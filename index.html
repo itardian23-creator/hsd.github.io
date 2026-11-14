@@ -408,6 +408,7 @@ async function xl(k,silent){if(!window.ExcelJS)return silent===true?0:toast('Pus
 // kirim ke Drive sebagai file TERPISAH: rekap + 1 file per KPI
 async function xlSep(loud){let ok=0;const ks=['rk','gc','tl','kt','ins'];
  for(const x of ks){if(await xl(x,true)===true)ok++}
+ if(ok==ks.length){XLS={ok:true,t:new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'})};try{localStorage.setItem('hsims-xl-ok','1')}catch(e){}xlShow()}else if(!XLS||XLS.ok){XLS={ok:false,m:ok+' dari '+ks.length+' file terkirim'};xlShow()}
  if(loud)toast(ok==ks.length?ks.length+' file Excel terkirim ke Drive ✓':ok+' dari '+ks.length+' file terkirim ke Drive');return ok}
 
 
@@ -483,7 +484,8 @@ async function upDrive(fn,buf,quiet){if(!GAS())return;
  try{const u=new Uint8Array(buf);let bin='';for(let i=0;i<u.length;i+=0x8000)bin+=String.fromCharCode.apply(null,u.subarray(i,i+0x8000));
   await gas({action:'putFile',name:fn,mime:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',data:btoa(bin)});
   return true}
- catch(e){if(!quiet)toast('Excel gagal dikirim ke Drive: '+friendly(e).slice(0,60));return false}}
+ catch(e){XLS={ok:false,m:friendly(e)};xlShow();if(!quiet)toast('Excel gagal dikirim ke Drive: '+friendly(e).slice(0,60));return false}}
+let XLS=null;function xlShow(){const d=$('#xls');if(d)d.innerHTML=XLS?XLS.ok?'<span class="ok">terkirim '+XLS.t+'</span>':'<span class="bad">gagal — '+esc(XLS.m)+'</span>':'belum pernah terkirim'}
 let xt,xlBusy=false;function schedXl(){clearTimeout(xt);xt=setTimeout(()=>{if(!GAS()||!window.ExcelJS)return;if(ST!='ok'||xlBusy){schedXl();return}xlBusy=true;xlSep(false).finally(()=>xlBusy=false)},6000)}
 async function gas(body){
  const r=await fetch(gUrl(),{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({key:gKey(),...body})});
@@ -504,7 +506,7 @@ async function syncGAS(ia){
    if(before!==after&&!F&&!/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||''))draw();
   }
   if(!done)throw new Error('Konflik data, coba lagi');
-  if(pushed)schedXl()
+  {let nv=0;try{nv=!localStorage.getItem('hsims-xl-ok')}catch(e){}if(pushed||nv)schedXl()}
  }catch(e){setSt('err',friendly(e))}
  syncing=false;if(again){again=false;sched()}}
 let lastSt='';
@@ -528,7 +530,7 @@ function notify(s,m){
  const d=$('#drs');if(d)d.textContent=s=='ok'?'tersinkron '+STM:bad?'tidak tersambung — '+(m||''):'menunggu'}
 function gasCard(){return`<div class="card"><h2>Penyimpanan data (Google Apps Script)</h2><p class="sub">Data disinkronkan otomatis ke Google Drive. Jika koneksi terputus, muncul peringatan merah di atas layar. Status: <b id="drs">${ST=='ok'?'tersinkron '+esc(STM):ST=='err'?'tidak tersambung — '+esc(STM):'menunggu'}</b></p>
 ${GAS_KEY0?'':`<div class="f"><label>Kunci rahasia (isi sekali)<input id="gkey" type="password" size="30" value="${esc(C.key||'')}" placeholder="SECRET di Code.gs"></label></div>`}
-<p class="row" style="justify-content:flex-start;margin:12px 0 0"><button class="btn acc" data-dr="gsync">Sinkron sekarang</button></p><p class="sub">Laporan Excel bulan terpilih dikirim ke folder <b>HSIMS KPI Laporan</b> sebagai file terpisah (Rekap, General Cleaning, Toilet Umum, Penyiapan Kamar, Inspeksi Vacant Clean), dan otomatis diperbarui beberapa detik setelah ada data yang ditambah atau diubah di web (tidak perlu dikirim manual).</p></div>`}
+<p class="row" style="justify-content:flex-start;margin:12px 0 0"><button class="btn acc" data-dr="gsync">Sinkron sekarang</button></p><p class="sub">Laporan Excel bulan terpilih dikirim ke folder <b>HSIMS KPI Laporan</b> sebagai file terpisah (Rekap, General Cleaning, Toilet Umum, Penyiapan Kamar, Inspeksi Vacant Clean), dan otomatis diperbarui beberapa detik setelah ada data yang ditambah atau diubah di web (tidak perlu dikirim manual). Status Excel: <b id="xls">belum pernah terkirim</b></p><p class="sub" hidden></p></div>`}
 function sched(){if(!C.on||!ON())return;clearTimeout(timer);timer=setTimeout(()=>sync(false),2500)}
 function driveCard(){return`<div class="card"><h2>Google Drive (penyimpanan data)</h2><p class="sub">Data disimpan sebagai berkas <b>${FN}</b> di Google Drive dan digabung otomatis antar perangkat. Status: <b id="drs">${ST=='ok'?'tersinkron '+STM:C.on?'terhubung':'belum terhubung'}</b></p>
 <div class="f"><label>OAuth Client ID<input id="cid" size="46" value="${esc(CID())}" placeholder="xxxx.apps.googleusercontent.com"></label><label>File ID (kosong = otomatis)<input id="fid" size="34" value="${esc(C.fid||'')}"></label><label>Akses<select id="full"><option value="" ${C.full?'':'selected'}>drive.file · hanya berkas buatan aplikasi (1 akun)</option><option value="1" ${C.full?'selected':''}>drive · berkas yang dibagikan (banyak akun)</option></select></label></div>
