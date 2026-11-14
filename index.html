@@ -56,7 +56,7 @@ const PAGES=[['dash','Ringkasan'],['gc','1 · General Cleaning'],['tl','2 · Toi
 const MN=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
 const pd=n=>String(n).padStart(2,'0');const td=new Date(),TODAY=td.getFullYear()+'-'+pd(td.getMonth()+1)+'-'+pd(td.getDate());
 let S;try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
-S=S||{};S.items=S.items||SEED.items;['gc','tl','kt','ins','tc'].forEach(k=>S[k]=S[k]||(k=='ins'||k=='tc'?[]:{}));S.geo=S.geo||{};
+S=S||{};S.items=S.items||SEED.items;['gc','tl','kt','ins','tc'].forEach(k=>S[k]=S[k]||(k=='ins'||k=='tc'?[]:{}));S.geo=S.geo||{};S.users=S.users||{};
 let page='dash',M=TODAY.slice(0,7),D=TODAY,gcMode='a',gcArea='';
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}if(typeof sched=='function')sched()};
 const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -66,7 +66,7 @@ const elapsed=m=>m>TODAY.slice(0,7)?0:m==TODAY.slice(0,7)?+TODAY.slice(8)-1:dim(
 const P=(n,d)=>d?(n/d*100).toFixed(1).replace('.',',')+'%':'–';
 /* ---- perhitungan KPI ---- */
 const gcIt=m=>S.items.filter(i=>(!i.s||m>=i.s)&&(!i.e||m<i.e));
-const isAdmin=()=>{try{return authed()=='admin'}catch(e){return false}};
+const isAdmin=()=>{try{const u=authed();return u=='admin'||((S.users||{})[u]||{}).r=='admin'}catch(e){return false}};
 function gcCalc(m){let n=0,d=0;gcIt(m).forEach(it=>{const r=(S.gc[m]||{})[it.id]||{},p=r.p||it.p,a=r.a||[];p.forEach((x,i)=>{if(x){d++;if(a[i])n++}})});return{n,d}}
 function tlCalc(m){let n=0;for(const dt in S.tl)if(dt.startsWith(m)&&dt<TODAY)for(const a in S.tl[dt])n+=S.tl[dt][a].filter(Boolean).length;return{n,d:SEED.areas.length*14*elapsed(m)}}
 function ktCalc(m){let n=0,d=0;const o=S.kt[m]||{};for(const k in o){d+=+o[k].c||0;n+=+o[k].s||0}return{n,d}}
@@ -76,7 +76,7 @@ const CALC={gc:gcCalc,tl:tlCalc,kt:ktCalc,ins:inCalc};
 const INFO={gc:['HK-01','Program General Cleaning','Rencana pekerjaan yang terealisasi / total rencana bulan ini','PI-RSPIBJ-HSD-01'],tl:['HK-02','Kepatuhan Checklist Toilet Umum','Checklist toilet terisi / (14 area × 14 jam × hari berjalan)','PI-RSPIBJ-HSD-02'],kt:['HK-03','Ketepatan Penyiapan Kamar','Kamar sesuai standar waktu / kamar check out','PI-RSPIBJ-HSD-03'],ins:['HK-05','Inspeksi Vacant Clean','Inspeksi acceptable / inspeksi yang dilakukan','PI-RSPIBJ-HSD-05']};
 const mbar=()=>`<div class="f"><label>Bulan<input type="month" id="mon" value="${M}"></label></div>`;
 const sumbox=k=>{const c=CALC[k](M),v=c.d?c.n/c.d:null;return`<div class="card"><div class="sub">${INFO[k][0]} · Target 100%</div><div class="big ${v==null?'':v>=TGT?'ok':v>=.9?'warn':'bad'}" id="big">${P(c.n,c.d)}</div><div class="bar"><i style="width:${Math.min(100,v*100||0)}%"></i></div><div class="sub" id="nd">${c.n} dari ${c.d} · ${INFO[k][2]}</div></div>`};
-const head=k=>`<div><p class="eyebrow">${INFO[k][0]} · ${INFO[k][3]}</p><h1>${INFO[k][1]}</h1><div class="tgl" style="margin-top:10px"><button data-v="in" class="${view=='in'?'on':''}">Input</button><button data-v="rp" class="${view=='rp'?'on':''}">Laporan</button></div></div>`;
+const head=k=>`<div><p class="eyebrow">${INFO[k][0]} · ${INFO[k][3]}</p><h1>${INFO[k][1]}</h1></div>`;
 /* ---- halaman ---- */
 const V={
 dash(){return`<div class="row"><div><p class="eyebrow">Housekeeping · PT Provices Indonesia</p><h1>Ringkasan KPI</h1><div class="sub">RSPI Bintaro Jaya · ${MN[+M.slice(5)-1]} ${M.slice(0,4)}</div></div>${mbar()}</div>
@@ -111,7 +111,7 @@ const rows=Object.keys(CALC).map(x=>{const c=CALC[x](M);return`<tr><td>${INFO[x]
 return`<div class="row"><div><p class="eyebrow">Housekeeping · RSPI Bintaro Jaya</p><h1>Laporan</h1></div>${mbar()}</div><div class="card"><div class="row"><h2>Rekap KPI ${MU()}</h2><button class="btn acc" data-xl="all">Unduh semua (Excel)</button></div><div class="tw" style="margin-top:12px"><table><tr><th>Kode</th><th>Indikator</th><th>Numerator</th><th>Denominator</th><th>Pencapaian</th><th>Target</th></tr>${rows}</table></div><p class="sub">Satu file Excel berisi sheet Rekap + keempat laporan.</p></div><div class="tgl" style="justify-self:start;flex-wrap:wrap">${Object.keys(NM).map(x=>`<button data-rk="${x}" class="${x==k?'on':''}">${INFO[x][0]} · ${NM[x]}</button>`).join('')}</div>${RP[k](true)}`},
 data(){return`<div><p class="eyebrow">Cadangan & integrasi</p><h1>Data</h1></div><div class="card"><div class="row" style="justify-content:flex-start"><button class="btn acc" data-act="expj">Ekspor JSON (semua data)</button><button class="btn" data-act="expr">Ekspor rekap KPI (CSV)</button><label class="btn">Impor JSON<input type="file" id="imp" accept=".json" hidden></label><button class="btn" data-act="reset">Hapus semua</button></div>
 <p class="sub">Rekap CSV berisi numerator, denominator, dan persentase per KPI untuk bulan terpilih (${M}); siap diselaraskan dengan tabel kpi_results di HSIMS (HK-02 = toilet).</p></div>`}};
-function draw(){$('#nav').innerHTML=PAGES.map(([k,n])=>`<button data-go="${k}" class="${k==page?'on':''}">${n}</button>`).join('');$('#app').innerHTML=(view=='rp'&&RP[page])?RP[page]():V[page]()}
+function draw(){$('#nav').innerHTML=PAGES.map(([k,n])=>`<button data-go="${k}" class="${k==page?'on':''}">${n}</button>`).join('');view='in';$('#app').innerHTML=V[page]()}
 function refresh(){if(page=='kt'||page=='gc'||page=='tl'||page=='ins'){const k=page,b=$('#big');if(b){const c=CALC[k](M),v=c.d?c.n/c.d:null;b.textContent=P(c.n,c.d);b.className='big '+(v==null?'':v>=TGT?'ok':v>=.9?'warn':'bad');b.nextElementSibling.firstElementChild.style.width=Math.min(100,v*100||0)+'%';$('#nd').textContent=`${c.n} dari ${c.d} · ${INFO[k][2]}`}}}
 const dl=async(n,t)=>{if(!DLC){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t]));a.download=n;document.body.append(a);a.click();a.remove();return}try{await DLC.save({filename:n,data:t});toast('Tersimpan')}catch(e){if(!e||e.code!='declined')toast('Gagal menyimpan')}};
 document.addEventListener('click',e=>{const t=e.target.closest('button,[data-go]');if(!t)return;const q=t.dataset;
@@ -440,7 +440,7 @@ function m3(b,l,r){
    else o[k]=m3(bv,l[k],r[k])});
   return o}
  return l}
-function norm(){S=S||{};S.items=S.items||SEED.items;['gc','tl','kt','ins','tc'].forEach(k=>S[k]=S[k]||(k=='ins'||k=='tc'?[]:{}));S.geo=S.geo||{}}
+function norm(){S=S||{};S.items=S.items||SEED.items;['gc','tl','kt','ins','tc'].forEach(k=>S[k]=S[k]||(k=='ins'||k=='tc'?[]:{}));S.geo=S.geo||{};S.users=S.users||{}}
 function setSt(s,m){ST=s;STM=m||'';notify(s,m);const b=$('#synct');if(!b)return;const T={off:'Drive: atur',idle:'Sambungkan Drive',sync:'Menyinkronkan…',ok:'Tersinkron '+STM,exp:'Sambungkan ulang',err:'Gagal sinkron'};b.textContent=T[s]||'';const w=$('#sync');if(w){w.title=m||'';w.style.color=s=='err'||s=='exp'?'var(--bad)':s=='ok'?'var(--ok)':''}}
 const gis=()=>new Promise((ok,no)=>{if(window.google&&google.accounts&&google.accounts.oauth2)return ok();let s=document.querySelector('#gis');if(!s){s=document.createElement('script');s.id='gis';s.src='https://accounts.google.com/gsi/client';document.head.append(s)}s.addEventListener('load',ok);s.addEventListener('error',()=>no(new Error('Gagal memuat Google Identity (cek internet)')))});
 function token(ia){return new Promise((ok,no)=>{
@@ -554,16 +554,34 @@ setInterval(()=>{if(!document.hidden&&ST=='err'&&gUrl())sync(false)},20000);
 addEventListener('online',()=>{if(gUrl())sync(false)});
 addEventListener('offline',()=>{if(gUrl())setSt('err','Tidak ada koneksi internet')});
 
-const AUTH={admin:'6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b',petugas:'02dea744a55778a6df72447a2468558d435b4b8a93a98ec5795414ab14979055'};
+const AUTH={admin:'6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b'};
 const sha=async s=>{if(!(window.crypto&&crypto.subtle))throw 0;const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')};
+async function uh(u,p){return sha('hsims:'+u+':'+p)}
 const authed=()=>{try{return sessionStorage.getItem('hsims-auth')||localStorage.getItem('hsims-auth')}catch(e){return null}};
 function lock(on){document.body.classList.toggle('locked',on);$('#login').hidden=!on;if(on)setTimeout(()=>{const u=$('#lu');u&&u.focus&&u.focus()},50)}
 async function doLogin(){const u=$('#lu').value.trim().toLowerCase(),p=$('#lp').value;let ok=false;
- try{ok=!!AUTH[u]&&AUTH[u]===await sha(p)}catch(e){$('#le').textContent='Peramban tidak mendukung login (butuh HTTPS).';return}
+ try{const us=(S.users||{})[u];ok=us&&us.h?us.h===await uh(u,p):!!AUTH[u]&&AUTH[u]===await sha(p)}catch(e){$('#le').textContent='Peramban tidak mendukung login (butuh HTTPS).';return}
  if(ok){try{($('#lr').checked?localStorage:sessionStorage).setItem('hsims-auth',u)}catch(e){}$('#lp').value='';$('#le').textContent='';lock(false);draw()}
  else{$('#le').textContent='Username atau password salah';$('#lp').value=''}}
 {const _d2=V.data;V.data=()=>_d2()+`<div class="card row"><span>Masuk sebagai <b>${esc(authed()||'-')}</b></span><button class="btn" data-lo="1">Keluar</button></div>`}
 document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.id=='lb')doLogin();if(b.dataset.lo){try{sessionStorage.removeItem('hsims-auth');localStorage.removeItem('hsims-auth')}catch(x){}lock(true)}});
+
+function userCard(){const us=S.users||{},me=authed(),rows=['admin',...Object.keys(us).filter(k=>k!='admin')].map(u=>{const r=u=='admin'?'admin':us[u].r;
+  return`<tr><td>${esc(u)}${u==me?' <span class="sub">(Anda)</span>':''}</td><td>${r=='admin'?'Admin':'Petugas'}</td><td><button class="btn sm" data-ua="pw" data-u="${esc(u)}">Ganti password</button>${u!='admin'&&u!=me?` <button class="btn sm" data-ua="del" data-u="${esc(u)}">Hapus</button>`:''}</td></tr>`}).join('');
+ return`<div class="card"><h2>Kelola akun</h2><p class="sub"><b>Admin</b>: mengatur rencana, menambah/menghentikan pekerjaan, dan kelola akun. <b>Petugas</b>: hanya mengisi realisasi (tanggal & foto). Akun ikut tersinkron ke semua perangkat.</p>
+${us.admin&&us.admin.h?'':'<p class="sub" style="color:var(--bad);font-weight:700">Password admin masih bawaan. Ketuk "Ganti password" pada admin sekarang.</p>'}
+<div class="tw"><table><tr><th>Username</th><th>Peran</th><th></th></tr>${rows}</table></div>
+<div class="f" style="margin-top:14px"><label>Username baru<input id="uu" autocomplete="off" placeholder="mis. budi"></label><label>Password<input id="up" type="password" autocomplete="new-password" placeholder="min. 6 karakter"></label><label>Sebagai<select id="ur"><option value="petugas">Petugas</option><option value="admin">Admin</option></select></label><button class="btn acc" data-ua="add">Tambah akun</button></div></div>`}
+{const _d3=V.data;V.data=()=>_d3()+(isAdmin()?userCard():'')}
+document.addEventListener('click',async e=>{const b=e.target.closest('[data-ua]');if(!b||!isAdmin())return;const a=b.dataset.ua,u=b.dataset.u;S.users=S.users||{};
+ if(a=='add'){const n=$('#uu').value.trim().toLowerCase(),p=$('#up').value,r=$('#ur').value;
+  if(!/^[a-z0-9._-]{3,20}$/.test(n))return toast('Username 3–20 karakter: huruf kecil, angka, titik, - atau _');
+  if(p.length<6)return toast('Password minimal 6 karakter');
+  if(n=='admin'||S.users[n])return toast('Username sudah dipakai');
+  S.users[n]={h:await uh(n,p),r};save();draw();toast('Akun '+n+' ditambahkan')}
+ if(a=='pw'){const p=prompt('Password baru untuk '+u+' (min. 6 karakter):');if(!p)return;if(p.length<6)return toast('Minimal 6 karakter');
+  S.users[u]=Object.assign(S.users[u]||{r:'admin'},{h:await uh(u,p)});save();draw();toast('Password '+u+' diganti')}
+ if(a=='del'&&u!='admin'&&u!=authed()&&confirm('Hapus akun '+u+'?')){delete S.users[u];save();draw();toast('Akun dihapus')}});
 document.addEventListener('keydown',e=>{if(e.key=='Enter'&&(e.target.id=='lp'||e.target.id=='lu'))doLogin()});
 lock(!authed());
 
