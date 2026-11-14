@@ -383,7 +383,7 @@ async function phSave(){const x=PH,b=$('#phok');const[g1,g2]=gcRange(x.w),dd=+(x
  try{for(const [k,n] of SLOT){if(!x.nw[k])continue;
    const nm=('GC_'+x.it.a+'_'+x.it.n).replace(/[^\w]+/g,'-').slice(0,60)+'_'+M+'_M'+(x.w+1)+'_'+n+'.jpg';
    const j=await gas({action:'putPhoto',mime:'image/jpeg',name:nm,data:x.nw[k].split(',')[1]});x.ids[k]=j.id;PHC.set(j.id,x.nw[k])}
- }catch(e){b.disabled=false;b.textContent='Coba lagi';return toast('Gagal mengunggah: '+friendly(e).slice(0,60))}
+ }catch(e){b.disabled=false;b.textContent='Coba lagi';const m=friendly(e),pm=$('#phmsg');if(pm){pm.className='sub bad';pm.textContent='Gagal mengunggah: '+m}return toast('Gagal mengunggah: '+m.slice(0,60))}
  const r=((S.gc[M]=S.gc[M]||{})[x.id]=S.gc[M][x.id]||{p:[...x.it.p],a:[0,0,0,0,0]});r.p=r.p||[...x.it.p];r.a=r.a||[0,0,0,0,0];r.ph=r.ph||{};
  r.a[x.w]=1;r.ph[x.w]={d:x.d||TODAY,b:x.ids.b||'',g:x.ids.g||'',a:x.ids.a||''};
  save();phClose();draw();toast('Tersimpan ✓')}
@@ -535,7 +535,8 @@ let xt,xlBusy=false;function schedXl(){clearTimeout(xt);xt=setTimeout(()=>{if(!G
 async function gas(body){
  const r=await fetch(gUrl(),{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({key:gKey(),...body})});
  if(!r.ok)throw new Error('Server '+r.status);
- const j=await r.json();if(!j.ok&&j.error!=='conflict')throw new Error(j.error||'Gagal');return j}
+ let j;try{j=await r.json()}catch(x){throw new Error('Balasan Apps Script bukan JSON (deploy ulang dengan akses "Anyone")')}
+ if(!j.ok&&j.error!=='conflict'){if(j.error==='Aksi tidak dikenal'&&/Photo|File/.test(body.action||''))throw new Error('Script Apps Script belum diperbarui: tempel Code.gs terbaru lalu Deploy > Kelola deployment > Versi baru');throw new Error(j.error||'Gagal')}return j}
 async function syncGAS(ia){
  if(syncing){again=true;return}
  syncing=true;setSt('sync');
