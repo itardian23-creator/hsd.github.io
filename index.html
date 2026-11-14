@@ -378,7 +378,7 @@ function m3(b,l,r){
   return o}
  return l}
 function norm(){S=S||{};S.items=S.items||SEED.items;['gc','tl','kt','ins','tc'].forEach(k=>S[k]=S[k]||(k=='ins'||k=='tc'?[]:{}));S.geo=S.geo||{}}
-function setSt(s,m){ST=s;STM=m||'';const b=$('#synct');if(!b)return;const T={off:'Drive: atur',idle:'Sambungkan Drive',sync:'Menyinkronkan…',ok:'Tersinkron '+STM,exp:'Sambungkan ulang',err:'Gagal sinkron'};b.textContent=T[s]||'';const w=$('#sync');if(w){w.title=m||'';w.style.color=s=='err'||s=='exp'?'var(--bad)':s=='ok'?'var(--ok)':''}}
+function setSt(s,m){ST=s;STM=m||'';notify(s,m);const b=$('#synct');if(!b)return;const T={off:'Drive: atur',idle:'Sambungkan Drive',sync:'Menyinkronkan…',ok:'Tersinkron '+STM,exp:'Sambungkan ulang',err:'Gagal sinkron'};b.textContent=T[s]||'';const w=$('#sync');if(w){w.title=m||'';w.style.color=s=='err'||s=='exp'?'var(--bad)':s=='ok'?'var(--ok)':''}}
 const gis=()=>new Promise((ok,no)=>{if(window.google&&google.accounts&&google.accounts.oauth2)return ok();let s=document.querySelector('#gis');if(!s){s=document.createElement('script');s.id='gis';s.src='https://accounts.google.com/gsi/client';document.head.append(s)}s.addEventListener('load',ok);s.addEventListener('error',()=>no(new Error('Gagal memuat Google Identity (cek internet)')))});
 function token(ia){return new Promise((ok,no)=>{
  if(TOK&&Date.now()<TEXP-60000)return ok(TOK);
@@ -398,6 +398,7 @@ async function fileId(ia){if(C.fid)return C.fid;
  const r=await(await gd(`${API}/upload/drive/v3/files?uploadType=multipart&fields=id`,{method:'POST',headers:{'Content-Type':'multipart/related; boundary='+b},body},ia)).json();
  C.fid=r.id;saveC();try{localStorage.setItem(BK,JSON.stringify(S))}catch(e){}return C.fid}
 async function sync(ia){
+ if(gUrl()&&!gKey())return setSt('err','Kunci rahasia belum diisi (menu Data)');
  if(GAS())return syncGAS(ia);
  if(!CID())return setSt('off');
  if(syncing){again=true;return}
@@ -434,11 +435,30 @@ async function syncGAS(ia){
    if(before!==after&&!F&&!/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||''))draw();
   }
   if(!done)throw new Error('Konflik data, coba lagi')
- }catch(e){setSt('err',e.message);if(ia)toast(String(e.message).slice(0,90))}
+ }catch(e){setSt('err',friendly(e))}
  syncing=false;if(again){again=false;sched()}}
-function gasCard(){return`<div class="card"><h2>Google Apps Script (penyimpanan data)</h2><p class="sub">Alternatif tanpa OAuth: data disimpan lewat Web App Apps Script ke Drive pemilik skrip. Jika diisi, ini dipakai menggantikan Google Drive OAuth di bawah.</p>
-<div class="f"><label>URL Web App (/exec)<input id="gurl" size="46" value="${esc(gUrl())}" placeholder="https://script.google.com/macros/s/.../exec"></label><label>Kunci rahasia<input id="gkey" type="password" size="30" value="${esc(gKey())}" placeholder="sama dengan SECRET di Code.gs"></label></div>
-<p class="row" style="justify-content:flex-start;margin:12px 0 0"><button class="btn acc" data-dr="gsync">Sambungkan & sinkron</button><button class="btn" data-dr="goff">Putuskan</button></p></div>`}
+let lastSt='';
+function friendly(e){const m=String(e&&e.message||e||'');
+ if(!navigator.onLine)return'Tidak ada koneksi internet';
+ if(/Failed to fetch|NetworkError|Load failed/i.test(m))return'Tidak bisa menghubungi server Apps Script (cek internet, URL, atau akses "Anyone")';
+ if(/JSON|Unexpected token/i.test(m))return'Balasan Apps Script tidak valid (pastikan deploy dengan akses "Anyone")';
+ return m}
+function notify(s,m){
+ let bn=$('#sbanner');
+ if(!bn){bn=document.createElement('div');bn.id='sbanner';
+  bn.style.cssText='position:fixed;top:0;left:0;right:0;z-index:250;background:var(--bad,#c0392b);color:#fff;padding:calc(8px + env(safe-area-inset-top,0px)) 14px 8px;font-size:13px;text-align:center;display:none;cursor:pointer';
+  bn.title='Ketuk untuk mencoba lagi';bn.onclick=()=>sync(true);document.body.append(bn)}
+ const bad=s=='err';
+ bn.style.display=bad?'block':'none';
+ if(bad)bn.textContent='⚠ Tidak tersambung ke penyimpanan: '+(m||'')+'. Data aman di perangkat ini dan dikirim otomatis begitu tersambung. Ketuk untuk coba lagi.';
+ const sy=$('#sync');if(sy)sy.style.color=bad?'var(--bad)':s=='ok'?'var(--ok)':'';
+ if(bad&&lastSt!='err')toast('⚠ Tidak tersambung: '+(m||'').slice(0,70));
+ else if(s=='ok'&&lastSt=='err')toast('Tersambung kembali ✓');
+ lastSt=s;
+ const d=$('#drs');if(d)d.textContent=s=='ok'?'tersinkron '+STM:bad?'tidak tersambung — '+(m||''):'menunggu'}
+function gasCard(){return`<div class="card"><h2>Penyimpanan data (Google Apps Script)</h2><p class="sub">Data disinkronkan otomatis ke Google Drive. Jika koneksi terputus, muncul peringatan merah di atas layar. Status: <b id="drs">${ST=='ok'?'tersinkron '+esc(STM):ST=='err'?'tidak tersambung — '+esc(STM):'menunggu'}</b></p>
+${GAS_KEY0?'':`<div class="f"><label>Kunci rahasia (isi sekali)<input id="gkey" type="password" size="30" value="${esc(C.key||'')}" placeholder="SECRET di Code.gs"></label></div>`}
+<p class="row" style="justify-content:flex-start;margin:12px 0 0"><button class="btn acc" data-dr="gsync">Sinkron sekarang</button></p></div>`}
 function sched(){if(!C.on||!ON())return;clearTimeout(timer);timer=setTimeout(()=>sync(false),2500)}
 function driveCard(){return`<div class="card"><h2>Google Drive (penyimpanan data)</h2><p class="sub">Data disimpan sebagai berkas <b>${FN}</b> di Google Drive dan digabung otomatis antar perangkat. Status: <b id="drs">${ST=='ok'?'tersinkron '+STM:C.on?'terhubung':'belum terhubung'}</b></p>
 <div class="f"><label>OAuth Client ID<input id="cid" size="46" value="${esc(CID())}" placeholder="xxxx.apps.googleusercontent.com"></label><label>File ID (kosong = otomatis)<input id="fid" size="34" value="${esc(C.fid||'')}"></label><label>Akses<select id="full"><option value="" ${C.full?'':'selected'}>drive.file · hanya berkas buatan aplikasi (1 akun)</option><option value="1" ${C.full?'selected':''}>drive · berkas yang dibagikan (banyak akun)</option></select></label></div>
@@ -446,18 +466,22 @@ function driveCard(){return`<div class="card"><h2>Google Drive (penyimpanan data
 <p class="sub">Panduan lengkap: lihat SETUP-GoogleDrive.md. Client ID bukan rahasia, tetapi harus diberi izin origin <b>${esc(location.origin)}</b> di Google Cloud.</p></div>`}
 {const _d=V.data;V.data=()=>_d()+gasCard()}
 document.addEventListener('click',e=>{const b=e.target.closest('[data-dr]');if(!b)return;const a=b.dataset.dr;
+ if(a=='sync'&&gUrl()){if(!GAS())page='data',F=null,draw();sync(true);return}
  if(a=='gsync'){if(!GAS()){toast('Isi URL dan kunci dulu');return}C.on=1;saveC();sync(true);return}
  if(a=='goff'){C.key='';C.on=0;saveC();setSt(CID()?'idle':'off');page='data';F=null;draw();toast('Terputus dari Apps Script');return}
  if(a=='sync'){if(!CID()){page='data';F=null;draw();return toast('Isi Client ID dulu')}sync(true)}
  if(a=='off'){try{if(TOK&&window.google)google.accounts.oauth2.revoke(TOK)}catch(x){}TOK=null;C.on=0;saveC();setSt(CID()?'idle':'off');const s=$('#drs');if(s)s.textContent='belum terhubung';toast('Terputus dari Drive')}});
 document.addEventListener('change',e=>{const t=e.target;
- if(t.id=='gurl'||t.id=='gkey'){C[t.id=='gurl'?'url':'key']=t.value.trim();try{localStorage.removeItem(BK)}catch(x){}C.on=GAS()?1:0;saveC();setSt(ON()?'idle':'off');return}
+ if(t.id=='gurl'||t.id=='gkey'){C[t.id=='gurl'?'url':'key']=t.value.trim();try{localStorage.removeItem(BK)}catch(x){}C.on=GAS()?1:0;saveC();setSt(ON()?'idle':'off');if(GAS())sync(true);return}
  if(t.id=='cid'){C.cid=t.value.trim();C.on=0;TOK=null;saveC();setSt(CID()?'idle':'off')}
  else if(t.id=='fid'){C.fid=t.value.trim();saveC();try{localStorage.removeItem(BK)}catch(x){}}
  else if(t.id=='full'){C.full=t.value?1:0;C.on=0;TOK=null;saveC();setSt(CID()?'idle':'off')}});
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&C.on)sync(false)});
 setInterval(()=>{if(!document.hidden&&C.on&&ST!='exp')sync(false)},90000);
-setSt(GAS()?'idle':CID()?(C.on?'exp':'idle'):'off');if(GAS()){C.on=1;sync(false)}else if(CID())gis().catch(()=>{});
+setSt(GAS()?'idle':CID()?(C.on?'exp':'idle'):'off');if(GAS()){C.on=1;sync(false)}else if(gUrl()){sync(false)}else if(CID())gis().catch(()=>{});
+setInterval(()=>{if(!document.hidden&&ST=='err'&&gUrl())sync(false)},20000);
+addEventListener('online',()=>{if(gUrl())sync(false)});
+addEventListener('offline',()=>{if(gUrl())setSt('err','Tidak ada koneksi internet')});
 
 const AUTH={admin:'6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b'};
 const sha=async s=>{if(!(window.crypto&&crypto.subtle))throw 0;const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')};
