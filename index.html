@@ -49,45 +49,28 @@ details{border:1px solid var(--line);border-radius:16px;padding:0 14px;backgroun
 .tgl{display:inline-flex;background:var(--chip);border-radius:99px;padding:3px}.tgl button{border:0;background:none;font:inherit;padding:6px 14px;border-radius:99px;cursor:pointer;color:var(--mute)}.tgl .on{background:var(--acc-btn);color:#fff}
 tfoot td{font-weight:700;background:var(--chip)}th{text-align:center}
 .opt{display:flex;gap:6px;margin-top:10px}.opt button{flex:1;border:1.5px solid var(--line);background:var(--chip);color:var(--ink);font:inherit;font-size:13px;padding:10px 4px;border-radius:12px;cursor:pointer}.opt .s-ok{background:color-mix(in srgb,var(--ok) 18%,transparent);border-color:var(--ok)}.opt .s-warn{background:color-mix(in srgb,var(--warn) 18%,transparent);border-color:var(--warn)}.opt .s-bad{background:color-mix(in srgb,var(--bad) 18%,transparent);border-color:var(--bad)}.btn:disabled{opacity:.45;cursor:not-allowed;transform:none}textarea{resize:vertical}
-@media(max-width:700px){.hm{display:none}.navlinks{max-width:calc(100vw - 190px)}}
+#sync svg{flex:none}
+@media(max-width:700px){#sync::after{content:'';width:9px;height:9px;border-radius:50%;background:currentColor}.hm{display:none}.navlinks{max-width:calc(100vw - 190px)}}
 #login{position:fixed;inset:0;z-index:300;background:var(--bg);display:grid;place-items:center;padding:20px}.lc{width:100%;max-width:380px}.locked .topnav,.locked .app{display:none}
 .toast{position:fixed;bottom:calc(18px + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:99px;font-size:13px;z-index:260}
 
-/* Menu titik tiga (HP) — mengikuti gaya index-ardian */
+/* Menu titik tiga (HP) — dropdown ringan seperti aplikasi keuangan */
 .menu-wrap{display:none;position:relative}
 @media(max-width:760px){.navlinks{display:none}.menu-wrap{display:block}}
-.menu-btn{position:relative;z-index:3;width:44px;height:44px;border-radius:999px;border:1px solid var(--line);background:var(--glass);color:var(--ink);display:grid;place-items:center;cursor:pointer;box-shadow:0 6px 20px -10px rgba(15,23,42,.25);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);transition:background .35s,color .35s,border-color .35s,transform .35s cubic-bezier(.25,1,.5,1)}
-.menu-btn:active{transform:scale(.94)}
+.menu-btn{position:relative;width:44px;height:44px;border-radius:999px;border:1px solid var(--line);background:var(--glass);color:var(--ink);display:grid;place-items:center;cursor:pointer;box-shadow:0 6px 20px -10px rgba(15,23,42,.25);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);transition:transform .2s}
+.menu-btn:active{transform:scale(.92)}
 .menu-btn:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
-.menu-btn svg{overflow:visible;transition:transform .6s cubic-bezier(.65,0,.35,1)}
-.menu-btn .dots circle{transform-box:fill-box;transform-origin:center;transition:transform .45s cubic-bezier(.65,0,.35,1),opacity .25s}
-.menu-btn .x line{stroke-dasharray:20;stroke-dashoffset:20;transition:stroke-dashoffset .4s cubic-bezier(.65,0,.35,1)}
-.menu-btn[aria-expanded="true"]{background:var(--acc-btn);color:#fff;border-color:transparent}
-.menu-btn[aria-expanded="true"] svg{transform:rotate(90deg)}
-.menu-btn[aria-expanded="true"] .dots circle{opacity:0;transform:scale(0)}
-.menu-btn[aria-expanded="true"] .dots circle:nth-child(1){transform:translateY(7px) scale(0)}
-.menu-btn[aria-expanded="true"] .dots circle:nth-child(3){transform:translateY(-7px) scale(0)}
-.menu-btn[aria-expanded="true"] .x line{stroke-dashoffset:0;transition-delay:.18s}
-.menu-btn[aria-expanded="true"] .x line+line{transition-delay:.26s}
-html.mm-lock,html.mm-lock body{overflow:hidden}
-html.mm-lock #sbanner{display:none!important}
-.mmenu{position:fixed;inset:0;z-index:1;display:flex;flex-direction:column;justify-content:space-between;gap:32px;padding:calc(96px + env(safe-area-inset-top,0px)) clamp(24px,7vw,56px) calc(48px + env(safe-area-inset-bottom,0px));background:var(--bg);color:var(--ink);overflow-y:auto;overscroll-behavior:contain;clip-path:circle(0px at var(--mx,calc(100% - 38px)) var(--my,36px));visibility:hidden;pointer-events:none;transition:clip-path .75s cubic-bezier(.76,0,.24,1),visibility 0s linear .75s}
-.mmenu::before{content:"";position:fixed;inset:0;pointer-events:none;background:radial-gradient(60% 42% at 88% 0%,rgba(37,99,235,.16),transparent 70%),radial-gradient(55% 40% at 0% 100%,rgba(79,70,229,.12),transparent 70%)}
-.mmenu.open{clip-path:circle(150vmax at var(--mx,calc(100% - 38px)) var(--my,36px));visibility:visible;pointer-events:auto;transition:clip-path .9s cubic-bezier(.76,0,.24,1),visibility 0s}
-.mm-list{position:relative;list-style:none;margin:auto 0;padding:0;display:flex;flex-direction:column;gap:4px}
-.mm-list button{display:block;width:fit-content;max-width:100%;padding:4px 0;border:0;background:none;color:var(--ink);font:inherit;font-size:clamp(1.7rem,8.5vw,2.6rem);font-weight:700;letter-spacing:-.04em;line-height:1.15;text-align:left;cursor:pointer;transition:opacity .3s,transform .45s cubic-bezier(.25,1,.5,1),color .3s}
-.mm-list button.on{color:var(--acc)}
-.mm-list button:focus-visible,.mm-sec button:focus-visible{outline:2px solid var(--acc);outline-offset:4px;border-radius:6px}
-.mm-foot{position:relative;padding-top:22px;border-top:1px solid var(--line)}
-.mm-note{color:var(--mute);font-size:.95rem;margin:0 0 14px}
-.mm-sec{display:flex;flex-wrap:wrap;gap:10px 22px}
-.mm-sec button{border:0;background:none;font:inherit;font-size:1rem;font-weight:700;cursor:pointer;padding:4px 0}
-.mm-list li,.mm-foot>*{opacity:0;transform:translateY(36px);filter:blur(12px);transition:opacity .35s ease,transform .35s ease,filter .35s ease}
-.mmenu.open .mm-list li,.mmenu.open .mm-foot>*{opacity:1;transform:none;filter:none;transition:opacity .7s ease,transform .85s cubic-bezier(.16,1,.3,1),filter .7s ease;transition-delay:calc(.3s + var(--i,0)*.07s)}
-.mmenu.open .mm-foot>*{transition-delay:calc(.3s + 8*.07s + var(--i,0)*.08s)}
-@media(prefers-reduced-motion:reduce){.mmenu{clip-path:none;opacity:0;transition:opacity .2s,visibility 0s linear .2s}.mmenu.open{clip-path:none;opacity:1;transition:opacity .2s,visibility 0s}.mm-list li,.mm-foot>*{filter:none;transform:none;transition:none}.mmenu.open .mm-list li,.mmenu.open .mm-foot>*{transition:none}.menu-btn svg,.menu-btn .dots circle,.menu-btn .x line{transition:none}}
+.mmenu{position:absolute;top:calc(100% + 8px);right:0;min-width:230px;padding:8px;border-radius:18px;background:var(--panel);border:1px solid var(--line);box-shadow:0 18px 40px -14px rgba(15,23,42,.35);display:flex;flex-direction:column;gap:2px;visibility:hidden;opacity:0;transform:translateY(-8px) scale(.96);transform-origin:top right;transition:opacity .2s,transform .25s var(--ease),visibility 0s .25s}
+.mmenu.open{visibility:visible;opacity:1;transform:none;transition-delay:0s}
+.mmenu button{text-align:left;border:0;background:none;color:var(--ink);font:inherit;font-weight:500;padding:12px 14px;border-radius:12px;cursor:pointer;min-height:44px}
+.mmenu button:hover,.mmenu button:active{background:var(--chip)}
+.mmenu button.on{color:var(--acc);background:var(--chip);font-weight:700}
+.mmenu button:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.mmenu hr{border:0;border-top:1px solid var(--line);margin:4px 6px}
+.mmenu .who{padding:6px 14px 2px;color:var(--mute);font-size:12px}
+@media(prefers-reduced-motion:reduce){.mmenu{transition:none}}
 </style></head><body>
-<div class="topnav"><div style="display:flex;gap:8px;align-items:center"><div class="logo"><span class="mark"></span>HSIMS KPI</div><button class="logo" id="sync" data-dr="sync" style="font:inherit;font-size:.85rem;cursor:pointer;color:inherit">☁<span id="synct" class="hm"></span></button></div><nav class="navlinks" id="nav"></nav><div class="menu-wrap"><button type="button" class="menu-btn" id="menuBtn" aria-label="Buka menu" aria-expanded="false" aria-controls="mmenu"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><g class="dots"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></g><g class="x" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="6.5" y1="6.5" x2="17.5" y2="17.5"/><line x1="17.5" y1="6.5" x2="6.5" y2="17.5"/></g></svg></button><nav class="mmenu" id="mmenu" aria-label="Menu"><ul class="mm-list" id="mmlist"></ul><div class="mm-foot" id="mmfoot"></div></nav></div></div>
+<div class="topnav"><div style="display:flex;gap:8px;align-items:center"><div class="logo"><span class="mark"></span>HSIMS KPI</div><button class="logo" id="sync" data-dr="sync" style="font:inherit;font-size:.85rem;cursor:pointer;color:inherit"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.35 10.04A7.49 7.49 0 0 0 12 4C9.11 4 6.6 5.64 5.35 8.04A5.994 5.994 0 0 0 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/></svg><span id="synct" class="hm"></span></button></div><nav class="navlinks" id="nav"></nav><div class="menu-wrap"><button type="button" class="menu-btn" id="menuBtn" aria-label="Buka menu" aria-expanded="false" aria-controls="mmenu"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></button><nav class="mmenu" id="mmenu" aria-label="Menu"></nav></div></div>
 <main class="app" id="app"></main>
 <div id="login" hidden><div class="card lc"><div class="logo" style="display:inline-flex;margin-bottom:14px"><span class="mark"></span>HSIMS KPI</div><h1 style="font-size:1.5rem">Masuk</h1><p class="sub">Housekeeping · RSPI Bintaro Jaya</p><div class="f" style="flex-direction:column;align-items:stretch;margin-top:14px"><label>Username<input id="lu" autocomplete="username" autocapitalize="none"></label><label>Password<input id="lp" type="password" autocomplete="current-password"></label></div><label class="sub" style="display:flex;gap:8px;margin:12px 0"><input type="checkbox" id="lr"> Ingat saya di perangkat ini</label><button class="btn acc" id="lb" style="width:100%">Masuk</button><p id="le" class="bad" style="min-height:1.4em;margin:10px 0 0;font-size:13px"></p></div></div>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
@@ -164,7 +147,7 @@ const rows=Object.keys(CALC).map(x=>{const c=CALC[x](M);return`<tr><td>${INFO[x]
 return`<div class="row"><div><p class="eyebrow">Housekeeping · RSPI Bintaro Jaya</p><h1>Laporan</h1></div>${mbar()}</div><div class="card"><div class="row"><h2>Rekap KPI ${MU()}</h2><button class="btn acc" data-xl="all">Unduh semua (Excel)</button></div><div class="tw" style="margin-top:12px"><table><tr><th>Kode</th><th>Indikator</th><th>Numerator</th><th>Denominator</th><th>Pencapaian</th><th>Target</th></tr>${rows}</table></div><p class="sub">Satu file Excel berisi sheet Rekap + keempat laporan.</p></div><div class="tgl" style="justify-self:start;flex-wrap:wrap">${Object.keys(NM).map(x=>`<button data-rk="${x}" class="${x==k?'on':''}">${INFO[x][0]} · ${NM[x]}</button>`).join('')}</div>${RP[k](true)}`},
 data(){return`<div><p class="eyebrow">Cadangan & integrasi</p><h1>Data</h1></div><div class="card"><div class="row" style="justify-content:flex-start"><button class="btn acc" data-act="expj">Ekspor JSON (semua data)</button><button class="btn" data-act="expr">Ekspor rekap KPI (CSV)</button><label class="btn">Impor JSON<input type="file" id="imp" accept=".json" hidden></label><button class="btn" data-act="reset">Hapus semua</button></div>
 <p class="sub">Rekap CSV berisi numerator, denominator, dan persentase per KPI untuk bulan terpilih (${M}); siap diselaraskan dengan tabel kpi_results di HSIMS (HK-02 = toilet).</p></div>`}};
-function mmFill(){const L=$('#mmlist'),R=$('#mmfoot');if(!L||!R)return;L.innerHTML=PAGES.filter(([k])=>allowed(k)).map(([k,n],i)=>`<li style="--i:${i}"><button data-go="${k}" class="${k==page?'on':''}">${esc(n)}</button></li>`).join('');R.innerHTML=`<p class="mm-note" style="--i:0">Masuk sebagai <b>${esc(authed()||'-')}</b></p><div class="mm-sec" style="--i:1"><button data-lo="1" style="color:var(--bad)">⎋ Keluar</button></div>`}
+function mmFill(){const M_=$('#mmenu');if(!M_)return;M_.innerHTML=`<div class="who">Masuk sebagai <b>${esc(authed()||'-')}</b></div>`+PAGES.filter(([k])=>allowed(k)).map(([k,n])=>`<button type="button" data-go="${k}" class="${k==page?'on':''}">${esc(n)}</button>`).join('')+`<hr><button type="button" data-lo="1" style="color:var(--bad)">⎋ Keluar</button>`}
 function draw(){if(!allowed(page)){const f=PAGES.find(([k])=>allowed(k));page=f?f[0]:'dash'}$('#nav').innerHTML=PAGES.filter(([k])=>allowed(k)).map(([k,n])=>`<button data-go="${k}" class="${k==page?'on':''}">${n}</button>`).join('')+`<button data-lo="1" title="Keluar (${esc(authed()||'')})" style="color:var(--bad);font-weight:600">⎋ Keluar</button>`;view='in';mmFill();$('#app').innerHTML=V[page]();if(page=='ins')insApply()}
 function refresh(){if(page=='kt'||page=='gc'||page=='tl'||page=='ins'){const k=page,b=$('#big');if(b){const c=CALC[k](M),v=c.d?c.n/c.d:null;b.textContent=P(c.n,c.d);b.className='big '+(v==null?'':v>=TGT?'ok':v>=.9?'warn':'bad');b.nextElementSibling.firstElementChild.style.width=Math.min(100,v*100||0)+'%';$('#nd').textContent=`${c.n} dari ${c.d} · ${INFO[k][2]}`}}}
 const dl=async(n,t)=>{if(!DLC){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t]));a.download=n;document.body.append(a);a.click();a.remove();return}try{await DLC.save({filename:n,data:t});toast('Tersimpan')}catch(e){if(!e||e.code!='declined')toast('Gagal menyimpan')}};
@@ -697,13 +680,12 @@ document.addEventListener('keydown',e=>{if(e.key=='Enter'&&(e.target.id=='lp'||e
 lock(!authed());
 
 document.addEventListener('change',e=>{const t=e.target;if(t.id=='ur'){const w=$('#umw');if(w)w.hidden=t.value=='admin'}if(t.id=='iu'){insUnit=t.value;insRoom='';$('#ir').innerHTML=roomOpts(insUnit);$('#irml').hidden=true;insApply()}else if(t.id=='ir'){$('#irml').hidden=t.value!='__x';insRoom=t.value=='__x'?'':t.value;insApply()}else if(t.id=='irm'){insRoom=t.value.trim();insApply()}else if(t.id=='id')insApply()});
-(function(){const btn=$('#menuBtn'),menu=$('#mmenu');if(!btn||!menu)return;const root=document.documentElement,desk=matchMedia('(min-width: 761px)');
- function origin(){const r=btn.getBoundingClientRect();menu.style.setProperty('--mx',(r.left+r.width/2)+'px');menu.style.setProperty('--my',(r.top+r.height/2)+'px')}
- function set(o){if(o===menu.classList.contains('open'))return;if(o)origin();menu.classList.toggle('open',o);root.classList.toggle('mm-lock',o);btn.setAttribute('aria-expanded',String(o));btn.setAttribute('aria-label',o?'Tutup menu':'Buka menu')}
+(function(){const btn=$('#menuBtn'),menu=$('#mmenu');if(!btn||!menu)return;
+ const set=o=>{menu.classList.toggle('open',o);btn.setAttribute('aria-expanded',String(o));btn.setAttribute('aria-label',o?'Tutup menu':'Buka menu')};
  btn.addEventListener('click',e=>{e.stopPropagation();set(!menu.classList.contains('open'))});
  menu.addEventListener('click',e=>{if(e.target.closest('button'))set(false)});
- document.addEventListener('keydown',e=>{if(e.key=='Escape'&&menu.classList.contains('open')){set(false);btn.focus()}});
- const od=()=>{if(desk.matches)set(false)};desk.addEventListener?desk.addEventListener('change',od):desk.addListener(od)})();
-document.addEventListener('input',e=>{const t=e.target;if(!F)return;if(t.id=='tfp'){F.p=t.value;gpsShow()}else if(t.id=='tfk')F.k=t.value});
+ document.addEventListener('click',e=>{if(!menu.contains(e.target))set(false)});
+ document.addEventListener('keydown',e=>{if(e.key=='Escape')set(false)});
+ addEventListener('scroll',()=>set(false),{passive:true})})();
 draw();
 </script></body></html>
