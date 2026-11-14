@@ -65,7 +65,9 @@ const dim=m=>new Date(+m.slice(0,4),+m.slice(5),0).getDate();
 const elapsed=m=>m>TODAY.slice(0,7)?0:m==TODAY.slice(0,7)?+TODAY.slice(8)-1:dim(m);
 const P=(n,d)=>d?(n/d*100).toFixed(1).replace('.',',')+'%':'–';
 /* ---- perhitungan KPI ---- */
-function gcCalc(m){let n=0,d=0;S.items.forEach(it=>{const r=(S.gc[m]||{})[it.id]||{},p=r.p||it.p,a=r.a||[];p.forEach((x,i)=>{if(x){d++;if(a[i])n++}})});return{n,d}}
+const gcIt=m=>S.items.filter(i=>(!i.s||m>=i.s)&&(!i.e||m<i.e));
+const isAdmin=()=>{try{return authed()=='admin'}catch(e){return false}};
+function gcCalc(m){let n=0,d=0;gcIt(m).forEach(it=>{const r=(S.gc[m]||{})[it.id]||{},p=r.p||it.p,a=r.a||[];p.forEach((x,i)=>{if(x){d++;if(a[i])n++}})});return{n,d}}
 function tlCalc(m){let n=0;for(const dt in S.tl)if(dt.startsWith(m)&&dt<TODAY)for(const a in S.tl[dt])n+=S.tl[dt][a].filter(Boolean).length;return{n,d:SEED.areas.length*14*elapsed(m)}}
 function ktCalc(m){let n=0,d=0;const o=S.kt[m]||{};for(const k in o){d+=+o[k].c||0;n+=+o[k].s||0}return{n,d}}
 function insList(m){return S.ins.filter(x=>x.date.startsWith(m))}
@@ -80,12 +82,13 @@ const V={
 dash(){return`<div class="row"><div><p class="eyebrow">Housekeeping · PT Provices Indonesia</p><h1>Ringkasan KPI</h1><div class="sub">RSPI Bintaro Jaya · ${MN[+M.slice(5)-1]} ${M.slice(0,4)}</div></div>${mbar()}</div>
 <div class="grid">${Object.keys(CALC).map((k,i)=>{const c=CALC[k](M),v=c.d?c.n/c.d:null;return`<button class="card stat" data-go="${k}"><div class="sub">${INFO[k][0]}</div><h2>${INFO[k][1]}</h2><div class="big ${v==null?'':v>=TGT?'ok':v>=.9?'warn':'bad'}">${P(c.n,c.d)}</div><div class="bar"><i style="width:${Math.min(100,v*100||0)}%"></i></div><div class="sub">${c.n} / ${c.d} · target 100%</div></button>`}).join('')}</div>
 <div class="card sub">Klik kartu untuk membuka menu input. Data tersimpan di peramban ini; gunakan menu Data untuk ekspor/impor atau pindah perangkat.</div>`},
-gc(){const ar=[...new Set(S.items.map(i=>i.a))];gcArea=gcArea||ar[0];const rec=(S.gc[M]||{});
-const rows=S.items.filter(i=>i.a==gcArea).map(it=>{const r=rec[it.id]||{},p=r.p||it.p,a=r.a||[];return`<tr><td>${esc(it.n)}<div class="sub">${esc(it.j)} · ${esc(it.f)}</div></td>${[0,1,2,3,4].map(w=>`<td><button class="cell ${p[w]?(a[w]?'d':'p'):'n'}" data-gc="${it.id}" data-w="${w}">${p[w]?(a[w]?'✓':'○'):'–'}</button></td>`).join('')}</tr>`}).join('');
+gc(){const adm=isAdmin(),md=adm?gcMode:'a',ar=[...new Set(gcIt(M).map(i=>i.a))];gcArea=ar.includes(gcArea)?gcArea:ar[0];const rec=(S.gc[M]||{});
+const rows=gcIt(M).filter(i=>i.a==gcArea).filter(it=>{const r=rec[it.id]||{};return adm||(r.p||it.p).some(Boolean)}).map(it=>{const r=rec[it.id]||{},p=r.p||it.p,a=r.a||[];return`<tr><td>${esc(it.n)}<div class="sub">${esc(it.j)} · ${esc(it.f)}</div></td>${[0,1,2,3,4].map(w=>`<td><button class="cell ${p[w]?(a[w]?'d':'p'):'n'}" data-gc="${it.id}" data-w="${w}" title="${a[w]&&r.ph&&r.ph[w]?hari(r.ph[w].d)+', '+r.ph[w].d:''}">${p[w]?(a[w]?'✓':'○'):'–'}</button></td>`).join('')}${adm&&md=='p'?`<td><button class="btn sm" data-act="stopgc" data-id="${it.id}">Hentikan</button></td>`:''}</tr>`}).join('');
 return`<div class="row">${head('gc')}${mbar()}</div>${sumbox('gc')}
-<div class="card"><div class="row"><div class="f"><label>Area<select id="gca">${ar.map(a=>`<option ${a==gcArea?'selected':''}>${esc(a)}</option>`).join('')}</select></label></div><div class="tgl"><button data-m="a" class="${gcMode=='a'?'on':''}">Realisasi</button><button data-m="p" class="${gcMode=='p'?'on':''}">Atur rencana</button></div></div>
-<p class="sub">${gcMode=='a'?'Ketuk ○ (direncanakan) untuk menandai selesai ✓.':'Ketuk untuk menetapkan minggu mana pekerjaan direncanakan pada bulan ini.'}</p>
-<div class="tw"><table><tr><th>Pekerjaan</th><th>M1</th><th>M2</th><th>M3</th><th>M4</th><th>M5</th></tr>${rows}</table></div></div>
+<div class="card"><div class="row"><div class="f"><label>Area<select id="gca">${ar.map(a=>`<option ${a==gcArea?'selected':''}>${esc(a)}</option>`).join('')}</select></label></div><div class="tgl"><button data-m="a" class="${md=='a'?'on':''}">Realisasi</button>${adm?`<button data-m="p" class="${md=='p'?'on':''}">Atur rencana</button>`:''}</div></div>
+<p class="sub">${md=='a'?'Ketuk ○ (direncanakan) untuk mengisi tanggal & foto, lalu menandai selesai ✓.':'Admin: ketuk untuk menetapkan minggu pekerjaan direncanakan pada bulan ini (sebulan sekali = 1 minggu, mingguan = 4 minggu). Berlaku hanya untuk bulan ini.'}</p>
+<div class="tw"><table><tr><th>Pekerjaan</th><th>M1</th><th>M2</th><th>M3</th><th>M4</th><th>M5</th>${adm&&md=='p'?'<th></th>':''}</tr>${rows}</table></div></div>
+${adm?`<details><summary>Kelola pekerjaan (admin)</summary><div class="f" style="padding-bottom:14px"><label>Area<input id="na" list="al" value="${esc(gcArea)}"></label><datalist id="al">${ar.map(a=>`<option>${esc(a)}`).join('')}</datalist><label>Pekerjaan<input id="nn"></label><label>Jenis<input id="nj" size="9" placeholder="washing"></label><label>Frekuensi<select id="nf"><option>weekly<option>2weekly<option>monthly</select></label><button class="btn acc" data-act="addgc">Tambah mulai bulan ini</button></div></details>`:''}
 `},
 tl(){const rec=S.tl[D]||{};const hd=H.map(h=>`<th>${pd(h)}</th>`).join('');
 const rows=SEED.areas.map(([c,n])=>{const a=rec[c]||Array(14).fill(0);return`<tr><td>${n}</td>${a.map((x,i)=>`<td><button class="cell ${x?'d':''}" data-tl="${c}" data-h="${i}">${x?'✓':''}</button></td>`).join('')}<td><button class="btn sm" data-tlall="${c}">Semua</button></td></tr>`}).join('');
@@ -123,15 +126,17 @@ if(q.tdel){const r=S.tc.find(x=>x.id==q.tdel);if(r&&confirm('Hapus checklist ini
 if(q.gme){geoOpen=true;navigator.geolocation?navigator.geolocation.getCurrentPosition(p=>{S.geo[q.gme]=[+p.coords.latitude.toFixed(7),+p.coords.longitude.toFixed(7)];save();const y=scrollY;draw();scrollTo(0,y);toast('Koordinat diperbarui')},()=>toast('Izin GPS ditolak'),{enableHighAccuracy:true,timeout:8000}):toast('GPS tidak tersedia');return}
 if(q.rk){repK=q.rk;draw();return}
 if(q.xl){xl(q.xl);return}
-if(q.m){gcMode=q.m;draw();return}
+if(q.m){if(q.m=='p'&&!isAdmin())return toast('Hanya admin yang bisa mengatur rencana');gcMode=q.m;draw();return}
 if(q.gc){const id=q.gc,w=+q.w,it=S.items.find(i=>i.id==id),r=((S.gc[M]=S.gc[M]||{})[id]=S.gc[M][id]||{p:[...it.p],a:[0,0,0,0,0]});r.p=r.p||[...it.p];r.a=r.a||[0,0,0,0,0];
- if(gcMode=='p'){r.p[w]=r.p[w]?0:1;if(!r.p[w])r.a[w]=0}else if(r.p[w]){phOpen(id,w);return}else return;save();const y=scrollY;draw();scrollTo(0,y);return}
+ if(gcMode=='p'&&isAdmin()){r.p[w]=r.p[w]?0:1;if(!r.p[w])r.a[w]=0}else if(r.p[w]){phOpen(id,w);return}else return;save();const y=scrollY;draw();scrollTo(0,y);return}
 if(q.tl){const r=(S.tl[D]=S.tl[D]||{});r[q.tl]=r[q.tl]||Array(14).fill(0);r[q.tl][+q.h]^=1;save();t.className='cell '+(r[q.tl][+q.h]?'d':'');t.textContent=r[q.tl][+q.h]?'✓':'';refresh();return}
 if(q.tlall){const r=(S.tl[D]=S.tl[D]||{});const full=(r[q.tlall]||[]).every(Boolean);r[q.tlall]=Array(14).fill(full?0:1);save();const y=scrollY;draw();scrollTo(0,y);return}
 if(q.x!==undefined){t.classList.toggle('x');return}
 if(q.del){if(confirm('Hapus inspeksi ini?')){S.ins=S.ins.filter(x=>x.id!=q.del);save();draw()}return}
 const a=q.act;if(!a)return;
-if(a=='addgc'){const n=$('#nn').value.trim(),ar=$('#na').value.trim();if(!n||!ar)return toast('Isi area dan pekerjaan');S.items.push({id:Math.max(0,...S.items.map(i=>i.id))+1,a:ar,n,j:$('#nj').value,f:$('#nf').value,p:$('#nf').value=='monthly'?[1,0,0,0,0]:$('#nf').value=='2weekly'?[1,0,1,0,1]:[1,1,1,1,1]});gcArea=ar;save();draw();toast('Pekerjaan ditambahkan')}
+if((a=='addgc'||a=='stopgc')&&!isAdmin())return toast('Hanya admin');
+if(a=='stopgc'){const it=S.items.find(i=>i.id==t.dataset.id);if(it&&confirm('Hentikan "'+it.n+'" mulai bulan '+M+'? (bulan sebelumnya tidak berubah)')){it.e=M;save();draw();toast('Pekerjaan dihentikan mulai bulan ini')}return}
+if(a=='addgc'){const n=$('#nn').value.trim(),ar=$('#na').value.trim();if(!n||!ar)return toast('Isi area dan pekerjaan');S.items.push({id:Math.max(0,...S.items.map(i=>i.id))+1,a:ar,n,j:$('#nj').value,f:$('#nf').value,s:M,p:$('#nf').value=='monthly'?[1,0,0,0,0]:$('#nf').value=='2weekly'?[1,0,1,0,0]:[1,1,1,1,0]});gcArea=ar;save();draw();toast('Pekerjaan ditambahkan')}
 if(a=='addins'){const room=$('#ir').value.trim();if(!room)return toast('Isi nomor kamar');S.ins.push({id:Date.now(),date:$('#id').value,room,by:$('#ib').value,bad:[...document.querySelectorAll('[data-x].x')].map(b=>+b.dataset.x)});D=$('#id').value;M=D.slice(0,7);save();draw();toast('Inspeksi tersimpan')}
 if(a=='expj')dl('hsims-kpi-hk-'+TODAY+'.json',JSON.stringify(S),'application/json');
 if(a=='expr'){let c='kpi,nama,bulan,numerator,denominator,pencapaian\n';for(const k in CALC){const x=CALC[k](M);c+=[INFO[k][0],INFO[k][1],M,x.n,x.d,x.d?(x.n/x.d).toFixed(6):''].join(',')+'\n'}dl('rekap-kpi-hk-'+M+'.csv',c,'text/csv')}
@@ -186,8 +191,8 @@ const rom=n=>{let r='';[[10,'X'],[9,'IX'],[5,'V'],[4,'IV'],[1,'I']].forEach(([v,
 const pc=(n,d)=>({p:d?n/d:null});
 const dmy=d=>pd(d)+'/'+M.slice(5)+'/'+M.slice(0,4);
 const R={
-gc(){const rec=S.gc[M]||{},ar=[...new Set(S.items.map(i=>i.a))],b=[];let TP=0,TA=0;
- ar.forEach((a,ai)=>{let sp=0,sa=0,k=0;const rows=[];S.items.filter(i=>i.a==a).forEach(it=>{const r=rec[it.id]||{},p=r.p||it.p,x=r.a||[],c=[];let tp=0,ta=0;for(let w=0;w<5;w++){const pp=p[w]?1:0,aa=pp&&x[w]?1:0;tp+=pp;ta+=aa;c.push(pp||'',aa||'')}sp+=tp;sa+=ta;rows.push([++k,it.n,it.f,it.j,...c,tp,ta,tp-ta,pc(ta,tp),''])});
+gc(){const rec=S.gc[M]||{},ar=[...new Set(gcIt(M).map(i=>i.a))],b=[];let TP=0,TA=0;
+ ar.forEach((a,ai)=>{let sp=0,sa=0,k=0;const rows=[];gcIt(M).filter(i=>i.a==a).forEach(it=>{const r=rec[it.id]||{},p=r.p||it.p,x=r.a||[],c=[];let tp=0,ta=0;for(let w=0;w<5;w++){const pp=p[w]?1:0,aa=pp&&x[w]?1:0;tp+=pp;ta+=aa;c.push(pp||'',aa||'')}sp+=tp;sa+=ta;rows.push([++k,it.n,it.f,it.j,...c,tp,ta,tp-ta,pc(ta,tp),''])});
  TP+=sp;TA+=sa;b.push([rom(ai+1),a,'','',...Array(10).fill(''),sp,sa,sp-sa,pc(sa,sp),''],...rows)});
  return{n:'Project '+M,t:['PROJECT PLAN BULAN '+MU()],h:[['NO','AREA','FREKUENSI','Jenis Pekerjaan','M1 (Plan)','M1 (Actual)','M2 (Plan)','M2 (Actual)','M3 (Plan)','M3 (Actual)','M4 (Plan)','M4 (Actual)','M5 (Plan)','M5 (Actual)','Total Plan','Total Actual','Total Pending','% Per Area','KETERANGAN']],b,f:[['','TOTAL','','',...Array(10).fill(''),TP,TA,TP-TA,pc(TA,TP),'']]}},
 tl(){const n=dim(M),ar=SEED.areas,h1=['No','Area','Detail','Total target 1 hari','Total target 1 bulan'],h2=['','','','',''];
@@ -301,16 +306,19 @@ function sIN(wb,nm){const l=insList(M).sort((a,b)=>a.date.localeCompare(b.date)|
 
 /* ===== Foto bukti General Cleaning (BEFORE / PROGRES / AFTER) → Google Drive ===== */
 const PHC=new Map();
+const gcRange=w=>{const n=dim(M);return[[1,7],[8,15],[16,23],[24,n]][w]||[1,n]};
+const HARI=['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'],hari=d=>d?HARI[new Date(d+'T00:00:00').getDay()]:'';
 const shrink=(src,max,q)=>new Promise((ok,no)=>{const im=new Image();im.onload=()=>{const k=Math.min(1,max/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);ok(c.toDataURL('image/jpeg',q))};im.onerror=()=>no(new Error('Foto tidak bisa dibaca'));im.src=src});
 async function phSrc(id){if(PHC.has(id))return PHC.get(id);const j=await gas({action:'getPhoto',id}),u='data:'+j.mime+';base64,'+j.data;PHC.set(id,u);return u}
 const SLOT=[['b','BEFORE'],['g','PROGRES'],['a','AFTER']];
 let PH=null;
 function phOpen(id,w){const it=S.items.find(i=>i.id==id),r=((S.gc[M]||{})[id])||{},e=(r.ph||{})[w]||{};
- PH={id,w,it,done:!!(r.a&&r.a[w]),d:e.d||TODAY,ids:{b:e.b,g:e.g,a:e.a},nw:{}};phDraw()}
+ const[g1,g2]=gcRange(w),inr=TODAY.slice(0,7)==M&&+TODAY.slice(8)>=g1&&+TODAY.slice(8)<=g2;
+ PH={id,w,it,done:!!(r.a&&r.a[w]),d:e.d||(inr?TODAY:M+'-'+pd(g1)),ids:{b:e.b,g:e.g,a:e.a},nw:{}};phDraw()}
 function phDraw(){let o=$('#phov');if(!o){o=document.createElement('div');o.id='phov';o.style.cssText='position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.5);display:flex;align-items:flex-end;justify-content:center;overflow:auto;padding:0';document.body.append(o)}
  const x=PH;o.innerHTML=`<div style="background:var(--panel);color:var(--ink);width:min(560px,100%);border-radius:22px 22px 0 0;padding:20px;max-height:92vh;overflow:auto">
  <div class="sub">${esc(x.it.a)} · Minggu ${x.w+1} · ${MS[+M.slice(5)-1]} ${M.slice(0,4)}</div><h2 style="margin:4px 0 12px">${esc(x.it.n)}</h2>
- <div class="f"><label>Tanggal pengerjaan<input type="date" id="phd" value="${x.d}"></label></div>
+ <div class="f"><label>Tanggal selesai (Minggu ${x.w+1}: tgl ${gcRange(x.w)[0]}–${gcRange(x.w)[1]})<input type="date" id="phd" value="${x.d}" min="${M+'-'+pd(gcRange(x.w)[0])}" max="${M+'-'+pd(gcRange(x.w)[1])}"></label><b id="phh" style="align-self:end;padding-bottom:10px">${hari(x.d)}</b></div>
  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0">${SLOT.map(([k,n])=>`<div><div class="sub" style="text-align:center;font-weight:700">${n}</div>
   <label style="display:block;aspect-ratio:3/4;border:1px dashed var(--line);border-radius:12px;background:var(--chip) center/cover no-repeat;cursor:pointer;position:relative;overflow:hidden" id="phs${k}">
   <span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--mute);text-align:center;padding:4px">+ Foto</span>
@@ -320,11 +328,12 @@ function phDraw(){let o=$('#phov');if(!o){o=document.createElement('div');o.id='
  SLOT.forEach(([k])=>{const el=$('#phs'+k),show=u=>{el.style.backgroundImage='url('+u+')';el.firstElementChild.style.display='none'};
   if(x.nw[k])show(x.nw[k]);else if(x.ids[k])phSrc(x.ids[k]).then(show).catch(()=>{el.firstElementChild.textContent='Foto tidak termuat'})});
  o.onclick=e=>{if(e.target===o)phClose()};
- $('#phx').onclick=phClose;$('#phd').onchange=e=>{x.d=e.target.value};
+ $('#phx').onclick=phClose;$('#phd').onchange=e=>{x.d=e.target.value;$('#phh').textContent=hari(x.d)};
  o.querySelectorAll('input[data-phk]').forEach(i=>i.onchange=async()=>{const f=i.files[0];if(!f)return;try{const u=URL.createObjectURL(f);x.nw[i.dataset.phk]=await shrink(u,1280,.72);URL.revokeObjectURL(u);phDraw()}catch(e){toast(e.message)}});
  $('#phok').onclick=phSave;const un=$('#phun');if(un)un.onclick=()=>{const r=(S.gc[M]||{})[x.id];if(r){r.a[x.w]=0;if(r.ph)delete r.ph[x.w]}save();phClose();draw();toast('Realisasi dibatalkan')}}
 function phClose(){const o=$('#phov');if(o)o.remove();PH=null}
-async function phSave(){const x=PH,b=$('#phok');if(!GAS()&&Object.keys(x.nw).length)return toast('Belum tersambung ke penyimpanan, foto belum bisa diunggah');
+async function phSave(){const x=PH,b=$('#phok');const[g1,g2]=gcRange(x.w),dd=+(x.d||'').slice(8);
+ if(!x.d||x.d.slice(0,7)!=M||dd<g1||dd>g2)return toast('Tanggal harus di Minggu '+(x.w+1)+' (tgl '+g1+'–'+g2+')');if(!GAS()&&Object.keys(x.nw).length)return toast('Belum tersambung ke penyimpanan, foto belum bisa diunggah');
  b.disabled=true;b.textContent='Mengunggah…';
  try{for(const [k,n] of SLOT){if(!x.nw[k])continue;
    const nm=('GC_'+x.it.a+'_'+x.it.n).replace(/[^\w]+/g,'-').slice(0,60)+'_'+M+'_M'+(x.w+1)+'_'+n+'.jpg';
@@ -344,7 +353,7 @@ async function sFoto(wb,nm){const rec=S.gc[M]||{},rows=[];
  for(const x of rows){n++;const row=ws.addRow([n,x.it.a,x.it.n,x.p.d]);row.height=118;row.alignment={vertical:'middle',wrapText:true};
   for(const [i,k] of ['b','g','a'].entries()){const id=x.p[k];if(!id)continue;
    try{const im=await shrink(PHC.get(id)||await phSrc(id),320,.6);ws.addImage(wb.addImage({base64:im,extension:'jpeg'}),{tl:{col:4+i,row:row.number-1},ext:{width:200,height:150}})}catch(e){row.getCell(5+i).value='foto tidak tersedia'}}}}
-function sGC(wb,nm){const n=dim(M),rec=S.gc[M]||{},ws=wb.addWorksheet(nm,mset()),ar=[...new Set(S.items.map(i=>i.a))];
+function sGC(wb,nm){const n=dim(M),rec=S.gc[M]||{},ws=wb.addWorksheet(nm,mset()),ar=[...new Set(gcIt(M).map(i=>i.a))];
  const pl=it=>{const r=rec[it.id]||{};return r.p||it.p},ac=it=>{const r=rec[it.id]||{};return r.a||[]};
  const wk=[[1,7],[8,15],[16,23],[24,n]].map((x,k)=>({k,d:Array.from({length:x[1]-x[0]+1},(_,i)=>x[0]+i)}));
  if(S.items.some(it=>pl(it)[4]||ac(it)[4]))wk.push({k:4,d:[null]});
@@ -354,7 +363,7 @@ function sGC(wb,nm){const n=dim(M),rec=S.gc[M]||{},ws=wb.addWorksheet(nm,mset())
  wk.forEach(w=>{ws.getColumn(w.pc).width=8.5;w.dc.forEach(x=>ws.getColumn(x).width=5)});
  [[tp,10],[ta,12],[tn,13],[tq,12],[tk,20]].forEach(([x,v])=>ws.getColumn(x).width=v);
  const H={sz:14,b:1,h:'center',fill:XC.lime,w:1};let r0=1;const totals=[];
- ar.forEach((a,ai)=>{const its=S.items.filter(i=>i.a==a);
+ ar.forEach((a,ai)=>{const its=gcIt(M).filter(i=>i.a==a);
   ws.getRow(r0).height=ai?35.15:42.75;ws.getRow(r0+1).height=24.75;ws.getRow(r0+2).height=44.25;ws.getRow(r0+3).height=18.75;
   mg(ws,r0,2,r0,tn,'PROJECT PLAN BULAN '+MU(),{sz:17,b:1,h:'center',w:1,bd:{bottom:XB}});
   mg(ws,r0+1,2,r0+3,2,'NO',H);mg(ws,r0+1,3,r0+3,3,'AREA',H);mg(ws,r0+1,4,r0+3,4,'FREKUENSI',H);mg(ws,r0+1,5,r0+3,5,'Jenis Pekerjaan',H);
@@ -365,7 +374,7 @@ function sGC(wb,nm){const n=dim(M),rec=S.gc[M]||{},ws=wb.addWorksheet(nm,mset())
   let r=ra+1,sp=0,sa=0;const f0=r;
   its.forEach((it,k)=>{ws.getRow(r).height=45;const p=pl(it),x=ac(it);let tpn=0,tan=0;const F={sz:17,h:'center',fill:XC.wh};
    put(ws,r,2,k+1,{sz:17,h:'center'});put(ws,r,3,it.n.trim(),{sz:17,w:1});put(ws,r,4,it.f,F);put(ws,r,5,it.j,{...F,w:1});
-   wk.forEach(w=>{const pp=p[w.k]?1:0,aa=pp&&x[w.k]?1:0;tpn+=pp;tan+=aa;put(ws,r,w.pc,pp||null,F);w.dc.forEach((dc,i)=>put(ws,r,dc,i==0&&aa?1:null,F))});
+   wk.forEach(w=>{const pp=p[w.k]?1:0,aa=pp&&x[w.k]?1:0,ph=((rec[it.id]||{}).ph||{})[w.k],dd=ph&&ph.d&&ph.d.slice(0,7)==M?+ph.d.slice(8):null;tpn+=pp;tan+=aa;put(ws,r,w.pc,pp||null,F);w.dc.forEach((dc,i)=>put(ws,r,dc,aa&&(dd==null||w.d[0]==null?i==0:w.d[i]===dd)?1:null,F))});
    put(ws,r,tp,{formula:`SUM(${wk.map(w=>cl(w.pc)+r).join(',')})`,result:tpn},F);
    put(ws,r,ta,{formula:`SUM(${wk.map(w=>cl(w.dc[0])+r+':'+cl(w.dc[w.dc.length-1])+r).join(',')})`,result:tan},F);
    put(ws,r,tn,{formula:`${cl(tp)}${r}-${cl(ta)}${r}`,result:tpn-tan},F);put(ws,r,tk,null,{sz:14,h:'center',fill:XC.wh});
@@ -545,7 +554,7 @@ setInterval(()=>{if(!document.hidden&&ST=='err'&&gUrl())sync(false)},20000);
 addEventListener('online',()=>{if(gUrl())sync(false)});
 addEventListener('offline',()=>{if(gUrl())setSt('err','Tidak ada koneksi internet')});
 
-const AUTH={admin:'6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b'};
+const AUTH={admin:'6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b',petugas:'02dea744a55778a6df72447a2468558d435b4b8a93a98ec5795414ab14979055'};
 const sha=async s=>{if(!(window.crypto&&crypto.subtle))throw 0;const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s));return[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')};
 const authed=()=>{try{return sessionStorage.getItem('hsims-auth')||localStorage.getItem('hsims-auth')}catch(e){return null}};
 function lock(on){document.body.classList.toggle('locked',on);$('#login').hidden=!on;if(on)setTimeout(()=>{const u=$('#lu');u&&u.focus&&u.focus()},50)}
