@@ -38,6 +38,7 @@ input[type=number]{width:84px}.f{display:flex;gap:10px;flex-wrap:wrap;align-item
 .cell.p{border-style:dashed;color:var(--acc)}.cell.d{background:var(--ok);border-color:var(--ok);color:#fff}.cell.n{opacity:.3}
 .chk{display:flex;flex-wrap:wrap;gap:8px}.chk button{border:1px solid var(--line);background:var(--chip);color:var(--ink);font:inherit;font-size:13px;padding:8px 12px;border-radius:12px;cursor:pointer;min-height:40px}
 .chk button.g{background:color-mix(in srgb,var(--ok) 16%,transparent);border-color:var(--ok);color:var(--ok);font-weight:700}
+.chk button{-webkit-user-select:none;user-select:none}
 .chk button .why{display:block;font-size:11px;font-weight:600;margin-top:2px}
 .chk button.x{background:color-mix(in srgb,var(--bad) 16%,transparent);border-color:var(--bad);color:var(--bad);font-weight:700}
 details{border:1px solid var(--line);border-radius:16px;padding:0 14px;background:var(--panel)}summary{cursor:pointer;padding:12px 0;font-weight:700;display:flex;justify-content:space-between;gap:10px}
@@ -148,7 +149,7 @@ ins(){const g={};SEED.chk.forEach((c,i)=>(g[c.g]=g[c.g]||[]).push([i,c.n]));
 const l=insList(M).sort((a,b)=>b.date.localeCompare(a.date));
 return`<div class="row">${head('ins')}${mbar()}</div>${sumbox('ins')}
 <div class="card"><h2>Inspeksi baru</h2><div class="f"><label>Tanggal<input type="date" id="id" value="${D}"></label><label>Unit<select id="iu">${Object.keys(KROOMS).map(u=>`<option ${u==insUnit?'selected':''}>${esc(u)}`).join('')}</select></label><label>Kamar<select id="ir">${roomOpts(insUnit)}</select></label><label id="irml" hidden>Nomor kamar<input id="irm" size="8" placeholder="mis. 9131"></label><label>Diperiksa oleh<input id="ib" size="14"></label></div>
-<p class="sub">Ketuk item untuk menilai: 1× = <b class="ok">hijau (acceptable)</b>, 2× = <b class="bad">merah · Kotor</b>, 3× = <b class="bad">merah · Rusak</b>, 4× = <b class="bad">merah · Kotor &amp; rusak</b>, 5× = batal. Item yang belum dinilai dianggap acceptable.</p>
+<p class="sub">Ketuk item lalu pilih penilaian: <b class="ok">Acceptable</b> atau <b class="bad">Unacceptable</b> (Kotor / Rusak / Kotor &amp; rusak). Item yang belum dinilai dianggap acceptable.</p>
 ${Object.entries(g).map(([k,v])=>`<h2 style="margin:12px 0 8px">${k}</h2><div class="chk">${v.map(([i,n])=>`<button data-x="${i}" data-s=""><span>${esc(n)}</span><span class="why"></span></button>`).join('')}</div>`).join('')}
 <p><button class="btn acc" data-act="addins">Simpan inspeksi</button></p></div>
 <div class="card"><h2>Inspeksi bulan ini (${l.length})</h2><div class="tw"><table><tr><th>Tgl</th><th>Kamar</th><th>Hasil</th><th>Temuan</th><th></th></tr>${l.map(x=>`<tr><td>${x.date.slice(8)}</td><td>${esc(x.room)}</td><td class="${x.bad.length?'bad':'ok'}">${x.bad.length?'Unacceptable':'Acceptable'}</td><td>${x.bad.map(i=>esc(SEED.chk[i].n)+((x.why||{})[i]?' <span class="sub">('+({k:'kotor',r:'rusak',kr:'kotor &amp; rusak'}[x.why[i]]||'')+')</span>':'')).join(', ')}</td><td><button class="btn sm" data-del="${x.id}">Hapus</button></td></tr>`).join('')||'<tr><td colspan="5" class="sub">Belum ada inspeksi.</td></tr>'}</table></div></div>`},
@@ -178,7 +179,9 @@ if(q.gc){const id=q.gc,w=+q.w,it=S.items.find(i=>i.id==id),r=((S.gc[M]=S.gc[M]||
  if(gcMode=='p'&&isAdmin()){r.p[w]=r.p[w]?0:1;if(!r.p[w])r.a[w]=0}else if(r.p[w]){phOpen(id,w);return}else return;save();const y=scrollY;draw();scrollTo(0,y);return}
 if(q.tl){const r=(S.tl[D]=S.tl[D]||{});r[q.tl]=r[q.tl]||Array(14).fill(0);r[q.tl][+q.h]^=1;save();t.className='cell '+(r[q.tl][+q.h]?'d':'');t.textContent=r[q.tl][+q.h]?'✓':'';refresh();return}
 if(q.tlall){const r=(S.tl[D]=S.tl[D]||{});const full=(r[q.tlall]||[]).every(Boolean);r[q.tlall]=Array(14).fill(full?0:1);save();const y=scrollY;draw();scrollTo(0,y);return}
-if(q.x!==undefined){const C=['','g','k','r','kr'],L={k:'Kotor',r:'Rusak',kr:'Kotor & rusak'},n=C[(C.indexOf(t.dataset.s||'')+1)%C.length];t.dataset.s=n;t.classList.toggle('g',n=='g');t.classList.toggle('x',n.length>0&&n!='g');t.querySelector('.why').textContent=L[n]||'';return}
+if(q.x!==undefined){insMenu(t);return}
+if(q.insv!==undefined){insSet(q.insv);return}
+if(q.insc!==undefined){insClose();return}
 if(q.del){if(confirm('Hapus inspeksi ini?')){S.ins=S.ins.filter(x=>x.id!=q.del);save();draw()}return}
 const a=q.act;if(!a)return;
 if((a=='addgc'||a=='stopgc'||a=='addarea')&&!isAdmin())return toast('Hanya admin');
@@ -201,6 +204,14 @@ else if(t.dataset.geo&&isAdmin()){const[c,i]=t.dataset.geo.split('|'),g=geo(c).s
 else if(t.id=='dt'&&t.value){D=t.value;M=D.slice(0,7);draw()}
 else if(t.dataset.kt){const o=(S.kt[M]=S.kt[M]||{}),k=t.dataset.kt,x=(o[k]=o[k]||{});x[t.dataset.f]=t.value;save();ktUpd(k);refresh()}
 else if(t.id=='imp'){const f=t.files[0];if(!f)return;f.text().then(s=>{try{const j=JSON.parse(s);if(!j.items||!j.gc)throw 0;S=j;S.tc=S.tc||[];S.geo=S.geo||{};save();draw();toast('Impor berhasil')}catch(x){toast('Berkas tidak valid')}})}});
+let INSB=null;
+function insClose(){const o=$('#insov');if(o)o.remove();INSB=null}
+function insSet(v){const t=INSB;if(!t)return;const L={k:'Kotor',r:'Rusak',kr:'Kotor & rusak'};t.dataset.s=v;t.classList.toggle('g',v=='g');t.classList.toggle('x',v.length>0&&v!='g');t.querySelector('.why').textContent=L[v]||'';insClose()}
+function insMenu(t){insClose();INSB=t;const cur=t.dataset.s||'',o=document.createElement('div');o.id='insov';
+ o.style.cssText='position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center';
+ const O=[['g','✅ Acceptable','var(--ok)'],['k','❌ Unacceptable · Kotor','var(--bad)'],['r','❌ Unacceptable · Rusak','var(--bad)'],['kr','❌ Unacceptable · Kotor & rusak','var(--bad)'],['','↺ Belum dinilai','var(--ink)']];
+ o.innerHTML=`<div style="background:var(--panel);color:var(--ink);width:min(420px,100%);border-radius:22px 22px 0 0;padding:18px 18px calc(18px + env(safe-area-inset-bottom,0px));display:grid;gap:8px"><div class="sub">Penilaian item</div><b style="margin-bottom:4px">${esc(t.firstElementChild.textContent)}</b>${O.map(([v,l,c])=>`<button class="btn" data-insv="${v}" style="text-align:left;padding:13px 14px;border:2px solid ${v==cur?c:'transparent'};color:${c}">${l}</button>`).join('')}<button class="btn" data-insc="1" style="margin-top:4px">Batal</button></div>`;
+ o.onclick=e=>{if(e.target===o)insClose()};document.body.append(o)}
 let F=null,GPS={ok:false,msg:''},geoOpen=false;
 const ITEMS=[['lantai','Lantai & Dinding'],['sabun','Sabun, Tisu & Hand Sanitizer'],['flush','Flush, Kran & Wastafel'],['bau','Bau & Pewangi'],['kloset','Kloset, Urinal & Dudukan']];
 const geo=c=>{const a=SEED.areas.find(x=>x[0]==c);return S.geo[c]||[a[2],a[3]]};
