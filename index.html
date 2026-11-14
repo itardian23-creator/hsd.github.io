@@ -86,7 +86,7 @@ return`<div class="row">${head('gc')}${mbar()}</div>${sumbox('gc')}
 <div class="card"><div class="row"><div class="f"><label>Area<select id="gca">${ar.map(a=>`<option ${a==gcArea?'selected':''}>${esc(a)}</option>`).join('')}</select></label></div><div class="tgl"><button data-m="a" class="${gcMode=='a'?'on':''}">Realisasi</button><button data-m="p" class="${gcMode=='p'?'on':''}">Atur rencana</button></div></div>
 <p class="sub">${gcMode=='a'?'Ketuk ○ (direncanakan) untuk menandai selesai ✓.':'Ketuk untuk menetapkan minggu mana pekerjaan direncanakan pada bulan ini.'}</p>
 <div class="tw"><table><tr><th>Pekerjaan</th><th>M1</th><th>M2</th><th>M3</th><th>M4</th><th>M5</th></tr>${rows}</table></div></div>
-<details><summary>Tambah pekerjaan baru</summary><div class="f" style="padding-bottom:14px"><label>Area<input id="na" list="al" value="${esc(gcArea)}"></label><datalist id="al">${ar.map(a=>`<option>${esc(a)}`).join('')}</datalist><label>Pekerjaan<input id="nn"></label><label>Jenis<input id="nj" size="9" placeholder="washing"></label><label>Frekuensi<select id="nf"><option>weekly<option>2weekly<option>monthly</select></label><button class="btn acc" data-act="addgc">Tambah</button></div></details>`},
+`},
 tl(){const rec=S.tl[D]||{};const hd=H.map(h=>`<th>${pd(h)}</th>`).join('');
 const rows=SEED.areas.map(([c,n])=>{const a=rec[c]||Array(14).fill(0);return`<tr><td>${n}</td>${a.map((x,i)=>`<td><button class="cell ${x?'d':''}" data-tl="${c}" data-h="${i}">${x?'✓':''}</button></td>`).join('')}<td><button class="btn sm" data-tlall="${c}">Semua</button></td></tr>`}).join('');
 const dn=Object.values(rec).reduce((s,a)=>s+a.filter(Boolean).length,0);
@@ -125,7 +125,7 @@ if(q.rk){repK=q.rk;draw();return}
 if(q.xl){xl(q.xl);return}
 if(q.m){gcMode=q.m;draw();return}
 if(q.gc){const id=q.gc,w=+q.w,it=S.items.find(i=>i.id==id),r=((S.gc[M]=S.gc[M]||{})[id]=S.gc[M][id]||{p:[...it.p],a:[0,0,0,0,0]});r.p=r.p||[...it.p];r.a=r.a||[0,0,0,0,0];
- if(gcMode=='p'){r.p[w]=r.p[w]?0:1;if(!r.p[w])r.a[w]=0}else if(r.p[w])r.a[w]=r.a[w]?0:1;else return;save();const y=scrollY;draw();scrollTo(0,y);return}
+ if(gcMode=='p'){r.p[w]=r.p[w]?0:1;if(!r.p[w])r.a[w]=0}else if(r.p[w]){phOpen(id,w);return}else return;save();const y=scrollY;draw();scrollTo(0,y);return}
 if(q.tl){const r=(S.tl[D]=S.tl[D]||{});r[q.tl]=r[q.tl]||Array(14).fill(0);r[q.tl][+q.h]^=1;save();t.className='cell '+(r[q.tl][+q.h]?'d':'');t.textContent=r[q.tl][+q.h]?'✓':'';refresh();return}
 if(q.tlall){const r=(S.tl[D]=S.tl[D]||{});const full=(r[q.tlall]||[]).every(Boolean);r[q.tlall]=Array(14).fill(full?0:1);save();const y=scrollY;draw();scrollTo(0,y);return}
 if(q.x!==undefined){t.classList.toggle('x');return}
@@ -298,6 +298,52 @@ function sIN(wb,nm){const l=insList(M).sort((a,b)=>a.date.localeCompare(b.date)|
  ws.views=[{state:'frozen',xSplit:2,ySplit:4}]}
 
 /* 1 · Program general cleaning */
+
+/* ===== Foto bukti General Cleaning (BEFORE / PROGRES / AFTER) → Google Drive ===== */
+const PHC=new Map();
+const shrink=(src,max,q)=>new Promise((ok,no)=>{const im=new Image();im.onload=()=>{const k=Math.min(1,max/Math.max(im.width,im.height)),c=document.createElement('canvas');c.width=Math.round(im.width*k);c.height=Math.round(im.height*k);c.getContext('2d').drawImage(im,0,0,c.width,c.height);ok(c.toDataURL('image/jpeg',q))};im.onerror=()=>no(new Error('Foto tidak bisa dibaca'));im.src=src});
+async function phSrc(id){if(PHC.has(id))return PHC.get(id);const j=await gas({action:'getPhoto',id}),u='data:'+j.mime+';base64,'+j.data;PHC.set(id,u);return u}
+const SLOT=[['b','BEFORE'],['g','PROGRES'],['a','AFTER']];
+let PH=null;
+function phOpen(id,w){const it=S.items.find(i=>i.id==id),r=((S.gc[M]||{})[id])||{},e=(r.ph||{})[w]||{};
+ PH={id,w,it,done:!!(r.a&&r.a[w]),d:e.d||TODAY,ids:{b:e.b,g:e.g,a:e.a},nw:{}};phDraw()}
+function phDraw(){let o=$('#phov');if(!o){o=document.createElement('div');o.id='phov';o.style.cssText='position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.5);display:flex;align-items:flex-end;justify-content:center;overflow:auto;padding:0';document.body.append(o)}
+ const x=PH;o.innerHTML=`<div style="background:var(--panel);color:var(--ink);width:min(560px,100%);border-radius:22px 22px 0 0;padding:20px;max-height:92vh;overflow:auto">
+ <div class="sub">${esc(x.it.a)} · Minggu ${x.w+1} · ${MS[+M.slice(5)-1]} ${M.slice(0,4)}</div><h2 style="margin:4px 0 12px">${esc(x.it.n)}</h2>
+ <div class="f"><label>Tanggal pengerjaan<input type="date" id="phd" value="${x.d}"></label></div>
+ <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0">${SLOT.map(([k,n])=>`<div><div class="sub" style="text-align:center;font-weight:700">${n}</div>
+  <label style="display:block;aspect-ratio:3/4;border:1px dashed var(--line);border-radius:12px;background:var(--chip) center/cover no-repeat;cursor:pointer;position:relative;overflow:hidden" id="phs${k}">
+  <span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--mute);text-align:center;padding:4px">+ Foto</span>
+  <input type="file" accept="image/*" data-phk="${k}" hidden></label></div>`).join('')}</div>
+ <p class="sub" id="phmsg">Foto dikompres lalu disimpan ke Google Drive. Ketuk kotak untuk ambil/ganti foto.</p>
+ <div class="row" style="justify-content:flex-end;gap:8px;margin-top:10px">${x.done?'<button class="btn" id="phun" style="margin-right:auto;color:var(--bad)">Batalkan selesai</button>':''}<button class="btn" id="phx">Tutup</button><button class="btn acc" id="phok">${x.done?'Simpan perubahan':'Simpan & tandai selesai ✓'}</button></div></div>`;
+ SLOT.forEach(([k])=>{const el=$('#phs'+k),show=u=>{el.style.backgroundImage='url('+u+')';el.firstElementChild.style.display='none'};
+  if(x.nw[k])show(x.nw[k]);else if(x.ids[k])phSrc(x.ids[k]).then(show).catch(()=>{el.firstElementChild.textContent='Foto tidak termuat'})});
+ o.onclick=e=>{if(e.target===o)phClose()};
+ $('#phx').onclick=phClose;$('#phd').onchange=e=>{x.d=e.target.value};
+ o.querySelectorAll('input[data-phk]').forEach(i=>i.onchange=async()=>{const f=i.files[0];if(!f)return;try{const u=URL.createObjectURL(f);x.nw[i.dataset.phk]=await shrink(u,1280,.72);URL.revokeObjectURL(u);phDraw()}catch(e){toast(e.message)}});
+ $('#phok').onclick=phSave;const un=$('#phun');if(un)un.onclick=()=>{const r=(S.gc[M]||{})[x.id];if(r){r.a[x.w]=0;if(r.ph)delete r.ph[x.w]}save();phClose();draw();toast('Realisasi dibatalkan')}}
+function phClose(){const o=$('#phov');if(o)o.remove();PH=null}
+async function phSave(){const x=PH,b=$('#phok');if(!GAS()&&Object.keys(x.nw).length)return toast('Belum tersambung ke penyimpanan, foto belum bisa diunggah');
+ b.disabled=true;b.textContent='Mengunggah…';
+ try{for(const [k,n] of SLOT){if(!x.nw[k])continue;
+   const nm=('GC_'+x.it.a+'_'+x.it.n).replace(/[^\w]+/g,'-').slice(0,60)+'_'+M+'_M'+(x.w+1)+'_'+n+'.jpg';
+   const j=await gas({action:'putPhoto',mime:'image/jpeg',name:nm,data:x.nw[k].split(',')[1]});x.ids[k]=j.id;PHC.set(j.id,x.nw[k])}
+ }catch(e){b.disabled=false;b.textContent='Coba lagi';return toast('Gagal mengunggah: '+friendly(e).slice(0,60))}
+ const r=((S.gc[M]=S.gc[M]||{})[x.id]=S.gc[M][x.id]||{p:[...x.it.p],a:[0,0,0,0,0]});r.p=r.p||[...x.it.p];r.a=r.a||[0,0,0,0,0];r.ph=r.ph||{};
+ r.a[x.w]=1;r.ph[x.w]={d:x.d||TODAY,b:x.ids.b||'',g:x.ids.g||'',a:x.ids.a||''};
+ save();phClose();draw();toast('Tersimpan ✓')}
+async function sFoto(wb,nm){const rec=S.gc[M]||{},rows=[];
+ S.items.forEach(it=>{const r=rec[it.id]||{};Object.keys(r.ph||{}).forEach(w=>{if(r.a&&r.a[w])rows.push({it,p:r.ph[w]})})});
+ if(!rows.length)return;rows.sort((p,q)=>(p.p.d||'').localeCompare(q.p.d||''));
+ const ids=[...new Set(rows.flatMap(x=>['b','g','a'].map(k=>x.p[k]).filter(Boolean)))].filter(i=>!PHC.has(i));
+ for(let i=0;i<ids.length;i+=5)await Promise.all(ids.slice(i,i+5).map(id=>phSrc(id).catch(()=>0)));
+ const ws=wb.addWorksheet(nm);ws.addRow(['PROJECT BULANAN ACTUAL']).font={bold:true,size:14};ws.addRow(['UNIT RSPI BINTARO JAYA']);ws.addRow(['Periode : '+MS[+M.slice(5)-1]+' '+M.slice(0,4)]);ws.addRow([]);
+ const hr=ws.addRow(['NO','UNIT','PROJECT','TANGGAL','BEFORE','PROGRES','AFTER']);hr.font={bold:true};hr.alignment={horizontal:'center'};
+ [6,14,38,13,30,30,30].forEach((w,i)=>ws.getColumn(i+1).width=w);let n=0;
+ for(const x of rows){n++;const row=ws.addRow([n,x.it.a,x.it.n,x.p.d]);row.height=118;row.alignment={vertical:'middle',wrapText:true};
+  for(const [i,k] of ['b','g','a'].entries()){const id=x.p[k];if(!id)continue;
+   try{const im=await shrink(PHC.get(id)||await phSrc(id),320,.6);ws.addImage(wb.addImage({base64:im,extension:'jpeg'}),{tl:{col:4+i,row:row.number-1},ext:{width:200,height:150}})}catch(e){row.getCell(5+i).value='foto tidak tersedia'}}}}
 function sGC(wb,nm){const n=dim(M),rec=S.gc[M]||{},ws=wb.addWorksheet(nm,mset()),ar=[...new Set(S.items.map(i=>i.a))];
  const pl=it=>{const r=rec[it.id]||{};return r.p||it.p},ac=it=>{const r=rec[it.id]||{};return r.a||[]};
  const wk=[[1,7],[8,15],[16,23],[24,n]].map((x,k)=>({k,d:Array.from({length:x[1]-x[0]+1},(_,i)=>x[0]+i)}));
@@ -344,6 +390,7 @@ function sRK(wb,nm){const ws=wb.addWorksheet(nm,mset(false));[8,34,14,14,14,10].
 async function xl(k,silent){if(!window.ExcelJS)return silent===true?0:toast('Pustaka Excel belum termuat (perlu internet)');
  try{const wb=new ExcelJS.Workbook();wb.creator='HSIMS KPI Housekeeping';wb.created=new Date();const ms=MS[+M.slice(5)-1],B={gc:sGC,tl:sTL,kt:sKT,ins:sIN};
   if(k=='all'){sRK(wb,'Rekap');const T={gc:'GC',tl:'Toilet',kt:'Kamar',ins:'Inspeksi'};Object.keys(B).forEach(x=>B[x](wb,T[x]+' '+ms))}else if(k=='rk')sRK(wb,'Rekap '+ms);else B[k](wb,ms);
+  if(k=='gc'||k=='all')await sFoto(wb,'Foto '+ms);
   const buf=await wb.xlsx.writeBuffer();
   const NM={all:'Laporan-Lengkap',rk:'Rekap',gc:'General-Cleaning',tl:'Toilet-Umum',kt:'Penyiapan-Kamar',ins:'Inspeksi-Vacant-Clean'},fn='KPI-'+NM[k]+'-'+M+'.xlsx';
   if(!silent)dl(fn,buf);
@@ -428,7 +475,7 @@ async function upDrive(fn,buf,quiet){if(!GAS())return;
   await gas({action:'putFile',name:fn,mime:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',data:btoa(bin)});
   return true}
  catch(e){if(!quiet)toast('Excel gagal dikirim ke Drive: '+friendly(e).slice(0,60));return false}}
-let xt;function schedXl(){clearTimeout(xt);xt=setTimeout(()=>{if(GAS()&&window.ExcelJS&&ST=='ok')xlSep(false)},20000)}
+let xt;function schedXl(){clearTimeout(xt);xt=setTimeout(()=>{if(GAS()&&window.ExcelJS&&ST=='ok')xlSep(false)},60000)}
 async function gas(body){
  const r=await fetch(gUrl(),{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({key:gKey(),...body})});
  if(!r.ok)throw new Error('Server '+r.status);
@@ -472,7 +519,7 @@ function notify(s,m){
  const d=$('#drs');if(d)d.textContent=s=='ok'?'tersinkron '+STM:bad?'tidak tersambung — '+(m||''):'menunggu'}
 function gasCard(){return`<div class="card"><h2>Penyimpanan data (Google Apps Script)</h2><p class="sub">Data disinkronkan otomatis ke Google Drive. Jika koneksi terputus, muncul peringatan merah di atas layar. Status: <b id="drs">${ST=='ok'?'tersinkron '+esc(STM):ST=='err'?'tidak tersambung — '+esc(STM):'menunggu'}</b></p>
 ${GAS_KEY0?'':`<div class="f"><label>Kunci rahasia (isi sekali)<input id="gkey" type="password" size="30" value="${esc(C.key||'')}" placeholder="SECRET di Code.gs"></label></div>`}
-<p class="row" style="justify-content:flex-start;margin:12px 0 0"><button class="btn acc" data-dr="gsync">Sinkron sekarang</button><button class="btn" data-dr="gxl">Kirim Excel ke Drive sekarang</button></p><p class="sub">Laporan Excel bulan terpilih dikirim ke folder <b>HSIMS KPI Laporan</b> sebagai file terpisah (Rekap, General Cleaning, Toilet Umum, Penyiapan Kamar, Inspeksi Vacant Clean), otomatis ±20 detik setelah data berubah dan setiap kali Anda mengunduh Excel.</p></div>`}
+<p class="row" style="justify-content:flex-start;margin:12px 0 0"><button class="btn acc" data-dr="gsync">Sinkron sekarang</button><button class="btn" data-dr="gxl">Kirim Excel ke Drive sekarang</button></p><p class="sub">Laporan Excel bulan terpilih dikirim ke folder <b>HSIMS KPI Laporan</b> sebagai file terpisah (Rekap, General Cleaning, Toilet Umum, Penyiapan Kamar, Inspeksi Vacant Clean), otomatis ±1 menit setelah data berubah dan setiap kali Anda mengunduh Excel.</p></div>`}
 function sched(){if(!C.on||!ON())return;clearTimeout(timer);timer=setTimeout(()=>sync(false),2500)}
 function driveCard(){return`<div class="card"><h2>Google Drive (penyimpanan data)</h2><p class="sub">Data disimpan sebagai berkas <b>${FN}</b> di Google Drive dan digabung otomatis antar perangkat. Status: <b id="drs">${ST=='ok'?'tersinkron '+STM:C.on?'terhubung':'belum terhubung'}</b></p>
 <div class="f"><label>OAuth Client ID<input id="cid" size="46" value="${esc(CID())}" placeholder="xxxx.apps.googleusercontent.com"></label><label>File ID (kosong = otomatis)<input id="fid" size="34" value="${esc(C.fid||'')}"></label><label>Akses<select id="full"><option value="" ${C.full?'':'selected'}>drive.file · hanya berkas buatan aplikasi (1 akun)</option><option value="1" ${C.full?'selected':''}>drive · berkas yang dibagikan (banyak akun)</option></select></label></div>
