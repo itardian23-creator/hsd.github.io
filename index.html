@@ -183,13 +183,12 @@ if(q.tlall){const r=(S.tl[D]=S.tl[D]||{});const full=(r[q.tlall]||[]).every(Bool
 if(q.x!==undefined){insMenu(t);return}
 if(q.insv!==undefined){insSet(q.insv);return}
 if(q.insc!==undefined){insClose();return}
+if(q.arok!==undefined){areaSave();return}
+if(q.arc!==undefined){areaClose();return}
 if(q.del){if(confirm('Hapus inspeksi ini?')){S.ins=S.ins.filter(x=>x.id!=q.del);save();draw()}return}
 const a=q.act;if(!a)return;
 if((a=='addgc'||a=='stopgc'||a=='addarea')&&!isAdmin())return toast('Hanya admin');
-if(a=='addarea'){const n=(prompt('Nama area baru (contoh: ROOFTOP):')||'').trim().toUpperCase();if(!n)return;
- const ex=[...new Set([...gcIt(M).map(i=>i.a),...Object.keys(S.ar||{})])].find(x=>x.toUpperCase()==n);
- if(ex){gcArea=ex;draw();return toast('Area sudah ada')}
- S.ar=S.ar||{};S.ar[n]=1;gcArea=n;save();draw();toast('Area '+n+' ditambahkan. Sekarang tambahkan pekerjaannya.');return}
+if(a=='addarea'){areaOpen();return}
 if(a=='stopgc'){const it=S.items.find(i=>i.id==t.dataset.id);if(it&&confirm('Hentikan "'+it.n+'" mulai bulan '+M+'? (bulan sebelumnya tidak berubah)')){it.e=M;save();draw();toast('Pekerjaan dihentikan mulai bulan ini')}return}
 if(a=='addgc'){const n=$('#nn').value.trim(),ar=$('#na').value.trim();if(!n||!ar)return toast('Isi area dan pekerjaan');S.items.push({id:Math.max(0,...S.items.map(i=>i.id))+1,a:ar,n,j:$('#nj').value,f:$('#nf').value,s:M,p:$('#nf').value=='monthly'?[1,0,0,0,0]:$('#nf').value=='2weekly'?[1,0,1,0,0]:[1,1,1,1,0]});gcArea=ar;save();draw();toast('Pekerjaan ditambahkan')}
 if(a=='addins'){const room=($('#ir').value=='__x'?$('#irm').value:$('#ir').value).trim();if(!room)return toast('Pilih / isi nomor kamar');const un=[...document.querySelectorAll('[data-x]:not(.g):not(.x)')];if(un.length){un.forEach(b=>{b.style.outline='2px solid var(--warn)'});setTimeout(()=>un.forEach(b=>b.style.outline=''),2500);un[0].scrollIntoView({block:'center',behavior:'smooth'});return toast(un.length+' item belum dinilai. Semua wajib diisi.')}const dt=$('#id').value,bs=[...document.querySelectorAll('[data-x].x')],rc={date:dt,room,by:$('#ib').value,bad:bs.map(b=>+b.dataset.x),why:Object.fromEntries(bs.filter(b=>b.dataset.s!='u').map(b=>[b.dataset.x,b.dataset.s]))},old=S.ins.find(x=>x.date==dt&&x.room==room);
@@ -230,6 +229,16 @@ function insMenu(t){insClose();INSB=t;const cur=t.dataset.s||'',o=document.creat
  const O=[['g','✅ Acceptable','var(--ok)'],['k','❌ Unacceptable · Kotor','var(--bad)'],['r','❌ Unacceptable · Rusak','var(--bad)'],['kr','❌ Unacceptable · Kotor & rusak','var(--bad)'],['','↺ Belum dinilai','var(--ink)']];
  o.innerHTML=`<div style="background:var(--panel);color:var(--ink);width:min(420px,100%);border-radius:22px 22px 0 0;padding:18px 18px calc(18px + env(safe-area-inset-bottom,0px));display:grid;gap:8px"><div class="sub">Penilaian item</div><b style="margin-bottom:4px">${esc(t.firstElementChild.textContent)}</b>${O.map(([v,l,c])=>`<button class="btn" data-insv="${v}" style="text-align:left;padding:13px 14px;border:2px solid ${v==cur?c:'transparent'};color:${c}">${l}</button>`).join('')}<button class="btn" data-insc="1" style="margin-top:4px">Batal</button></div>`;
  o.onclick=e=>{if(e.target===o)insClose()};document.body.append(o)}
+function areaClose(){const o=$('#arov');if(o)o.remove()}
+function areaOpen(){areaClose();const o=document.createElement('div');o.id='arov';
+ o.style.cssText='position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center';
+ o.innerHTML=`<div style="background:var(--panel);color:var(--ink);width:min(460px,100%);border-radius:22px 22px 0 0;padding:20px 20px calc(20px + env(safe-area-inset-bottom,0px));display:grid;gap:12px"><div><div class="sub">General Cleaning</div><h2 style="margin-top:2px">Tambah area baru</h2></div><label class="sub" style="display:grid;gap:6px;font-weight:600">Nama area<input id="arn" placeholder="mis. ROOFTOP" autocomplete="off" autocapitalize="characters" style="text-transform:uppercase;font-size:16px"></label><p class="sub" id="arm" style="margin:0;min-height:1.2em"></p><div class="row" style="justify-content:flex-end;gap:8px"><button class="btn" data-arc="1">Batal</button><button class="btn acc" data-arok="1">Tambah area</button></div></div>`;
+ o.onclick=e=>{if(e.target===o)areaClose()};document.body.append(o);const i=$('#arn');i.focus();i.onkeydown=e=>{if(e.key=='Enter')areaSave();else if(e.key=='Escape')areaClose()}}
+function areaSave(){const i=$('#arn'),m=$('#arm');if(!i)return;const n=i.value.trim().toUpperCase();
+ if(!n){m.className='sub bad';m.textContent='Nama area wajib diisi';return}
+ const ex=[...new Set([...gcIt(M).map(x=>x.a),...Object.keys(S.ar||{})])].find(x=>x.toUpperCase()==n);
+ areaClose();if(ex){gcArea=ex;draw();return toast('Area sudah ada, dipilih')}
+ S.ar=S.ar||{};S.ar[n]=1;gcArea=n;save();draw();toast('Area '+n+' ditambahkan. Sekarang tambahkan pekerjaannya.')}
 let F=null,GPS={ok:false,msg:''},geoOpen=false;
 const ITEMS=[['lantai','Lantai & Dinding'],['sabun','Sabun, Tisu & Hand Sanitizer'],['flush','Flush, Kran & Wastafel'],['bau','Bau & Pewangi'],['kloset','Kloset, Urinal & Dudukan']];
 const geo=c=>{const a=SEED.areas.find(x=>x[0]==c);return S.geo[c]||[a[2],a[3]]};
