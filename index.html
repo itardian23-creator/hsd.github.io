@@ -35,7 +35,11 @@ input,select,textarea{font:inherit;color:var(--ink);background:var(--chip);borde
 input[type=number]{width:84px}.f{display:flex;gap:10px;flex-wrap:wrap;align-items:end}.f label{display:grid;gap:4px;font-size:12px;color:var(--mute);font-weight:600}
 .tw{overflow-x:auto;border:1px solid var(--line);border-radius:16px}table{border-collapse:collapse;width:100%;font-size:13px}th,td{padding:7px 9px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}th{background:var(--chip);font-size:12px;color:var(--mute)}
 .cell{width:34px;height:34px;border-radius:10px;border:1px solid var(--line);background:var(--chip);color:var(--mute);font:inherit;font-weight:700;cursor:pointer;padding:0}
-.cell.p{border-style:dashed;color:var(--acc)}.cell.d{background:var(--ok);border-color:var(--ok);color:#fff}.cell.n{opacity:.3}
+.cell.p{border-style:dashed;color:var(--acc)}.cell.h{border-style:dashed;border-color:var(--warn);background:color-mix(in srgb,var(--warn) 12%,transparent)}
+.cell.h::before{content:'';display:block;width:14px;height:14px;margin:auto;border:2px solid var(--warn);border-top-color:transparent;border-radius:50%;animation:sp 1s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+@media(prefers-reduced-motion:reduce){.cell.h::before{animation:none}}
+.cell.d{background:var(--ok);border-color:var(--ok);color:#fff}.cell.n{opacity:.3}
 .chk{display:flex;flex-wrap:wrap;gap:8px}.chk button{border:1px solid var(--line);background:var(--chip);color:var(--ink);font:inherit;font-size:13px;padding:8px 12px;border-radius:12px;cursor:pointer;min-height:40px}
 .chk button.g{background:color-mix(in srgb,var(--ok) 16%,transparent);border-color:var(--ok);color:var(--ok);font-weight:700}
 .chk button{-webkit-user-select:none;user-select:none}
@@ -111,6 +115,7 @@ const gcIt=m=>S.items.filter(i=>(!i.s||m>=i.s)&&(!i.e||m<i.e));
 const isAdmin=()=>{try{const u=authed();return u=='admin'||((S.users||{})[u]||{}).r=='admin'}catch(e){return false}};
 const MENUS=[['dash','Ringkasan'],['gc','General Cleaning'],['tl','Toilet Umum'],['kt','Penyiapan Kamar'],['ins','Inspeksi Vacant Clean'],['rep','Laporan'],['data','Data']];
 const allowed=k=>{if(isAdmin())return true;if(k=='akun')return false;const m=((S.users||{})[authed()]||{}).m;return !Array.isArray(m)||m.includes(k)};
+const phn=(r,w)=>{const q=(r.ph||{})[w];return q?['b','g','a'].filter(k=>q[k]).length:0};
 function gcCalc(m){let n=0,d=0;gcIt(m).forEach(it=>{const r=(S.gc[m]||{})[it.id]||{},p=r.p||it.p,a=r.a||[];p.forEach((x,i)=>{if(x){d++;if(a[i])n++}})});return{n,d}}
 function tlCalc(m){let n=0;for(const dt in S.tl)if(dt.startsWith(m)&&dt<TODAY)for(const a in S.tl[dt])n+=S.tl[dt][a].filter(Boolean).length;return{n,d:SEED.areas.length*14*elapsed(m)}}
 function ktUpd(k){const x=(S.kt[M]||{})[k]||{},has=x.c!==undefined&&x.c!=='',c=+x.c||0,s=+x.s||0,st=(id,v)=>{const e=$('#'+id);if(e)e.textContent=v};
@@ -130,7 +135,7 @@ dash(){return`<div class="row"><div><p class="eyebrow">Housekeeping · PT Provic
 <div class="grid">${Object.keys(CALC).filter(allowed).map((k,i)=>{const c=CALC[k](M),v=c.d?c.n/c.d:null;return`<button class="card stat" data-go="${k}"><div class="sub">${INFO[k][0]}</div><h2>${INFO[k][1]}</h2><div class="big ${v==null?'':v>=TGT?'ok':v>=.9?'warn':'bad'}">${P(c.n,c.d)}</div><div class="bar"><i style="width:${Math.min(100,v*100||0)}%"></i></div><div class="sub">${c.n} / ${c.d} · target 100%</div></button>`}).join('')}</div>
 <div class="card sub">Klik kartu untuk membuka menu input. Data tersimpan di peramban ini; gunakan menu Data untuk ekspor/impor atau pindah perangkat.</div>`},
 gc(){const adm=isAdmin(),md=adm?gcMode:'a',ar=[...new Set([...gcIt(M).map(i=>i.a),...Object.keys(S.ar||{})])];gcArea=ar.includes(gcArea)?gcArea:ar[0];const rec=(S.gc[M]||{});
-const rows=gcIt(M).filter(i=>i.a==gcArea).filter(it=>{const r=rec[it.id]||{};return adm||(r.p||it.p).some(Boolean)}).map(it=>{const r=rec[it.id]||{},p=r.p||it.p,a=r.a||[];return`<tr><td>${esc(it.n)}<div class="sub">${esc(it.j)} · ${esc(it.f)}</div></td>${[0,1,2,3,4].map(w=>`<td><button class="cell ${p[w]?(a[w]?'d':'p'):'n'}" data-gc="${it.id}" data-w="${w}" title="${a[w]&&r.ph&&r.ph[w]?hari(r.ph[w].d)+', '+r.ph[w].d:''}">${p[w]?(a[w]?'✓':'○'):'–'}</button></td>`).join('')}${adm&&md=='p'?`<td><button class="btn sm" data-act="stopgc" data-id="${it.id}">Hentikan</button></td>`:''}</tr>`}).join('');
+const rows=gcIt(M).filter(i=>i.a==gcArea).filter(it=>{const r=rec[it.id]||{};return adm||(r.p||it.p).some(Boolean)}).map(it=>{const r=rec[it.id]||{},p=r.p||it.p,a=r.a||[];return`<tr><td>${esc(it.n)}<div class="sub">${esc(it.j)} · ${esc(it.f)}</div></td>${[0,1,2,3,4].map(w=>`<td><button class="cell ${p[w]?(a[w]?'d':(phn(r,w)?'h':'p')):'n'}" data-gc="${it.id}" data-w="${w}" title="${a[w]&&r.ph&&r.ph[w]?hari(r.ph[w].d)+', '+r.ph[w].d:(p[w]&&phn(r,w)?phn(r,w)+'/3 foto, belum selesai':'')}">${p[w]?(a[w]?'✓':(phn(r,w)?'':'○')):'–'}</button></td>`).join('')}${adm&&md=='p'?`<td><button class="btn sm" data-act="stopgc" data-id="${it.id}">Hentikan</button></td>`:''}</tr>`}).join('');
 return`<div class="row">${head('gc')}${mbar()}</div>${sumbox('gc')}
 <div class="card"><div class="row"><div class="f"><label>Area<select id="gca">${ar.map(a=>`<option ${a==gcArea?'selected':''}>${esc(a)}</option>`).join('')}</select></label>${adm?'<button class="btn sm" data-act="addarea">+ Area baru</button>':''}</div><div class="tgl"><button data-m="a" class="${md=='a'?'on':''}">Realisasi</button>${adm?`<button data-m="p" class="${md=='p'?'on':''}">Atur rencana</button>`:''}</div></div>
 <p class="sub">${md=='a'?'Ketuk ○ (direncanakan) untuk mengisi tanggal & foto, lalu menandai selesai ✓.':'Admin: ketuk untuk menetapkan minggu pekerjaan direncanakan pada bulan ini (sebulan sekali = 1 minggu, mingguan = 4 minggu). Berlaku hanya untuk bulan ini.'}</p>
@@ -402,19 +407,19 @@ async function phSrc(id){if(PHC.has(id))return PHC.get(id);const j=await gas({ac
 const SLOT=[['b','BEFORE'],['g','PROGRES'],['a','AFTER']];
 let PH=null;
 function phOpen(id,w){const it=S.items.find(i=>i.id==id),r=((S.gc[M]||{})[id])||{},e=(r.ph||{})[w]||{};
- const[g1,g2]=gcRange(w),dn=+TODAY.slice(8),inr=TODAY.slice(0,7)==M&&dn>=g1&&dn<=g2,done=!!(r.a&&r.a[w]);
- if(!inr&&!done)return toast(M<TODAY.slice(0,7)||(M==TODAY.slice(0,7)&&dn>g2)?'Minggu '+(w+1)+' sudah lewat, tidak bisa diisi':'Minggu '+(w+1)+' belum dimulai (tgl '+g1+'–'+g2+')');
+ const[g1,g2]=gcRange(w),dn=+TODAY.slice(8),inr=TODAY.slice(0,7)==M&&dn>=g1&&dn<=g2,done=!!(r.a&&r.a[w]),has=phn(r,w)>0;
+ if(!inr&&!done&&!has)return toast(M<TODAY.slice(0,7)||(M==TODAY.slice(0,7)&&dn>g2)?'Minggu '+(w+1)+' sudah lewat, tidak bisa diisi':'Minggu '+(w+1)+' belum dimulai (tgl '+g1+'–'+g2+')');
  PH={id,w,it,done,lock:!inr,d:done&&e.d?e.d:TODAY,ids:{b:e.b,g:e.g,a:e.a},nw:{}};phDraw()}
 function phDraw(){let o=$('#phov');if(!o){o=document.createElement('div');o.id='phov';o.style.cssText='position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.5);display:flex;align-items:flex-end;justify-content:center;overflow:auto;padding:0';document.body.append(o)}
- const x=PH;o.innerHTML=`<div style="background:var(--panel);color:var(--ink);width:min(560px,100%);border-radius:22px 22px 0 0;padding:20px;max-height:92vh;overflow:auto">
+ const x=PH,cnt=SLOT.filter(([k])=>x.nw[k]||x.ids[k]).length;o.innerHTML=`<div style="background:var(--panel);color:var(--ink);width:min(560px,100%);border-radius:22px 22px 0 0;padding:20px;max-height:92vh;overflow:auto">
  <div class="sub">${esc(x.it.a)} · Minggu ${x.w+1} · ${MS[+M.slice(5)-1]} ${M.slice(0,4)}</div><h2 style="margin:4px 0 12px">${esc(x.it.n)}</h2>
  <div style="margin-bottom:6px"><div class="sub">Tanggal selesai (otomatis)</div><b style="font-size:1.05rem">${hari(x.d)}, ${x.d.split('-').reverse().join('/')}</b></div>
  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0">${SLOT.map(([k,n])=>`<div><div class="sub" style="text-align:center;font-weight:700">${n}</div>
   <label style="display:block;aspect-ratio:3/4;border:1px dashed var(--line);border-radius:12px;background:var(--chip) center/cover no-repeat;${x.lock?'':'cursor:pointer;'}position:relative;overflow:hidden" id="phs${k}">
   <span style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--mute);text-align:center;padding:4px">${x.lock?'Tidak ada foto':'+ Foto'}</span>
   ${x.lock?'':`<input type="file" accept="image/*" data-phk="${k}" hidden>`}</label></div>`).join('')}</div>
- <p class="sub" id="phmsg">${x.lock?'Minggu ini sudah lewat, data hanya bisa dilihat.':'Foto dikompres lalu disimpan ke Google Drive. Ketuk kotak untuk ambil/ganti foto.'}</p>
- <div class="row" style="justify-content:flex-end;gap:8px;margin-top:10px">${x.done&&!x.lock?'<button class="btn" id="phun" style="margin-right:auto;color:var(--bad)">Batalkan selesai</button>':''}<button class="btn" id="phx">Tutup</button>${x.lock?'':`<button class="btn acc" id="phok">${x.done?'Simpan perubahan':'Simpan & tandai selesai ✓'}</button>`}</div></div>`;
+ <p class="sub" id="phmsg">${x.lock?'Minggu ini sudah lewat, data hanya bisa dilihat.':`<b class="${cnt==3?'ok':'warn'}">Foto terisi ${cnt}/3.</b> Pekerjaan baru ditandai selesai ✓ setelah BEFORE, PROGRES, dan AFTER semuanya ada. Ketuk kotak untuk ambil/ganti foto.`}</p>
+ <div class="row" style="justify-content:flex-end;gap:8px;margin-top:10px">${x.done&&!x.lock?'<button class="btn" id="phun" style="margin-right:auto;color:var(--bad)">Batalkan selesai</button>':''}<button class="btn" id="phx">Tutup</button>${x.lock?'':`<button class="btn acc" id="phok">${cnt==3?(x.done?'Simpan perubahan':'Simpan & tandai selesai ✓'):'Simpan foto ('+cnt+'/3)'}</button>`}</div></div>`;
  SLOT.forEach(([k])=>{const el=$('#phs'+k),show=u=>{el.style.backgroundImage='url('+u+')';el.firstElementChild.style.display='none'};
   if(x.nw[k])show(x.nw[k]);else if(x.ids[k])phSrc(x.ids[k]).then(show).catch(()=>{el.firstElementChild.textContent='Foto tidak termuat'})});
  o.onclick=e=>{if(e.target===o)phClose()};
@@ -424,14 +429,15 @@ function phDraw(){let o=$('#phov');if(!o){o=document.createElement('div');o.id='
 function phClose(){const o=$('#phov');if(o)o.remove();PH=null}
 async function phSave(){const x=PH,b=$('#phok');if(x.lock||(!x.done&&x.d!==TODAY))return toast('Minggu ini sudah lewat, tidak bisa diisi');const[g1,g2]=gcRange(x.w),dd=+(x.d||'').slice(8);
  if(!x.d||x.d.slice(0,7)!=M||dd<g1||dd>g2)return toast('Tanggal harus di Minggu '+(x.w+1)+' (tgl '+g1+'–'+g2+')');if(!GAS()&&Object.keys(x.nw).length)return toast('Belum tersambung ke penyimpanan, foto belum bisa diunggah');
+ if(!SLOT.some(([k])=>x.nw[k]||x.ids[k]))return toast('Ambil minimal 1 foto dulu');
  b.disabled=true;b.textContent='Mengunggah…';
  try{for(const [k,n] of SLOT){if(!x.nw[k])continue;
    const nm=('GC_'+x.it.a+'_'+x.it.n).replace(/[^\w]+/g,'-').slice(0,60)+'_'+M+'_M'+(x.w+1)+'_'+n+'.jpg';
    const j=await gas({action:'putPhoto',mime:'image/jpeg',name:nm,data:x.nw[k].split(',')[1]});x.ids[k]=j.id;PHC.set(j.id,x.nw[k])}
  }catch(e){b.disabled=false;b.textContent='Coba lagi';const m=friendly(e),pm=$('#phmsg');if(pm){pm.className='sub bad';pm.textContent='Gagal mengunggah: '+m}return toast('Gagal mengunggah: '+m.slice(0,60))}
  const r=((S.gc[M]=S.gc[M]||{})[x.id]=S.gc[M][x.id]||{p:[...x.it.p],a:[0,0,0,0,0]});r.p=r.p||[...x.it.p];r.a=r.a||[0,0,0,0,0];r.ph=r.ph||{};
- r.a[x.w]=1;r.ph[x.w]={d:x.d||TODAY,b:x.ids.b||'',g:x.ids.g||'',a:x.ids.a||''};
- save();phClose();draw();toast('Tersimpan ✓')}
+ const all=!!(x.ids.b&&x.ids.g&&x.ids.a);r.a[x.w]=all?1:0;r.ph[x.w]={d:x.d||TODAY,b:x.ids.b||'',g:x.ids.g||'',a:x.ids.a||''};
+ save();phClose();draw();toast(all?'Selesai ✓ tersimpan':'Foto tersimpan ('+SLOT.filter(([k])=>x.ids[k]).length+'/3) — belum selesai')}
 async function sFoto(wb,nm){const rec=S.gc[M]||{},rows=[];
  S.items.forEach(it=>{const r=rec[it.id]||{};Object.keys(r.ph||{}).forEach(w=>{if(r.a&&r.a[w])rows.push({it,p:r.ph[w]})})});
  if(!rows.length)return;rows.sort((p,q)=>(p.p.d||'').localeCompare(q.p.d||''));
