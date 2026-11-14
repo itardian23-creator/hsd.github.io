@@ -355,7 +355,7 @@ const CK='hsims-kpi-cfg',BK='hsims-kpi-base',FN='hsims-kpi-hk.json',API='https:/
 let C={};try{C=JSON.parse(localStorage.getItem(CK))||{}}catch(e){}
 const saveC=()=>{try{localStorage.setItem(CK,JSON.stringify(C))}catch(e){}};
 const CID=()=>(C.cid||CID0||'').trim(),SCOPE=()=>API+(C.full?'/auth/drive':'/auth/drive.file');
-const GAS_URL0='https://script.google.com/macros/s/AKfycbyt1TMFCXcGocGevgzs-48GjEHBl_nnD6U5UxAeAnoWHiuqehBHc7xRNT9QUw_m2wEbeg/exec',GAS_KEY0='';
+const GAS_URL0='https://script.google.com/macros/s/AKfycbyt1TMFCXcGocGevgzs-48GjEHBl_nnD6U5UxAeAnoWHiuqehBHc7xRNT9QUw_m2wEbeg/exec',GAS_KEY0='umUljRehfag4xIf8Kl-n2YdK';
 const gUrl=()=>(C.url||GAS_URL0||'').trim(),gKey=()=>(C.key||GAS_KEY0||'').trim();
 const GAS=()=>!!(gUrl()&&gKey()),ON=()=>GAS()||!!CID();
 let TOK=null,TEXP=0,ST='off',STM='',syncing=false,again=false,timer=null;
@@ -446,8 +446,8 @@ function friendly(e){const m=String(e&&e.message||e||'');
 function notify(s,m){
  let bn=$('#sbanner');
  if(!bn){bn=document.createElement('div');bn.id='sbanner';
-  bn.style.cssText='position:fixed;top:0;left:0;right:0;z-index:250;background:var(--bad,#c0392b);color:#fff;padding:calc(8px + env(safe-area-inset-top,0px)) 14px 8px;font-size:13px;text-align:center;display:none;cursor:pointer';
-  bn.title='Ketuk untuk mencoba lagi';bn.onclick=()=>sync(true);document.body.append(bn)}
+  bn.style.cssText='position:sticky;top:0;left:0;right:0;z-index:250;background:var(--bad,#c0392b);color:#fff;padding:calc(8px + env(safe-area-inset-top,0px)) 14px 8px;font-size:13px;text-align:center;display:none;cursor:pointer';
+  bn.title='Ketuk untuk mencoba lagi';bn.onclick=()=>sync(true);document.body.prepend(bn)}
  const bad=s=='err';
  bn.style.display=bad?'block':'none';
  if(bad)bn.textContent='⚠ Tidak tersambung ke penyimpanan: '+(m||'')+'. Data aman di perangkat ini dan dikirim otomatis begitu tersambung. Ketuk untuk coba lagi.';
