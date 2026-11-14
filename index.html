@@ -75,6 +75,9 @@ const MENUS=[['dash','Ringkasan'],['gc','General Cleaning'],['tl','Toilet Umum']
 const allowed=k=>{if(isAdmin())return true;if(k=='akun')return false;const m=((S.users||{})[authed()]||{}).m;return !Array.isArray(m)||m.includes(k)};
 function gcCalc(m){let n=0,d=0;gcIt(m).forEach(it=>{const r=(S.gc[m]||{})[it.id]||{},p=r.p||it.p,a=r.a||[];p.forEach((x,i)=>{if(x){d++;if(a[i])n++}})});return{n,d}}
 function tlCalc(m){let n=0;for(const dt in S.tl)if(dt.startsWith(m)&&dt<TODAY)for(const a in S.tl[dt])n+=S.tl[dt][a].filter(Boolean).length;return{n,d:SEED.areas.length*14*elapsed(m)}}
+function ktUpd(k){const x=(S.kt[M]||{})[k]||{},has=x.c!==undefined&&x.c!=='',c=+x.c||0,s=+x.s||0,st=(id,v)=>{const e=$('#'+id);if(e)e.textContent=v};
+ st('te'+k,has&&c?Math.round(s/c*100)+'%':'');st('td'+k,has?c-s:'');st('tg'+k,has&&c?Math.round((c-s)/c*100)+'%':'');
+ const t=ktCalc(M);st('kc',t.d);st('ks',t.n);st('ke',t.d?(t.n/t.d*100).toFixed(1)+'%':'');st('kf',t.d-t.n);st('kg',t.d?((t.d-t.n)/t.d*100).toFixed(1)+'%':'')}
 function ktCalc(m){let n=0,d=0;const o=S.kt[m]||{};for(const k in o){d+=+o[k].c||0;n+=+o[k].s||0}return{n,d}}
 function insList(m){return S.ins.filter(x=>x.date.startsWith(m))}
 function inCalc(m){const l=insList(m);return{n:l.filter(x=>!x.bad.length).length,d:l.length}}
@@ -101,9 +104,10 @@ const rows=SEED.areas.map(([c,n])=>{const a=rec[c]||Array(14).fill(0);return`<tr
 const dn=Object.values(rec).reduce((s,a)=>s+a.filter(Boolean).length,0);
 return`<div class="row">${head('tl')}${mbar()}</div>${sumbox('tl')}
 <div class="card"><div class="row"><div class="f"><label>Tanggal<input type="date" id="dt" value="${D}"></label></div><span class="pill">Hari ini: ${dn} / 196</span></div><p class="sub">Ketuk jam untuk menandai area sudah dicek. Jam 08.00–21.00 (14 slot).</p><div class="tw"><table><tr><th>Area</th>${hd}<th></th></tr>${rows}</table></div></div>`},
-kt(){const o=S.kt[M]||{},n=dim(M);let r='';for(let d=1;d<=n;d++){const k=pd(d),x=o[k]||{},tdk=(x.c!==undefined&&x.c!=='')?(+x.c)-(+x.s||0):'';r+=`<tr><td>${d}</td><td><input type="number" min="0" data-kt="${k}" data-f="c" value="${x.c??''}"></td><td><input type="number" min="0" data-kt="${k}" data-f="s" value="${x.s??''}"></td><td id="td${k}">${tdk}</td><td><input data-kt="${k}" data-f="k" value="${esc(x.k||'')}" placeholder="Keterangan"></td></tr>`}
+kt(){const o=S.kt[M]||{},n=dim(M),y=M.slice(0,4),mo=+M.slice(5),SM=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];let r='',C=0,Z=0;
+for(let d=1;d<=n;d++){const k=pd(d),x=o[k]||{},has=x.c!==undefined&&x.c!=='',c=+x.c||0,s=+x.s||0;C+=c;Z+=s;r+=`<tr><td>${d}</td><td>${d}-${SM[mo-1]}-${y}</td><td><input type="number" min="0" data-kt="${k}" data-f="c" value="${x.c??''}"></td><td><input type="number" min="0" data-kt="${k}" data-f="s" value="${x.s??''}"></td><td id="te${k}">${has&&c?Math.round(s/c*100)+'%':''}</td><td id="td${k}">${has?c-s:''}</td><td id="tg${k}">${has&&c?Math.round((c-s)/c*100)+'%':''}</td><td><input data-kt="${k}" data-f="k" value="${esc(x.k||'')}" placeholder="Keterangan"></td></tr>`}
 return`<div class="row">${head('kt')}${mbar()}</div>${sumbox('kt')}
-<div class="card"><p class="sub">Standar waktu: kelas 2 & 3 = 20 menit · kelas 1 = 30 · VIP = 40 · suite = 60. Isi jumlah kamar check out dan jumlah yang sesuai standar.</p><div class="tw"><table><tr><th>Tgl</th><th>Check out</th><th>Sesuai standar</th><th>Tidak sesuai</th><th>Keterangan</th></tr>${r}</table></div></div>`},
+<div class="card"><h2>KECEPATAN PENYIAPAN KAMAR PERAWATAN BULAN ${MU()}</h2><p class="sub">Area Rumah Sakit Pondok Indah Bintaro Jaya. Standar waktu: kelas 2 &amp; 3 = 20 menit · kelas 1 = 30 · VIP = 40 · suite = 60. Isi <b>jumlah kamar check out</b> dan <b>jumlah sesuai standar</b>; kolom tidak sesuai dan persentase terhitung otomatis.</p><div class="tw"><table><tr><th rowspan="2">NO</th><th rowspan="2">TANGGAL</th><th rowspan="2">JUMLAH KAMAR CHEK OUT</th><th colspan="2">SESUAI STANDAR</th><th colspan="2">TIDAK SESUAI STANDAR</th><th rowspan="2">KETERANGAN</th></tr><tr><th>JUMLAH</th><th>%</th><th>JUMLAH</th><th>%</th></tr>${r}<tr><th colspan="2">JUMLAH</th><th id="kc">${C}</th><th id="ks">${Z}</th><th id="ke">${C?(Z/C*100).toFixed(1)+'%':''}</th><th id="kf">${C-Z}</th><th id="kg">${C?((C-Z)/C*100).toFixed(1)+'%':''}</th><th></th></tr></table></div></div>`},
 ins(){const g={};SEED.chk.forEach((c,i)=>(g[c.g]=g[c.g]||[]).push([i,c.n]));
 const l=insList(M).sort((a,b)=>b.date.localeCompare(a.date));
 return`<div class="row">${head('ins')}${mbar()}</div>${sumbox('ins')}
@@ -129,7 +133,7 @@ if(q.tfg){gpsCheck();return}
 if(q.ans){const[i,v]=q.ans.split('|');F.ans[i]=v;const y=scrollY;draw();scrollTo(0,y);return}
 if(q.tfs){submitTl();return}
 if(q.tdel){const r=S.tc.find(x=>x.id==q.tdel);if(r&&confirm('Hapus checklist ini?')){S.tc=S.tc.filter(x=>x.id!=r.id);try{S.tl[r.date][r.area][r.slot-8]=0}catch(e){}save();draw()}return}
-if(q.gme){geoOpen=true;navigator.geolocation?navigator.geolocation.getCurrentPosition(p=>{S.geo[q.gme]=[+p.coords.latitude.toFixed(7),+p.coords.longitude.toFixed(7)];save();const y=scrollY;draw();scrollTo(0,y);toast('Koordinat diperbarui')},()=>toast('Izin GPS ditolak'),{enableHighAccuracy:true,timeout:8000}):toast('GPS tidak tersedia');return}
+if(q.gme){if(!isAdmin())return toast('Hanya admin yang bisa mengatur koordinat');geoOpen=true;navigator.geolocation?navigator.geolocation.getCurrentPosition(p=>{S.geo[q.gme]=[+p.coords.latitude.toFixed(7),+p.coords.longitude.toFixed(7)];save();const y=scrollY;draw();scrollTo(0,y);toast('Koordinat diperbarui')},()=>toast('Izin GPS ditolak'),{enableHighAccuracy:true,timeout:8000}):toast('GPS tidak tersedia');return}
 if(q.rk){repK=q.rk;draw();return}
 if(q.xl){xl(q.xl);return}
 if(q.m){if(q.m=='p'&&!isAdmin())return toast('Hanya admin yang bisa mengatur rencana');gcMode=q.m;draw();return}
@@ -151,10 +155,10 @@ document.addEventListener('change',e=>{const t=e.target;
 if(t.id=='mon'&&t.value){M=t.value;D=M==TODAY.slice(0,7)?TODAY:M+'-01';draw()}
 else if(t.id=='gca'){gcArea=t.value;draw()}
 else if(t.id=='tfj'){F.j=+t.value}
-else if(t.id=='tol'){S.tol=Math.max(0,+t.value||0);save();toast('Toleransi disimpan')}
-else if(t.dataset.geo){const[c,i]=t.dataset.geo.split('|'),g=geo(c).slice();g[+i]=parseFloat(String(t.value).replace(',','.'))||0;S.geo[c]=g;save();toast('Koordinat disimpan')}
+else if(t.id=='tol'&&isAdmin()){S.tol=Math.max(0,+t.value||0);save();toast('Toleransi disimpan')}
+else if(t.dataset.geo&&isAdmin()){const[c,i]=t.dataset.geo.split('|'),g=geo(c).slice();g[+i]=parseFloat(String(t.value).replace(',','.'))||0;S.geo[c]=g;save();toast('Koordinat disimpan')}
 else if(t.id=='dt'&&t.value){D=t.value;M=D.slice(0,7);draw()}
-else if(t.dataset.kt){const o=(S.kt[M]=S.kt[M]||{}),k=t.dataset.kt,x=(o[k]=o[k]||{});x[t.dataset.f]=t.value;save();const el=$('#td'+k);if(el)el.textContent=x.c!==undefined&&x.c!==''?(+x.c)-(+x.s||0):'';refresh()}
+else if(t.dataset.kt){const o=(S.kt[M]=S.kt[M]||{}),k=t.dataset.kt,x=(o[k]=o[k]||{});x[t.dataset.f]=t.value;save();ktUpd(k);refresh()}
 else if(t.id=='imp'){const f=t.files[0];if(!f)return;f.text().then(s=>{try{const j=JSON.parse(s);if(!j.items||!j.gc)throw 0;S=j;S.tc=S.tc||[];S.geo=S.geo||{};save();draw();toast('Impor berhasil')}catch(x){toast('Berkas tidak valid')}})}});
 let F=null,GPS={ok:false,msg:''},geoOpen=false;
 const ITEMS=[['lantai','Lantai & Dinding'],['sabun','Sabun, Tisu & Hand Sanitizer'],['flush','Flush, Kran & Wastafel'],['bau','Bau & Pewangi'],['kloset','Kloset, Urinal & Dudukan']];
@@ -183,13 +187,13 @@ function submitTl(){if(!canSub())return;const a=F.code,d=TODAY,sl=+F.j;S.petugas
 V.tl=function(){if(F)return tlForm();
  const hr=Math.min(21,Math.max(8,new Date().getHours())),td_=S.tc.filter(x=>x.date==TODAY).sort((a,b)=>b.ts.localeCompare(a.ts));
  const vals=x=>Object.values(x.ans),bad=td_.filter(x=>vals(x).includes('bad')).length,wr=td_.filter(x=>vals(x).includes('warn')&&!vals(x).includes('bad')).length;
- const cards=SEED.areas.map(([c,n])=>{const bits=(S.tl[TODAY]||{})[c]||[],k=bits.filter(Boolean).length,cur=bits[hr-8];return`<button class="card stat" data-tf="${c}"><div class="row"><b>${n}</b><span class="pill ${cur?'ok':''}">${cur?'✓ '+pd(hr)+'.00':'Belum '+pd(hr)+'.00'}</span></div><div class="sub">${c} · ${k}/14 jam hari ini${unset(c)?' · <span class="warn">koordinat belum diatur</span>':''}</div></button>`}).join('');
+ const cards=SEED.areas.map(([c,n])=>{const bits=(S.tl[TODAY]||{})[c]||[],k=bits.filter(Boolean).length,cur=bits[hr-8];return`<button class="card stat" data-tf="${c}"><div class="row"><b>${n}</b><span class="pill ${cur?'ok':''}">${cur?'✓ '+pd(hr)+'.00':'Belum '+pd(hr)+'.00'}</span></div><div class="sub">${c} · ${k}/14 jam hari ini${unset(c)&&isAdmin()?' · <span class="warn">koordinat belum diatur</span>':''}</div></button>`}).join('');
  const nm=c=>(SEED.areas.find(x=>x[0]==c)||[])[1]||c;
  return`<div class="row">${head('tl')}${mbar()}</div>${sumbox('tl')}
 <div class="grid" style="grid-template-columns:repeat(3,1fr)"><div class="card"><div class="sub">Toilet dicek hari ini</div><div class="big ok">${new Set(td_.map(x=>x.area)).size}</div></div><div class="card"><div class="sub">Perlu perhatian</div><div class="big warn">${wr}</div></div><div class="card"><div class="sub">Temuan masalah</div><div class="big bad">${bad}</div></div></div>
 <h2>Pilih toilet · ${new Date().toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</h2><div class="grid">${cards}</div>
 <div class="card"><h2>Riwayat hari ini (${td_.length})</h2><div class="tw" style="margin-top:10px"><table><tr><th>Jam</th><th>Toilet</th><th>Petugas</th><th>Kondisi</th><th>Jarak</th><th>Keterangan</th><th></th></tr>${td_.map(x=>{const v=Object.values(x.ans);return`<tr><td>${pd(x.slot)}.00</td><td>${esc(nm(x.area))}</td><td>${esc(x.p)}</td><td><span class="ok">${v.filter(a=>a=='ok').length} OK</span> <span class="warn">${v.filter(a=>a=='warn').length} ⚠️</span> <span class="bad">${v.filter(a=>a=='bad').length} ❌</span></td><td>${x.dist==null?'–':x.dist+' m'}</td><td>${esc(x.k)}</td><td><button class="btn sm" data-tdel="${x.id}">Hapus</button></td></tr>`}).join('')||'<tr><td colspan="7" class="sub">Belum ada checklist hari ini.</td></tr>'}</table></div></div>
-<details ${geoOpen?'open':''}><summary>Koordinat lokasi & toleransi GPS</summary><div style="padding-bottom:14px"><div class="f"><label>Toleransi (meter, 0 = GPS nonaktif)<input type="number" id="tol" min="0" value="${tol()}"></label></div><p class="sub">Koordinat bertanda “belum diatur” masih memakai titik bawaan yang sama; ketuk “GPS saya” saat berdiri di toilet tersebut.</p><div class="tw"><table><tr><th>Area</th><th>Latitude</th><th>Longitude</th><th></th></tr>${SEED.areas.map(([c,n])=>{const g=geo(c);return`<tr><td>${n}</td><td><input style="width:120px" data-geo="${c}|0" value="${g[0]}"></td><td><input style="width:120px" data-geo="${c}|1" value="${g[1]}"></td><td><button class="btn sm" data-gme="${c}">GPS saya</button></td></tr>`}).join('')}</table></div></div></details>`};
+${isAdmin()?`<details ${geoOpen?'open':''}><summary>Koordinat lokasi & toleransi GPS</summary><div style="padding-bottom:14px"><div class="f"><label>Toleransi (meter, 0 = GPS nonaktif)<input type="number" id="tol" min="0" value="${tol()}"></label></div><p class="sub">Koordinat bertanda “belum diatur” masih memakai titik bawaan yang sama; ketuk “GPS saya” saat berdiri di toilet tersebut.</p><div class="tw"><table><tr><th>Area</th><th>Latitude</th><th>Longitude</th><th></th></tr>${SEED.areas.map(([c,n])=>{const g=geo(c);return`<tr><td>${n}</td><td><input style="width:120px" data-geo="${c}|0" value="${g[0]}"></td><td><input style="width:120px" data-geo="${c}|1" value="${g[1]}"></td><td><button class="btn sm" data-gme="${c}">GPS saya</button></td></tr>`}).join('')}</table></div></div></details>`:''}`};
 let view='in',DLC=null,repK='gc';
 try{claude.use('downloads').then(x=>DLC=x).catch(()=>{})}catch(e){}
 const MU=()=>MN[+M.slice(5)-1].toUpperCase()+' '+M.slice(0,4);
