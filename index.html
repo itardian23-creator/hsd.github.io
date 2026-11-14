@@ -194,7 +194,7 @@ if(a=='stopgc'){const it=S.items.find(i=>i.id==t.dataset.id);if(it&&confirm('Hen
 if(a=='addgc'){const n=$('#nn').value.trim(),ar=$('#na').value.trim();if(!n||!ar)return toast('Isi area dan pekerjaan');S.items.push({id:Math.max(0,...S.items.map(i=>i.id))+1,a:ar,n,j:$('#nj').value,f:$('#nf').value,s:M,p:$('#nf').value=='monthly'?[1,0,0,0,0]:$('#nf').value=='2weekly'?[1,0,1,0,0]:[1,1,1,1,0]});gcArea=ar;save();draw();toast('Pekerjaan ditambahkan')}
 if(a=='addins'){const room=($('#ir').value=='__x'?$('#irm').value:$('#ir').value).trim();if(!room)return toast('Pilih / isi nomor kamar');const un=[...document.querySelectorAll('[data-x]:not(.g):not(.x)')];if(un.length){un.forEach(b=>{b.style.outline='2px solid var(--warn)'});setTimeout(()=>un.forEach(b=>b.style.outline=''),2500);un[0].scrollIntoView({block:'center',behavior:'smooth'});return toast(un.length+' item belum dinilai. Semua wajib diisi.')}const dt=$('#id').value,bs=[...document.querySelectorAll('[data-x].x')],rc={date:dt,room,by:$('#ib').value,bad:bs.map(b=>+b.dataset.x),why:Object.fromEntries(bs.filter(b=>b.dataset.s!='u').map(b=>[b.dataset.x,b.dataset.s]))},old=S.ins.find(x=>x.date==dt&&x.room==room);
  if(old)Object.assign(old,rc);else S.ins.push({id:Date.now(),...rc});
- insRoom=room;D=dt;M=D.slice(0,7);save();draw();toast(old?'Inspeksi diperbarui':'Inspeksi tersimpan')}
+ {const dd=dLoad();delete dd[dt+'|'+room];dSave(dd)}insRoom=room;D=dt;M=D.slice(0,7);save();draw();toast(old?'Inspeksi diperbarui':'Inspeksi tersimpan')}
 if(a=='expj')dl('hsims-kpi-hk-'+TODAY+'.json',JSON.stringify(S),'application/json');
 if(a=='expr'){let c='kpi,nama,bulan,numerator,denominator,pencapaian\n';for(const k in CALC){const x=CALC[k](M);c+=[INFO[k][0],INFO[k][1],M,x.n,x.d,x.d?(x.n/x.d).toFixed(6):''].join(',')+'\n'}dl('rekap-kpi-hk-'+M+'.csv',c,'text/csv')}
 if(a=='reset'&&confirm('Hapus SEMUA data input di peramban ini?')){localStorage.removeItem(KEY);location.reload()}});
@@ -210,11 +210,18 @@ else if(t.id=='imp'){const f=t.files[0];if(!f)return;f.text().then(s=>{try{const
 let INSB=null;
 function insClose(){const o=$('#insov');if(o)o.remove();INSB=null}
 function insPaint(t,v){const L={k:'Kotor',r:'Rusak',kr:'Kotor & rusak',u:'Unacceptable'};t.dataset.s=v;t.classList.toggle('g',v=='g');t.classList.toggle('x',v.length>0&&v!='g');t.querySelector('.why').textContent=L[v]||''}
-function insSet(v){const t=INSB;if(!t)return;insPaint(t,v);insClose();insCount()}
+const DK='hsims-ins-draft';
+function dLoad(){let d={};try{d=JSON.parse(localStorage.getItem(DK))||{}}catch(e){}Object.keys(d).forEach(k=>{if(k.slice(0,10)<TODAY)delete d[k]});return d}
+function dSave(d){try{localStorage.setItem(DK,JSON.stringify(d))}catch(e){}}
+const dKey=()=>($('#id')?$('#id').value:'')+'|'+insRoomVal();
+function insDraft(){const room=insRoomVal();if(!room||!$('#id'))return;const d=dLoad(),m={};document.querySelectorAll('[data-x]').forEach(b=>{m[b.dataset.x]=b.dataset.s||''});d[dKey()]={m,by:($('#ib')||{}).value||''};dSave(d)}
+document.addEventListener('input',e=>{if(e.target.id=='ib')insDraft()});
+function insSet(v){const t=INSB;if(!t)return;insPaint(t,v);insClose();insDraft();insCount()}
 const insRoomVal=()=>{const r=$('#ir');return r?(r.value=='__x'?($('#irm').value||'').trim():r.value):''};
 function insApply(){const d=$('#id');if(!d)return;const room=insRoomVal(),rec=room?S.ins.find(x=>x.date==d.value&&x.room==room):null;
- document.querySelectorAll('[data-x]').forEach(b=>{const i=+b.dataset.x;insPaint(b,rec?(rec.bad.includes(i)?((rec.why||{})[i]||'u'):'g'):'')});
- const by=$('#ib');if(by&&rec&&rec.by)by.value=rec.by;
+ const dr=room?dLoad()[dKey()]:null;
+ document.querySelectorAll('[data-x]').forEach(b=>{const i=+b.dataset.x;let v=rec?(rec.bad.includes(i)?((rec.why||{})[i]||'u'):'g'):'';if(dr&&dr.m&&dr.m[i]!==undefined)v=dr.m[i];insPaint(b,v)});
+ const by=$('#ib');if(by){const nb=(dr&&dr.by)||(rec&&rec.by)||'';if(nb)by.value=nb}
  INSSAVED=!!rec;insCount()}
 let INSSAVED=false;
 function insCount(){const st=$('#insst');if(!st)return;const all=document.querySelectorAll('[data-x]'),dn=document.querySelectorAll('[data-x].g,[data-x].x').length,ok=dn==all.length;st.className='sub '+(ok?'ok':'warn');st.textContent='Terisi '+dn+' / '+all.length+(INSSAVED?' · ✓ sudah tersimpan untuk kamar & tanggal ini (ubah lalu simpan untuk memperbarui)':ok?' · siap disimpan':'')}
