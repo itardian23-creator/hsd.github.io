@@ -484,7 +484,7 @@ async function upDrive(fn,buf,quiet){if(!GAS())return;
   await gas({action:'putFile',name:fn,mime:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',data:btoa(bin)});
   return true}
  catch(e){if(!quiet)toast('Excel gagal dikirim ke Drive: '+friendly(e).slice(0,60));return false}}
-let xt;function schedXl(){clearTimeout(xt);xt=setTimeout(()=>{if(GAS()&&window.ExcelJS&&ST=='ok')xlSep(false)},60000)}
+let xt,xlBusy=false;function schedXl(){clearTimeout(xt);xt=setTimeout(()=>{if(!GAS()||!window.ExcelJS)return;if(ST!='ok'||xlBusy){schedXl();return}xlBusy=true;xlSep(false).finally(()=>xlBusy=false)},6000)}
 async function gas(body){
  const r=await fetch(gUrl(),{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({key:gKey(),...body})});
  if(!r.ok)throw new Error('Server '+r.status);
@@ -528,7 +528,7 @@ function notify(s,m){
  const d=$('#drs');if(d)d.textContent=s=='ok'?'tersinkron '+STM:bad?'tidak tersambung — '+(m||''):'menunggu'}
 function gasCard(){return`<div class="card"><h2>Penyimpanan data (Google Apps Script)</h2><p class="sub">Data disinkronkan otomatis ke Google Drive. Jika koneksi terputus, muncul peringatan merah di atas layar. Status: <b id="drs">${ST=='ok'?'tersinkron '+esc(STM):ST=='err'?'tidak tersambung — '+esc(STM):'menunggu'}</b></p>
 ${GAS_KEY0?'':`<div class="f"><label>Kunci rahasia (isi sekali)<input id="gkey" type="password" size="30" value="${esc(C.key||'')}" placeholder="SECRET di Code.gs"></label></div>`}
-<p class="row" style="justify-content:flex-start;margin:12px 0 0"><button class="btn acc" data-dr="gsync">Sinkron sekarang</button><button class="btn" data-dr="gxl">Kirim Excel ke Drive sekarang</button></p><p class="sub">Laporan Excel bulan terpilih dikirim ke folder <b>HSIMS KPI Laporan</b> sebagai file terpisah (Rekap, General Cleaning, Toilet Umum, Penyiapan Kamar, Inspeksi Vacant Clean), otomatis ±1 menit setelah data berubah dan setiap kali Anda mengunduh Excel.</p></div>`}
+<p class="row" style="justify-content:flex-start;margin:12px 0 0"><button class="btn acc" data-dr="gsync">Sinkron sekarang</button></p><p class="sub">Laporan Excel bulan terpilih dikirim ke folder <b>HSIMS KPI Laporan</b> sebagai file terpisah (Rekap, General Cleaning, Toilet Umum, Penyiapan Kamar, Inspeksi Vacant Clean), dan otomatis diperbarui beberapa detik setelah ada data yang ditambah atau diubah di web (tidak perlu dikirim manual).</p></div>`}
 function sched(){if(!C.on||!ON())return;clearTimeout(timer);timer=setTimeout(()=>sync(false),2500)}
 function driveCard(){return`<div class="card"><h2>Google Drive (penyimpanan data)</h2><p class="sub">Data disimpan sebagai berkas <b>${FN}</b> di Google Drive dan digabung otomatis antar perangkat. Status: <b id="drs">${ST=='ok'?'tersinkron '+STM:C.on?'terhubung':'belum terhubung'}</b></p>
 <div class="f"><label>OAuth Client ID<input id="cid" size="46" value="${esc(CID())}" placeholder="xxxx.apps.googleusercontent.com"></label><label>File ID (kosong = otomatis)<input id="fid" size="34" value="${esc(C.fid||'')}"></label><label>Akses<select id="full"><option value="" ${C.full?'':'selected'}>drive.file · hanya berkas buatan aplikasi (1 akun)</option><option value="1" ${C.full?'selected':''}>drive · berkas yang dibagikan (banyak akun)</option></select></label></div>
