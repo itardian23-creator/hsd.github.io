@@ -833,6 +833,7 @@ if(a=='addins'){const room=($('#ir').value=='__x'?$('#irm').value:$('#ir').value
 if(a=='expj')dl('hsims-kpi-hk-'+TODAY+'.json',JSON.stringify(S),'application/json');
 if(a=='expr'){let c='kpi,nama,bulan,numerator,denominator,pencapaian\n';for(const k in CALC){const x=CALC[k](M);c+=[INFO[k][0],INFO[k][1],M,x.n,x.d,x.d?(x.n/x.d).toFixed(6):''].join(',')+'\n'}dl('rekap-kpi-hk-'+M+'.csv',c,'text/csv')}
 if(a=='reset'&&confirm('Hapus SEMUA data input di peramban ini?')){localStorage.removeItem(KEY);location.reload()}});
+document.addEventListener('input',e=>{const t=e.target;if(!F)return;if(t.id=='tfp'){F.p=t.value;gpsShow()}else if(t.id=='tfk'){F.k=t.value}});
 document.addEventListener('change',e=>{const t=e.target;
 if(t.id=='mon'&&t.value){M=t.value;D=M==TODAY.slice(0,7)?TODAY:M+'-01';draw()}
 else if(t.id=='gca'){gcArea=t.value;draw()}
