@@ -883,7 +883,7 @@ const geo=c=>{const a=SEED.areas.find(x=>x[0]==c);return S.geo[c]||[a[2],a[3]]};
 const unset=c=>{const g=geo(c);return g[0]==-6.229728&&g[1]==106.664123};
 const tol=()=>S.tol===undefined?6:+S.tol;
 const hav=(a,b,c,d)=>{const r=Math.PI/180,x=Math.sin((c-a)*r/2)**2+Math.cos(a*r)*Math.cos(c*r)*Math.sin((d-b)*r/2)**2;return 12742000*Math.atan2(Math.sqrt(x),Math.sqrt(1-x))};
-const canSub=()=>!!(F&&(isAdmin()||GPS.ok)&&ITEMS.every(i=>F.ans[i[0]])&&(F.p.trim()||isAdmin()));
+const canSub=()=>!!(F&&(isAdmin()||GPS.ok)&&ITEMS.every(i=>F.ans[i[0]])&&1);
 function gpsShow(){const e=$('#gps');if(e){e.textContent=GPS.msg;e.className='pill '+(GPS.ok?'ok':'bad')}const h=$('#gpsh');if(h){h.textContent=GPS.hint||'';h.hidden=!GPS.hint}const b=$('#tfs');if(b)b.disabled=!canSub()}
 let GWID=null,GTOK=0;
 function gpsStop(){if(GWID!=null){try{navigator.geolocation.clearWatch(GWID)}catch(e){}GWID=null}}
@@ -940,7 +940,7 @@ function tlForm(){const a=SEED.areas.find(x=>x[0]==F.code);
 ${ITEMS.map(([id,l],i)=>`<div class="card"><div class="row"><b>${l}</b><span class="pill">${i+1}/5</span></div><div class="opt">${[['ok','Bersih/OK'],['warn','Perhatian'],['bad','Masalah']].map(([v,t])=>`<button data-ans="${id}|${v}" class="${F.ans[id]==v?'s-'+v:''}">${t}</button>`).join('')}</div></div>`).join('')}
 <div class="card"><label class="sub">Keterangan / Temuan</label><textarea id="tfk" rows="3" style="width:100%;margin-top:6px" placeholder="Tulis temuan atau catatan jika ada…">${esc(F.k)}</textarea></div>
 <button class="btn acc" id="tfs" data-tfs="1" ${canSub()?'':'disabled'}>Simpan checklist</button>`}
-function submitTl(){if(!canSub())return;const a=F.code,d=TODAY,sl=Math.min(21,Math.max(8,new Date().getHours()));F.j=sl;const pn=F.p.trim()||(isAdmin()?String(authed()||'admin'):'');if(F.p.trim())S.petugas=pn;
+function submitTl(){if(!canSub())return;if(!F.p.trim()){toast('Isi nama petugas dulu');const e=$('#tfp');if(e){e.focus();e.scrollIntoView({block:'center'})}return}const a=F.code,d=TODAY,sl=Math.min(21,Math.max(8,new Date().getHours()));F.j=sl;const pn=F.p.trim();S.petugas=pn;
  S.tc=S.tc.filter(x=>!(x.date==d&&x.slot==sl&&x.area==a));
  S.tc.push({id:Date.now(),o:authed(),date:d,slot:sl,area:a,p:pn,ans:F.ans,k:F.k.trim(),dist:GPS.dist??null,ts:new Date().toISOString()});
  const r=(S.tl[d]=S.tl[d]||{});r[a]=r[a]||Array(14).fill(0);r[a][sl-8]=1;M=d.slice(0,7);save();gpsStop();gpsModalClose();F=null;draw();scrollTo(0,0);toast('Checklist tersimpan')}
