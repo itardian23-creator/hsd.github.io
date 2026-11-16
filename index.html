@@ -210,7 +210,7 @@ function vpage(k){const x=vv(k),st=vst(k,x),r=vr(k[0]),c=k[3]=='c',P_=VP[k[2]];
  return`<div class="row"><div><p class="eyebrow">${k[0]} · ${P_[1]}</p><h1>${k[1]}</h1></div>${mbar()}</div>
 <div class="card"><div class="sub">${k[0]} · Target ${vtg(k)} · Bobot SLA ${k[5]}%</div><div class="big ${st[1]}">${pv(k)(x)}</div><div class="sub">${st[0]} · ${esc(k[6])}</div>
 ${c&&x&&x.v>0?'<p class="bad"><b>⚠ KPI kritis:</b> wajib CAR/NCR dalam 24 jam dan RCA dalam 5 hari kerja.</p>':''}</div>
-${k[0]=='FB-03'?'':`<div class="card"><h2>Input ${MN[+M.slice(5)-1]} ${M.slice(0,4)}</h2><div class="f" style="margin-top:8px">${c?`<label>Jumlah kejadian<input type="number" min="0" step="1" data-vk="${k[0]}|n" value="${esc(r.n??'')}"></label>`:`<label>Numerator<input type="number" min="0" step="any" data-vk="${k[0]}|n" value="${esc(r.n??'')}"></label><label>Denominator<input type="number" min="0" step="any" data-vk="${k[0]}|d" value="${esc(r.d??'')}"></label><label>Capaian manual % (jika tanpa num/den)<input type="number" min="0" max="100" step="any" data-vk="${k[0]}|p" value="${esc(r.p??'')}"></label>`}<label>Catatan<input data-vk="${k[0]}|k" value="${esc(r.k||'')}"></label></div></div>`}
+${['FB-03','SG-03','SG-02'].includes(k[0])?'':`<div class="card"><h2>Input ${MN[+M.slice(5)-1]} ${M.slice(0,4)}</h2><div class="f" style="margin-top:8px">${c?`<label>Jumlah kejadian<input type="number" min="0" step="1" data-vk="${k[0]}|n" value="${esc(r.n??'')}"></label>`:`<label>Numerator<input type="number" min="0" step="any" data-vk="${k[0]}|n" value="${esc(r.n??'')}"></label><label>Denominator<input type="number" min="0" step="any" data-vk="${k[0]}|d" value="${esc(r.d??'')}"></label><label>Capaian manual % (jika tanpa num/den)<input type="number" min="0" max="100" step="any" data-vk="${k[0]}|p" value="${esc(r.p??'')}"></label>`}<label>Catatan<input data-vk="${k[0]}|k" value="${esc(r.k||'')}"></label></div></div>`}
 ${logCard(k)}${xCard(k)}<div class="card"><h2>Tren ${M.slice(0,4)}</h2><div class="tw" style="margin-top:8px"><table><tr>${MS.map(m=>`<th>${m}</th>`).join('')}</tr><tr>${ymon().map(m=>{const z=vv(k,m),s2=vst(k,z);return`<td class="${s2[1]}">${pv(k)(z).replace(' kej.','')}</td>`}).join('')}</tr></table></div></div>`}
 VK.forEach(k=>{V[vkey(k)]=()=>vpage(k)});
 V.sla=()=>{const mo=ymon(),cur=v=>{const s=vs(v,M);return rate(s)};
@@ -428,9 +428,10 @@ document.addEventListener('change',e=>{const t=e.target,d=t.dataset;if(!d)return
 
 /* ===== Perbantuan Security: Start / Done (batas 15 menit) ===== */
 const PBMAX=15;
-const pbRun=()=>{const L=(S.pj||[]).slice().sort((a,b)=>a.t0.localeCompare(b.t0));
+const pbMine=j=>!j.o||j.o==authed()||isAdmin();
+const pbRun=()=>{const L=(S.pj||[]).filter(pbMine).sort((a,b)=>a.t0.localeCompare(b.t0));
  return L.map(j=>{const m=Math.floor((Date.now()-new Date(j.t0))/60000);
-  return`<div class="card" style="margin-top:8px"><div class="row"><div><b>${esc(j.minta)}</b><div class="sub">Mulai ${fmtT(j.t0)} · unit ${esc(j.unit||'-')} · request: ${esc(j.req||'-')} · posko: ${esc(j.pos||'-')}${j.bantu?' · membantu: '+esc(j.bantu):''}</div></div><span class="pill ${m>=PBMAX?'bad':'ok'}">${m} menit</span></div><div class="row" style="justify-content:flex-start;gap:8px;margin-top:10px"><button class="btn acc" data-pb="done|${j.id}">✔ Done</button><button class="btn" data-pb="del|${j.id}">Batal</button></div></div>`}).join('')||'<p class="sub">Belum ada perbantuan yang sedang berjalan.</p>'};
+  return`<div class="card" style="margin-top:8px"><div class="row"><div><b>${esc(j.minta)}</b><div class="sub">Mulai ${fmtT(j.t0)} · unit ${esc(j.unit||'-')} · request: ${esc(j.req||'-')} · posko: ${esc(j.pos||'-')}${j.bantu?' · membantu: '+esc(j.bantu):''}${isAdmin()&&j.o?' · akun: '+esc(j.o):''}</div></div><span class="pill ${m>=PBMAX?'bad':'ok'}">${m} menit</span></div><div class="row" style="justify-content:flex-start;gap:8px;margin-top:10px"><button class="btn acc" data-pb="done|${j.id}">✔ Done</button><button class="btn" data-pb="del|${j.id}">Batal</button></div></div>`}).join('')||'<p class="sub">Belum ada perbantuan yang sedang berjalan.</p>'};
 function pbCard(){const rows=(logOf('SG-04')||[]).slice(-15).reverse();
  return`<div class="card"><h2>Perbantuan · Start / Done</h2><p class="sub">Isi data lalu ketuk <b>Start</b> saat permintaan perbantuan diterima, dan <b>Done</b> saat selesai. Durasi ≤ ${PBMAX} menit = <b class="ok">TEPAT WAKTU</b>; lebih dari itu = <b class="bad">TERLAMBAT</b> (wajib isi keterangan). Baris otomatis masuk ke log & laporan.</p>
 <div class="f"><label>Nama petugas posko<input id="pbp" size="14" value="${esc(S.petugas||'')}"></label><label>Nama yang request<input id="pbr" size="14"></label><label>Unit<input id="pbu" size="12" placeholder="mis. Ward 9"></label><label>Petugas yang membantu<input id="pbb" size="14"></label><label>Perbantuan yang diminta<input id="pbm" size="26" placeholder="mis. Antar pasien ke radiologi"></label><label>Jam permintaan (kosong = sekarang)<input type="time" id="pbt"></label></div>
@@ -441,8 +442,8 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-pb]');if(!
  if(a=='start'){const g=i=>($(i)?$(i).value.trim():''),pos=g('#pbp'),minta=g('#pbm'),tv=g('#pbt');
   if(!pos)return toast('Isi nama petugas posko');if(!minta)return toast('Isi perbantuan yang diminta');
   let t0=new Date();if(tv){const[h,mi]=tv.split(':').map(Number);t0.setHours(h,mi,0,0);if(t0>new Date())t0.setDate(t0.getDate()-1)}
-  S.petugas=pos;S.pj.push({id:Date.now(),pos,req:g('#pbr'),unit:g('#pbu'),bantu:g('#pbb'),minta,t0:t0.toISOString()});save();rd();toast('Mulai: '+minta);return}
- const j=S.pj.find(x=>x.id==id);if(!j)return;
+  S.petugas=pos;S.pj.push({id:Date.now(),o:authed(),pos,req:g('#pbr'),unit:g('#pbu'),bantu:g('#pbb'),minta,t0:t0.toISOString()});save();rd();toast('Mulai: '+minta);return}
+ const j=S.pj.find(x=>x.id==id);if(!j)return;if(!pbMine(j))return toast('Perbantuan ini dimulai oleh akun lain');
  if(a=='del'){if(confirm('Batalkan perbantuan ini?')){S.pj=S.pj.filter(x=>x.id!=id);save();rd()}return}
  if(a=='done'){const t0=new Date(j.t0),t1=new Date(),dur=Math.max(1,Math.ceil((t1-t0)/60000)),ok=dur<=PBMAX;let lambat='';
   if(!ok){const q=prompt('Perbantuan melebihi '+PBMAX+' menit ('+dur+' menit). Isi keterangan keterlambatan:');if(q===null)return;lambat=q.trim();if(!lambat)return toast('Keterangan keterlambatan wajib diisi')}
