@@ -100,6 +100,50 @@ tfoot td{font-weight:700;background:var(--chip)}th{text-align:center}
 #gpsov .gi{width:52px;height:52px;border-radius:50%;background:var(--chip);display:grid;place-items:center;font-size:26px}
 #gpsov h2{font-size:1.2rem}#gpsov p{margin:0}#gpsov ol{margin:0;padding-left:20px;display:grid;gap:6px;font-size:14px}
 #gpsov .btn{width:100%;padding:13px 16px}
+
+/* ===== Kontrol form lebih besar & nyaman di HP ===== */
+input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=range]),select,textarea{font-size:16px;min-height:46px;border-radius:14px;padding:11px 14px}
+select{-webkit-appearance:none;appearance:none;padding-right:42px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;background-size:14px;cursor:pointer}
+input[type=date],input[type=month],input[type=time],input[type=datetime-local]{-webkit-appearance:none;appearance:none;display:block;text-align:left;min-width:0}
+input[type=date]::-webkit-date-and-time-value,input[type=month]::-webkit-date-and-time-value,input[type=time]::-webkit-date-and-time-value{text-align:left;min-height:1.4em}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--acc);outline-offset:1px;border-color:var(--acc)}
+.f label{font-size:13px}
+.f.mb{display:flex;gap:10px;align-items:end}.f.mb label{flex:1 1 180px}.f.mb .btn{white-space:nowrap}
+@media(max-width:760px){
+ body{font-size:16px}
+ .app{padding-left:14px;padding-right:14px;gap:16px}
+ .f{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 12px;align-items:end}
+ .f label{width:100%;gap:6px;font-size:13.5px;min-width:0}
+ .f input:not([type=checkbox]):not([type=radio]),.f select,.f textarea{width:100%;min-height:52px;font-size:17px;border-radius:16px;padding:12px 16px}
+ .f select{padding-right:46px;background-position:right 16px center}
+ .f>label:has(select),.f>label:has(input:not([type=number]):not([type=date]):not([type=month]):not([type=time]):not([type=datetime-local])),.f>label[style*=flex],.f>.btn,.f>.pill,.f>span,.f>div{grid-column:1/-1}
+ .f>.btn{width:100%}
+ .f.mb{display:grid;grid-template-columns:minmax(0,1fr) auto}
+ .f.mb>label{grid-column:auto}.f.mb>.btn{grid-column:auto;width:auto;min-height:52px;padding:0 18px}
+ .f.mb:not(:has(.btn)){grid-template-columns:minmax(0,1fr)}
+ input[type=number]{width:100%}
+ .row input,.row select{width:100%}
+ .card{padding:16px}
+ h2{font-size:1.12rem}
+ .sub{font-size:14px}
+ .btn{min-height:48px;padding:12px 18px;font-size:16px;border-radius:16px}
+ .btn.sm{min-height:42px;padding:8px 14px;font-size:14px;border-radius:12px}
+ .btn:hover{transform:none}.btn:active{transform:scale(.97)}
+ .tgl{display:flex;width:100%}.tgl button{flex:1;min-height:44px;font-size:15px;font-weight:600}
+ .cell{width:44px;height:44px;border-radius:12px;font-size:16px}
+ .cell.h::before{width:18px;height:18px}
+ .chk button{min-height:50px;font-size:15px;padding:10px 14px}
+ .opt button{min-height:50px;font-size:15px}
+ table{font-size:14px}
+ th,td{padding:10px 10px}
+ summary{padding:16px 0;font-size:16px;min-height:48px;align-items:center}
+ .pill{font-size:13px;padding:5px 12px}
+ .menu-btn{width:48px;height:48px}
+ .mmenu button{min-height:50px;font-size:16px}
+ .toast{font-size:15px;padding:12px 20px;max-width:calc(100vw - 32px);text-align:center}
+ #gpsov .btn{min-height:52px}
+}
+@media(max-width:380px){.f{grid-template-columns:1fr}}
 </style></head><body>
 <div class="topnav"><div style="display:flex;gap:8px;align-items:center"><div class="logo"><span class="mark"></span>HSIMS KPI</div><button class="logo" id="sync" data-dr="sync" style="font:inherit;font-size:.85rem;cursor:pointer;color:inherit"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.35 10.04A7.49 7.49 0 0 0 12 4C9.11 4 6.6 5.64 5.35 8.04A5.994 5.994 0 0 0 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/></svg><span id="synct" class="hm"></span></button></div><nav class="navlinks" id="nav"></nav><div class="menu-wrap"><button type="button" class="menu-btn" id="menuBtn" aria-label="Buka menu" aria-expanded="false" aria-controls="mmenu"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></button><nav class="mmenu" id="mmenu" aria-label="Menu"></nav></div></div>
 <main class="app" id="app"></main>
@@ -114,7 +158,7 @@ let insRoom='';
 const roomOpts=(u,sel,cust)=>(KROOMS[u]||[]).map(r=>`<option ${r==sel?'selected':''}>${esc(r)}`).join('')+`<option value="__x" ${cust?'selected':''}>Lainnya (ketik manual)…`;
 const PAGES=[['dash','Ringkasan'],['gc','1 · General Cleaning'],['tl','2 · Toilet Umum'],['kt','3 · Penyiapan Kamar'],['ins','4 · Inspeksi Vacant Clean'],['fb1','1 · Food Hazard'],['fb2','2 · Kesalahan Diet'],['fb3','3 · Validasi QHSE'],['fb4','4 · Ala Carte'],['fb5','5 · Buka Puasa'],['fb6','6 · Pasien Baru'],['sg1','1 · Patroli Amano'],['sg2','2 · CCTV'],['sg3','3 · Patroli Ranap'],['sg4','4 · Perbantuan'],['sla','Skor Vendor SLA'],['rep','Laporan'],['data','Data'],['akun','Kelola Akun']];
 const MN=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
-const pd=n=>String(n).padStart(2,'0');const td=new Date(),TODAY=td.getFullYear()+'-'+pd(td.getMonth()+1)+'-'+pd(td.getDate());
+const pd=n=>String(n).padStart(2,'0');const nowDay=()=>{const d=new Date();return d.getFullYear()+'-'+pd(d.getMonth()+1)+'-'+pd(d.getDate())};let TODAY=nowDay();
 let S;try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
 S=S||{};S.items=S.items||SEED.items;['gc','tl','kt','ins','tc','kj'].forEach(k=>S[k]=S[k]||(k=='ins'||k=='tc'||k=='kj'?[]:{}));S.geo=S.geo||{};S.users=S.users||{};
 let page='dash',M=TODAY.slice(0,7),D=TODAY,gcMode='a',gcArea='';
@@ -140,7 +184,7 @@ function insList(m){return S.ins.filter(x=>x.date.startsWith(m))}
 function inCalc(m){const l=insList(m);return{n:l.filter(x=>!x.bad.length).length,d:l.length}}
 const CALC={gc:gcCalc,tl:tlCalc,kt:ktCalc,ins:inCalc};
 const INFO={gc:['HK-01','Program General Cleaning','Rencana pekerjaan yang terealisasi / total rencana bulan ini','PI-RSPIBJ-HSD-01'],tl:['HK-02','Kepatuhan Checklist Toilet Umum','Checklist toilet terisi / (14 area × 14 jam × hari berjalan)','PI-RSPIBJ-HSD-02'],kt:['HK-03','Ketepatan Penyiapan Kamar','Kamar sesuai standar waktu / kamar check out','PI-RSPIBJ-HSD-03'],ins:['HK-05','Inspeksi Vacant Clean','Inspeksi acceptable / inspeksi yang dilakukan','PI-RSPIBJ-HSD-05']};
-const mbar=()=>`<div class="f"><label>Bulan<input type="month" id="mon" value="${M}"></label></div>`;
+const mbar=()=>`<div class="f mb"><label>Bulan<input type="month" id="mon" value="${M}"></label>${M!=TODAY.slice(0,7)?'<button type="button" class="btn acc" data-act="nowm">Bulan ini</button>':''}</div>`;
 const sumbox=k=>{const c=CALC[k](M),v=c.d?c.n/c.d:null;return`<div class="card"><div class="sub">${INFO[k][0]} · Target 100%</div><div class="big ${v==null?'':v>=TGT?'ok':v>=.9?'warn':'bad'}" id="big">${P(c.n,c.d)}</div><div class="bar"><i style="width:${Math.min(100,v*100||0)}%"></i></div><div class="sub" id="nd">${c.n} dari ${c.d} · ${INFO[k][2]}</div></div>`};
 const head=k=>`<div><p class="eyebrow">${INFO[k][0]} · ${INFO[k][3]}</p><h1>${INFO[k][1]}</h1></div>`;
 /* ---- halaman ---- */
@@ -731,7 +775,7 @@ function draw(){if(!allowed(page)){const f=PAGES.find(([k])=>allowed(k));page=f?
 function refresh(){if(page=='kt'||page=='gc'||page=='tl'||page=='ins'){const k=page,b=$('#big');if(b){const c=CALC[k](M),v=c.d?c.n/c.d:null;b.textContent=P(c.n,c.d);b.className='big '+(v==null?'':v>=TGT?'ok':v>=.9?'warn':'bad');b.nextElementSibling.firstElementChild.style.width=Math.min(100,v*100||0)+'%';$('#nd').textContent=`${c.n} dari ${c.d} · ${INFO[k][2]}`}}}
 const dl=async(n,t)=>{if(!DLC){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t]));a.download=n;document.body.append(a);a.click();a.remove();return}try{await DLC.save({filename:n,data:t});toast('Tersimpan')}catch(e){if(!e||e.code!='declined')toast('Gagal menyimpan')}};
 document.addEventListener('click',e=>{const t=e.target.closest('button,[data-go]');if(!t)return;const q=t.dataset;
-if(q.go){F=null;page=q.go;draw();scrollTo(0,0);return}
+if(q.go){F=null;page=q.go;M=TODAY.slice(0,7);D=TODAY;draw();scrollTo(0,0);return}
 if(q.v){view=q.v;draw();return}
 if(q.tf){F={code:q.tf,j:Math.min(21,Math.max(8,new Date().getHours())),p:S.petugas||'',k:'',ans:{}};GPS={ok:false,msg:'Memverifikasi lokasi…'};draw();scrollTo(0,0);gpsCheck();return}
 if(q.tfx){gpsStop();gpsModalClose();F=null;draw();return}
@@ -754,6 +798,7 @@ if(q.arok!==undefined){areaSave();return}
 if(q.arc!==undefined){areaClose();return}
 if(q.del){const ri=S.ins.find(x=>x.id==q.del);if(ri&&!own(ri))return toast('Hanya pemilik data atau admin yang bisa menghapus');if(confirm('Hapus inspeksi ini?')){S.ins=S.ins.filter(x=>x.id!=q.del);save();draw()}return}
 const a=q.act;if(!a)return;
+if(a=='nowm'){M=TODAY.slice(0,7);D=TODAY;draw();return}
 if((a=='addgc'||a=='stopgc'||a=='addarea')&&!isAdmin())return toast('Hanya admin');
 if(a=='addarea'){areaOpen();return}
 if(a=='stopgc'){const it=S.items.find(i=>i.id==t.dataset.id);if(it&&confirm('Hentikan "'+it.n+'" mulai bulan '+M+'? (bulan sebelumnya tidak berubah)')){it.e=M;save();draw();toast('Pekerjaan dihentikan mulai bulan ini')}return}
@@ -773,6 +818,7 @@ else if(t.dataset.geo&&isAdmin()){const[c,i]=t.dataset.geo.split('|'),g=geo(c).s
 else if(t.id=='dt'&&t.value){D=t.value;M=D.slice(0,7);draw()}
 else if(t.dataset.kt){const o=(S.kt[M]=S.kt[M]||{}),k=t.dataset.kt,x=(o[k]=o[k]||{});x[t.dataset.f]=t.value;save();ktUpd(k);refresh()}
 else if(t.id=='imp'){const f=t.files[0];if(!f)return;f.text().then(s=>{try{const j=JSON.parse(s);if(!j.items||!j.gc)throw 0;S=j;S.tc=S.tc||[];S.geo=S.geo||{};save();draw();toast('Impor berhasil')}catch(x){toast('Berkas tidak valid')}})}});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState!='visible')return;const n=nowDay();if(n==TODAY)return;const wasNow=M==TODAY.slice(0,7);TODAY=n;if(wasNow){M=n.slice(0,7);D=n}try{draw()}catch(e){}});
 let INSB=null;
 function insClose(){const o=$('#insov');if(o)o.remove();INSB=null}
 function insPaint(t,v){const L={k:'Kotor',r:'Rusak',kr:'Kotor & rusak',u:'Unacceptable'};t.dataset.s=v;t.classList.toggle('g',v=='g');t.classList.toggle('x',v.length>0&&v!='g');t.querySelector('.why').textContent=L[v]||''}
