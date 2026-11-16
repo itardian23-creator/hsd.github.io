@@ -428,11 +428,11 @@ document.addEventListener('change',e=>{const t=e.target,d=t.dataset;if(!d)return
 
 /* ===== Perbantuan Security: Start / Done (batas 15 menit) ===== */
 const PBMAX=15;
-const own=r=>isAdmin()||(!!r&&r.o===authed());
-const pbMine=j=>!j.o||j.o==authed()||isAdmin();
+const own=()=>true; /* akun hanya membatasi menu; semua data & aksi terlihat/bisa dilakukan bersama */
+const pbMine=()=>true;
 const pbRun=()=>{const L=(S.pj||[]).filter(pbMine).sort((a,b)=>a.t0.localeCompare(b.t0));
  return L.map(j=>{const m=Math.floor((Date.now()-new Date(j.t0))/60000);
-  return`<div class="card" style="margin-top:8px"><div class="row"><div><b>${esc(j.minta)}</b><div class="sub">Mulai ${fmtT(j.t0)} · unit ${esc(j.unit||'-')} · request: ${esc(j.req||'-')} · posko: ${esc(j.pos||'-')}${j.bantu?' · membantu: '+esc(j.bantu):''}${isAdmin()&&j.o?' · akun: '+esc(j.o):''}</div></div><span class="pill ${m>=PBMAX?'bad':'ok'}">${m} menit</span></div><div class="row" style="justify-content:flex-start;gap:8px;margin-top:10px"><button class="btn acc" data-pb="done|${j.id}">✔ Done</button><button class="btn" data-pb="del|${j.id}">Batal</button></div></div>`}).join('')||'<p class="sub">Belum ada perbantuan yang sedang berjalan.</p>'};
+  return`<div class="card" style="margin-top:8px"><div class="row"><div><b>${esc(j.minta)}</b><div class="sub">Mulai ${fmtT(j.t0)} · unit ${esc(j.unit||'-')} · request: ${esc(j.req||'-')} · posko: ${esc(j.pos||'-')}${j.bantu?' · membantu: '+esc(j.bantu):''}${j.o?' · oleh akun: '+esc(j.o):''}</div></div><span class="pill ${m>=PBMAX?'bad':'ok'}">${m} menit</span></div><div class="row" style="justify-content:flex-start;gap:8px;margin-top:10px"><button class="btn acc" data-pb="done|${j.id}">✔ Done</button><button class="btn" data-pb="del|${j.id}">Batal</button></div></div>`}).join('')||'<p class="sub">Belum ada perbantuan yang sedang berjalan.</p>'};
 function pbCard(){const rows=(logOf('SG-04')||[]).slice(-15).reverse();
  return`<div class="card"><h2>Perbantuan · Start / Done</h2><p class="sub">Isi data lalu ketuk <b>Start</b> saat permintaan perbantuan diterima, dan <b>Done</b> saat selesai. Durasi ≤ ${PBMAX} menit = <b class="ok">TEPAT WAKTU</b>; lebih dari itu = <b class="bad">TERLAMBAT</b> (wajib isi keterangan). Baris otomatis masuk ke log & laporan.</p>
 <div class="f"><label>Nama petugas posko<input id="pbp" size="14" value="${esc(S.petugas||'')}"></label><label>Nama yang request<input id="pbr" size="14"></label><label>Unit<input id="pbu" size="12" placeholder="mis. Ward 9"></label><label>Petugas yang membantu<input id="pbb" size="14"></label><label>Perbantuan yang diminta<input id="pbm" size="26" placeholder="mis. Antar pasien ke radiologi"></label><label>Jam permintaan (kosong = sekarang)<input type="time" id="pbt"></label></div>
