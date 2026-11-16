@@ -265,10 +265,7 @@ document.addEventListener('click',async e=>{const a=e.target.closest('[data-vl]'
   if(L.req.some(n=>!o[n]))return toast('Lengkapi kolom wajib: '+L.req.map(n=>L.f.find(f=>f[0]==n)[1]).join(', '));
   o.ts=nowS();if(L.pre)L.pre(o);o.ok=L.ok(o)?1:0;((((S.vl=S.vl||{})[M]=S.vl[M]||{})[c]=S.vl[M][c]||[])).push(o);save();const y=scrollY;draw();scrollTo(0,y);toast('Baris ditambahkan');return}
  if(d){const[c,i]=d.dataset.vld.split('|');if(confirm('Hapus baris ini?')){logOf(c).splice(+i,1);save();const y=scrollY;draw();scrollTo(0,y)}return}
- if(x){if(!window.ExcelJS)return toast('Pustaka Excel belum termuat (perlu internet)');const c=x.dataset.vle,L=LOG[c],rows=logOf(c)||[],wb=new ExcelJS.Workbook(),ws=wb.addWorksheet(L.sn());
-  ws.addRow(L.h);const hr=ws.getRow(1);hr.font={bold:true};hr.alignment={horizontal:'center',vertical:'middle',wrapText:true};hr.eachCell(z=>{z.fill={type:'pattern',pattern:'solid',fgColor:{argb:XC.blue}};z.border=XBOX});
-  if(L.mt)ws.addRow([MN[+M.slice(5)-1].toUpperCase()]);rows.forEach((r,i)=>{ws.addRow(L.row(r,i)).eachCell(z=>z.border=XBOX)});L.h.forEach((_,i)=>ws.getColumn(i+1).width=i==0?6:22);
-  dl('KPI-'+c+'-'+M+'.xlsx',await wb.xlsx.writeBuffer())}});
+ if(x){if(!window.ExcelJS)return toast('Pustaka Excel belum termuat (perlu internet)');const c=x.dataset.vle,[fn,buf]=await vBuild('le',c);dl(fn,buf);if(GAS())upDrive(fn,buf,true)}});
 
 /* ===== Laporan per vendor ===== */
 let repV='Provices';const repX={Sodexo:'FB-01',CSI:'SG-01'};
@@ -288,11 +285,7 @@ document.addEventListener('click',async e=>{const a=e.target.closest('[data-rv],
  if(a.dataset.rv){repV=a.dataset.rv;draw();return}
  if(a.dataset.rkv){repX[repV]=a.dataset.rkv;draw();return}
  if(!window.ExcelJS)return toast('Pustaka Excel belum termuat (perlu internet)');
- const wb=new ExcelJS.Workbook(),ws=wb.addWorksheet('Rekap '+MN[+M.slice(5)-1]);ws.addRow(['REKAP KPI '+repV+' – '+MU()]).font={bold:true,size:14};ws.addRow([]);
- const hr=ws.addRow(['Kode','Indikator','Numerator','Denominator','Pencapaian (%)','Target','Bobot (%)','Skor SLA']);hr.font={bold:true};hr.eachCell(z=>{z.fill={type:'pattern',pattern:'solid',fgColor:{argb:XC.blue}};z.border=XBOX});
- VK.filter(k=>k[2]==repV).forEach(k=>{const x=vv(k),[n,d]=vnd(k);ws.addRow([k[0],k[1],n,d,x?(k[3]=='c'?x.v:+(x.v*100).toFixed(2)):'',k[3]=='c'?0:k[4]*100,k[5],x?+x.s.toFixed(1):'']).eachCell(z=>z.border=XBOX)});
- const s=vs(repV,M);ws.addRow(['','Skor vendor','','','','','',s==null?'':+s.toFixed(1)]).font={bold:true};[8,52,14,14,16,10,10,10].forEach((w,i)=>ws.getColumn(i+1).width=w);
- dl('Rekap-'+repV+'-'+M+'.xlsx',await wb.xlsx.writeBuffer())});
+ const[fn,buf]=await vBuild('rk',repV);dl(fn,buf);if(GAS())upDrive(fn,buf,true)});
 
 /* ===== Input & ekspor Excel format asli: SG-01, SG-02, FB-01, FB-02, FB-03 ===== */
 const QI=[["1a", "Area bersih dan rapi serta lorong-lorong tidak terhalang", "LINGKUNGAN KERJA (SELURUH AREA)"], ["1b", "Lantai kering dan bersih, dinding, atap serta tiang dalam kondisi  yang kokoh", "LINGKUNGAN KERJA (SELURUH AREA)"], ["1c", "Pintu, jendela dan plastic curtain (kondisi baik & bersih?)", "LINGKUNGAN KERJA (SELURUH AREA)"], ["1d", "Saluran air (bersih dan tidak tersumbat?)", "LINGKUNGAN KERJA (SELURUH AREA)"], ["1e", "Fasilitas cuci & sanitasi tangan (berfungsi & tersedia alat kebersihan - chemical, paper t", "LINGKUNGAN KERJA (SELURUH AREA)"], ["1f", "Fasilitas diswashing (saluran air berfungsi & peralatan kondisi OK)", "LINGKUNGAN KERJA (SELURUH AREA)"], ["1g", "Lampu penerangan (berfungsi, tertutup & tidak redup?)", "LINGKUNGAN KERJA (SELURUH AREA)"], ["1h", "Ventilasi untuk sirkulasi udara berfungsi dengan baik & dalam kondisi bersih?", "LINGKUNGAN KERJA (SELURUH AREA)"], ["1i", "Fasilitas tempat sampah (kondisi tertutup, pedal OK, bersih & ter-cover?)", "LINGKUNGAN KERJA (SELURUH AREA)"], ["1j", "Bidang kerja seperti meja, sink, wastafel dll (kondisi layak pakai dan bersih?)", "LINGKUNGAN KERJA (SELURUH AREA)"], ["1k", "Semua kran air berfungsi dengan baik, tidak ada yang bocor", "LINGKUNGAN KERJA (SELURUH AREA)"], ["1l", "Air untuk produksi tidak berbau, tidak ada endapan dan jernih\n*cek menggunakan gelas benin", "LINGKUNGAN KERJA (SELURUH AREA)"], ["1m", "Kondisi kompor aman, selang/pipa gas dalam kondisi layak dan tidak ada risiko kebocoran", "LINGKUNGAN KERJA (SELURUH AREA)"], ["1n", "Tabung gas tersusun rapi, tidak berisiko terjatuh (memiliki guard) dan terdapat label \"kos", "LINGKUNGAN KERJA (SELURUH AREA)"], ["1o", "Exhaus hood bersih dan terpelihara dengan baik", "LINGKUNGAN KERJA (SELURUH AREA)"], ["1p", "Rak Penyimpanan (arsip, raw material) dalam kondisi kuat dan aman", "LINGKUNGAN KERJA (SELURUH AREA)"], ["2a", "Grooming Produksi (menggunakan pakaian kerja, apron, hairnet & sarung tangan untuk menjama", "PERSONAL HYGIENE"], ["2b", "Grooming Service (menggunakan pakaian kerja, topi service, rapi, bersih, dll)", "PERSONAL HYGIENE"], ["2c", "Personal Hygiene (kuku bersih dan pendek, asesoris pribadi?)", "PERSONAL HYGIENE"], ["2d", "Kondisi kesehatan (Ada karyawan sakit?)", "PERSONAL HYGIENE"], ["2e", "Data Alat Pelindung Diri tersedia dan dipakai secara konsisten", "PERSONAL HYGIENE"], ["3a", "Pest (Tidak ditemukan serangga, tikus dan sejenisnya?)", "PEST MANAGEMENT"], ["3b", "Insect killer berfungsi, kondisi bersih dan tidak berada di dalam area produksi / preparat", "PEST MANAGEMENT"], ["3c", "Checklist pest control rutin diisi setiap kedatangan?", "PEST MANAGEMENT"], ["4a", "Temperature Gun & probe, timbangan (berfungsi baik & sudah dikalibrasi - termasuk gun & pr", "MESIN & PERALATAN"], ["4b", "Peralatan tidak melewati batas kadaluarsa verifikasi - 3 bulan \n* chiller, freezer, timban", "MESIN & PERALATAN"], ["4c", "Pisau & talenan (kondisi bersih & khusus talenan tepat pakai sesuai warna?)", "MESIN & PERALATAN"], ["4d", "Terdapat wadah untuk perendaman talenan & pisau bersih dengan larutan klorin ?", "MESIN & PERALATAN"], ["4e", "Pisau dan peralatan tajam lainnya disimpan dengan aman", "MESIN & PERALATAN"], ["4f", "Utensil dalam kondisi baik dan bersih \n* meat mincer, blender, saringan, dll", "MESIN & PERALATAN"], ["4g", "Ditemukan chinaware/ kemasan kaca yang pecah?\nJika iya, terjadi di area mana & apa tindaka", "MESIN & PERALATAN"], ["4h", "Tangga tersedia dan berfungsi dengan baik", "MESIN & PERALATAN"], ["4i", "Tidak terdapat kabel terkelupas dan stop kontak yang rusak", "MESIN & PERALATAN"], ["4j", "Peralatan listrik dalam kondisi baik", "MESIN & PERALATAN"], ["5a", "Bahan Kimia / pembersih tidak berada di area produksi, dilabel dengan jelas ? Terdapat MSD", "STORAGE"], ["5b", "FIFO terlaksana baik (cek label kedatangan)", "STORAGE"], ["5c", "Jumlah produk update antara aktual vs SIIO sesuai", "STORAGE"], ["5d", "Produk dry goods (tidak kadaluarsa, rusak, kemasan penyok", "STORAGE"], ["5e", "Batas penyimpanan digudang min.  60 cm dari langit-langit", "STORAGE"], ["5f", "Produk jadi (produk kadarluarsa, busuk, rusak?)", "STORAGE"], ["5g", "Sayuran yang disimpan di chiller dalam kondisi sudah dicuci lebih dulu", "STORAGE"], ["5h", "Penyimpanan RM & masakan (Tidak menyentuh lantai langsung, tertutup, terlabel, terpisah ma", "STORAGE"], ["5i", "Makanan matang yang disimpan di chiller maksimal 48 jam sejak tanggal pemasakan dan di wra", "STORAGE"], ["5j", "Penyimpanan RM dan utensil tidak tercampur ?", "STORAGE"]],NVRT=[45,59,63],NVRN=['NVR 01','NVR 02','NVR 03'];
@@ -379,7 +372,7 @@ document.addEventListener('click',async e=>{const b=e.target.closest('[data-xq],
  if(ds.xqx){if(confirm('Hapus data tanggal ini?')){delete Q()[ddk()];save();rd()}return}
  if(ds.xi){const c=ds.xi,o={};document.querySelectorAll('[data-xf]').forEach(i=>o[i.dataset.xf]=i.value.trim());if(!o.desk)return toast('Isi deskripsi insiden');((((S.vi=S.vi||{})[M]=S.vi[M]||{})[c]=S.vi[M][c]||[])).push(o);save();rd();toast('Insiden tersimpan');return}
  if(ds.xid){const[c,i]=ds.xid.split('|');if(confirm('Hapus insiden ini?')){xs('vi')[c].splice(+i,1);save();rd()}return}
- if(ds.xe){if(!window.ExcelJS)return toast('Pustaka Excel belum termuat (perlu internet)');const c=ds.xe,wb=new ExcelJS.Workbook();({'SG-01':()=>exAmano(wb),'FB-03':()=>exQHSE(wb),'SG-02':()=>exCCTV(wb),'FB-01':()=>exIns(wb,c),'FB-02':()=>exIns(wb,c)})[c]();dl('KPI-'+c+'-'+M+'.xlsx',await wb.xlsx.writeBuffer())}});
+ if(ds.xe){if(!window.ExcelJS)return toast('Pustaka Excel belum termuat (perlu internet)');const c=ds.xe,[fn,buf]=await vBuild('xe',c);dl(fn,buf);if(GAS())upDrive(fn,buf,true)}});
 
 function mmFill(){const M_=$('#mmenu');if(!M_)return;const seen={};let h=`<div class="who">Masuk sebagai <b>${esc(authed()||'-')}</b></div>`;
  PAGES.filter(([k])=>allowed(k)).forEach(([k,n])=>{const g=gOf(k);if(g<0){h+=`<button type="button" data-go="${k}" class="${k==page?'on':''}">${esc(n)}</button>`;return}
@@ -531,7 +524,7 @@ V.tl=function(){if(F)return tlForm();
  return`<div class="row">${head('tl')}${mbar()}</div>${sumbox('tl')}
 <div class="grid" style="grid-template-columns:repeat(3,1fr)"><div class="card"><div class="sub">Toilet dicek hari ini</div><div class="big ok">${new Set(td_.map(x=>x.area)).size}</div></div><div class="card"><div class="sub">Perlu perhatian</div><div class="big warn">${wr}</div></div><div class="card"><div class="sub">Temuan masalah</div><div class="big bad">${bad}</div></div></div>
 <h2>Pilih toilet · ${new Date().toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</h2><div class="grid">${cards}</div>
-<div class="card"><h2>Riwayat hari ini (${td_.length})</h2><div class="tw" style="margin-top:10px"><table><tr><th>Jam</th><th>Toilet</th><th>Petugas</th><th>Kondisi</th><th>Jarak</th><th>Keterangan</th><th></th></tr>${td_.map(x=>{const v=Object.values(x.ans);return`<tr><td>${pd(x.slot)}.00</td><td>${esc(nm(x.area))}</td><td>${esc(x.p)}</td><td><span class="ok">${v.filter(a=>a=='ok').length} OK</span> <span class="warn">${v.filter(a=>a=='warn').length} ⚠️</span> <span class="bad">${v.filter(a=>a=='bad').length} ❌</span></td><td>${x.dist==null?'–':x.dist+' m'}</td><td>${esc(x.k)}</td><td><button class="btn sm" data-tdel="${x.id}">Hapus</button></td></tr>`}).join('')||'<tr><td colspan="7" class="sub">Belum ada checklist hari ini.</td></tr>'}</table></div></div>
+<div class="card"><div class=\"row\"><h2>Riwayat hari ini (${td_.length})</h2><button class=\"btn sm\" data-xl=\"ct\">Unduh Excel checklist</button></div><div class="tw" style="margin-top:10px"><table><tr><th>Jam</th><th>Toilet</th><th>Petugas</th><th>Kondisi</th><th>Jarak</th><th>Keterangan</th><th></th></tr>${td_.map(x=>{const v=Object.values(x.ans);return`<tr><td>${pd(x.slot)}.00</td><td>${esc(nm(x.area))}</td><td>${esc(x.p)}</td><td><span class="ok">${v.filter(a=>a=='ok').length} OK</span> <span class="warn">${v.filter(a=>a=='warn').length} ⚠️</span> <span class="bad">${v.filter(a=>a=='bad').length} ❌</span></td><td>${x.dist==null?'–':x.dist+' m'}</td><td>${esc(x.k)}</td><td><button class="btn sm" data-tdel="${x.id}">Hapus</button></td></tr>`}).join('')||'<tr><td colspan="7" class="sub">Belum ada checklist hari ini.</td></tr>'}</table></div></div>
 ${isAdmin()?`<details ${geoOpen?'open':''}><summary>Koordinat lokasi & toleransi GPS</summary><div style="padding-bottom:14px"><div class="f"><label>Toleransi (meter, 0 = GPS nonaktif)<input type="number" id="tol" min="0" value="${tol()}"></label></div><p class="sub">Koordinat bertanda “belum diatur” masih memakai titik bawaan yang sama; ketuk “GPS saya” saat berdiri di toilet tersebut.</p><div class="tw"><table><tr><th>Area</th><th>Latitude</th><th>Longitude</th><th></th></tr>${SEED.areas.map(([c,n])=>{const g=geo(c);return`<tr><td>${n}</td><td><input style="width:120px" data-geo="${c}|0" value="${g[0]}"></td><td><input style="width:120px" data-geo="${c}|1" value="${g[1]}"></td><td><button class="btn sm" data-gme="${c}">GPS saya</button></td></tr>`}).join('')}</table></div></div></details>`:''}`};
 let view='in',DLC=null,repK='gc';
 try{claude.use('downloads').then(x=>DLC=x).catch(()=>{})}catch(e){}
@@ -747,20 +740,50 @@ function sRK(wb,nm){const ws=wb.addWorksheet(nm,mset(false));[8,34,14,14,14,10].
  Object.keys(CALC).forEach((k,i)=>{const r=5+i,c=CALC[k](M),C={h:'center'};put(ws,r,1,INFO[k][0],C);put(ws,r,2,INFO[k][1]);put(ws,r,3,c.n,C);put(ws,r,4,c.d,C);
   put(ws,r,5,{formula:`IFERROR(C${r}/D${r},"")`,result:c.d?c.n/c.d:''},{...C,nf:'0.0%'});put(ws,r,6,1,{...C,nf:'0%'})})}
 
+/* Checklist toilet: detail isian petugas per kunjungan */
+function sCT(wb,nm){const ws=wb.addWorksheet(nm,mset()),nmA=c=>(SEED.areas.find(x=>x[0]==c)||[])[1]||c,
+ rows=(S.tc||[]).filter(x=>String(x.date).slice(0,7)==M).sort((a,b)=>String(a.date).localeCompare(String(b.date))||a.slot-b.slot||String(a.ts).localeCompare(String(b.ts))),
+ ST={ok:['Bersih/OK',XC.ok],warn:['Perhatian',XC.no],bad:['Masalah',XC.or]};
+ [5,12,8,30,20,...ITEMS.map(()=>17),34,12,18].forEach((w,i)=>ws.getColumn(i+1).width=w);const last=5+ITEMS.length+3;
+ mg(ws,1,1,1,last,'CHECKLIST TOILET '+MU(),{sz:14,b:1,h:'center',bd:false});mg(ws,2,1,2,last,'RSPI Bintaro Jaya · PT Provices Indonesia',{b:1,h:'center',bd:false});
+ const H={b:1,h:'center',w:1,fill:XC.blue};['No','Tanggal','Jam','Toilet','Petugas',...ITEMS.map(i=>i[1]),'Keterangan','Jarak GPS (m)','Dicatat'].forEach((t,i)=>put(ws,4,i+1,t,H));ws.getRow(4).height=34;
+ rows.forEach((x,i)=>{const r=5+i,C={h:'center'};put(ws,r,1,i+1,C);put(ws,r,2,String(x.date).split('-').reverse().join('/'),C);put(ws,r,3,pd(x.slot)+'.00',C);put(ws,r,4,nmA(x.area));put(ws,r,5,x.p||'');
+  ITEMS.forEach(([k],j)=>{const v=ST[(x.ans||{})[k]];put(ws,r,6+j,v?v[0]:'–',{h:'center',fill:v?v[1]:undefined})});
+  put(ws,r,6+ITEMS.length,x.k||'',{w:1});put(ws,r,7+ITEMS.length,x.dist==null?'–':x.dist,C);
+  put(ws,r,8+ITEMS.length,x.ts?new Date(x.ts).toLocaleString('id-ID',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}):'',C)});
+ if(!rows.length)mg(ws,5,1,5,last,'Belum ada checklist pada bulan ini.',{h:'center'});
+ ws.views=[{state:'frozen',ySplit:4}]}
+
 async function xl(k,silent){if(!window.ExcelJS)return silent===true?0:toast('Pustaka Excel belum termuat (perlu internet)');
- try{const wb=new ExcelJS.Workbook();wb.creator='HSIMS KPI Housekeeping';wb.created=new Date();const ms=MS[+M.slice(5)-1],B={gc:sGC,tl:sTL,kt:sKT,ins:sIN};
-  if(k=='all'){sRK(wb,'Rekap');const T={gc:'GC',tl:'Toilet',kt:'Kamar',ins:'Inspeksi'};Object.keys(B).forEach(x=>B[x](wb,T[x]+' '+ms))}else if(k=='rk')sRK(wb,'Rekap '+ms);else B[k](wb,ms);
+ try{const wb=new ExcelJS.Workbook();wb.creator='HSIMS KPI Housekeeping';wb.created=new Date();const ms=MS[+M.slice(5)-1],B={gc:sGC,tl:sTL,ct:sCT,kt:sKT,ins:sIN};
+  if(k=='all'){sRK(wb,'Rekap');const T={gc:'GC',tl:'Toilet',ct:'Checklist Toilet',kt:'Kamar',ins:'Inspeksi'};Object.keys(B).forEach(x=>B[x](wb,T[x]+' '+ms))}else if(k=='rk')sRK(wb,'Rekap '+ms);else B[k](wb,ms);
   if(k=='gc'||k=='all')await sFoto(wb,'Foto '+ms);
   const buf=await wb.xlsx.writeBuffer();
-  const NM={all:'Laporan-Lengkap',rk:'Rekap',gc:'General-Cleaning',tl:'Toilet-Umum',kt:'Penyiapan-Kamar',ins:'Inspeksi-Vacant-Clean'},fn='KPI-'+NM[k]+'-'+M+'.xlsx';
+  const NM={all:'Laporan-Lengkap',rk:'Rekap',gc:'General-Cleaning',tl:'Toilet-Umum',ct:'Checklist-Toilet',kt:'Penyiapan-Kamar',ins:'Inspeksi-Vacant-Clean'},fn='KPI-'+NM[k]+'-'+M+'.xlsx';
   if(!silent)dl(fn,buf);
   if(k=='all'){if(silent!==true)await xlSep(false);return}
   return await upDrive(fn,buf,silent===true)}catch(e){console.error(e);if(silent!==true)toast('Gagal membuat Excel')}}
+
+/* ===== Laporan vendor (Sodexo, CSI) ===== */
+async function vBuild(kind,c){const wb=new ExcelJS.Workbook();
+ if(kind=='rk'){const v=c;const wb=new ExcelJS.Workbook(),ws=wb.addWorksheet('Rekap '+MN[+M.slice(5)-1]);ws.addRow(['REKAP KPI '+v+' – '+MU()]).font={bold:true,size:14};ws.addRow([]);
+ const hr=ws.addRow(['Kode','Indikator','Numerator','Denominator','Pencapaian (%)','Target','Bobot (%)','Skor SLA']);hr.font={bold:true};hr.eachCell(z=>{z.fill={type:'pattern',pattern:'solid',fgColor:{argb:XC.blue}};z.border=XBOX});
+ VK.filter(k=>k[2]==v).forEach(k=>{const x=vv(k),[n,d]=vnd(k);ws.addRow([k[0],k[1],n,d,x?(k[3]=='c'?x.v:+(x.v*100).toFixed(2)):'',k[3]=='c'?0:k[4]*100,k[5],x?+x.s.toFixed(1):'']).eachCell(z=>z.border=XBOX)});
+ const s=vs(v,M);ws.addRow(['','Skor vendor','','','','','',s==null?'':+s.toFixed(1)]).font={bold:true};[8,52,14,14,16,10,10,10].forEach((w,i)=>ws.getColumn(i+1).width=w);
+ return['KPI-Rekap-'+v+'-'+M+'.xlsx',await wb.xlsx.writeBuffer()]}
+ if(kind=='le'){const L=LOG[c],rows=logOf(c)||[],ws=wb.addWorksheet(L.sn());ws.addRow(L.h);const hr=ws.getRow(1);hr.font={bold:true};hr.alignment={horizontal:'center',vertical:'middle',wrapText:true};hr.eachCell(z=>{z.fill={type:'pattern',pattern:'solid',fgColor:{argb:XC.blue}};z.border=XBOX});
+  if(L.mt)ws.addRow([MN[+M.slice(5)-1].toUpperCase()]);rows.forEach((r,i)=>{ws.addRow(L.row(r,i)).eachCell(z=>z.border=XBOX)});L.h.forEach((_,i)=>ws.getColumn(i+1).width=i==0?6:22);return['KPI-'+c+'-'+M+'.xlsx',await wb.xlsx.writeBuffer()]}
+ ({'SG-01':()=>exAmano(wb),'FB-03':()=>exQHSE(wb),'SG-02':()=>exCCTV(wb),'FB-01':()=>exIns(wb,c),'FB-02':()=>exIns(wb,c)})[c]();
+ return['KPI-'+c+'-'+M+'.xlsx',await wb.xlsx.writeBuffer()]}
+const VXL=()=>[['rk','Sodexo'],['rk','CSI'],['xe','SG-01'],['xe','SG-02'],['xe','FB-01'],['xe','FB-02'],['xe','FB-03'],...Object.keys(LOG).map(c=>['le',c])];
+async function vxAll(){const L=VXL();let ok=0;for(const [k,c] of L){try{const [fn,buf]=await vBuild(k,c);if(await upDrive(fn,buf,true)===true)ok++}catch(e){console.error(e)}}return[ok,L.length]}
 // kirim ke Drive sebagai file TERPISAH: rekap + 1 file per KPI
-async function xlSep(loud){let ok=0;const ks=['rk','gc','tl','kt','ins'];
+async function xlSep(loud){let ok=0;const ks=['rk','gc','tl','ct','kt','ins'];
  for(const x of ks){if(await xl(x,true)===true)ok++}
- if(ok==ks.length){XLS={ok:true,t:new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'})};try{localStorage.setItem('hsims-xl-ok','1')}catch(e){}xlShow()}else if(!XLS||XLS.ok){XLS={ok:false,m:ok+' dari '+ks.length+' file terkirim'};xlShow()}
- if(loud)toast(ok==ks.length?ks.length+' file Excel terkirim ke Drive ✓':ok+' dari '+ks.length+' file terkirim ke Drive');return ok}
+ let vo=0,vt=0;try{[vo,vt]=await vxAll()}catch(e){console.error(e)}
+ ok+=vo;const tot=ks.length+vt;
+ if(ok==tot){XLS={ok:true,t:new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'})};try{localStorage.setItem('hsims-xl-ok','1')}catch(e){}xlShow()}else if(!XLS||XLS.ok){XLS={ok:false,m:ok+' dari '+tot+' file terkirim'};xlShow()}
+ if(loud)toast(ok==tot?tot+' file Excel terkirim ke Drive ✓':ok+' dari '+tot+' file terkirim ke Drive');return ok}
 
 
 /* ===== Penyimpanan Google Drive (untuk GitHub Pages) =====
