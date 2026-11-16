@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+a<!DOCTYPE html>
 <html lang="id"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="color-scheme" content="light dark"><title>HSIMS – Input KPI Hospitality Services</title>
@@ -94,6 +94,12 @@ tfoot td{font-weight:700;background:var(--chip)}th{text-align:center}
  th,td{padding:7px 8px}
 }
 @media(max-width:380px){.grid{grid-template-columns:1fr}}
+#gpsov{position:fixed;inset:0;z-index:280;background:rgba(7,11,22,.55);display:grid;place-items:end center;padding:16px;padding-bottom:calc(16px + env(safe-area-inset-bottom,0px))}
+@media(min-width:600px){#gpsov{place-items:center}}
+#gpsov .gb{width:100%;max-width:400px;display:grid;gap:10px;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:24px;padding:22px;box-shadow:0 24px 60px -20px rgba(0,0,0,.5)}
+#gpsov .gi{width:52px;height:52px;border-radius:50%;background:var(--chip);display:grid;place-items:center;font-size:26px}
+#gpsov h2{font-size:1.2rem}#gpsov p{margin:0}#gpsov ol{margin:0;padding-left:20px;display:grid;gap:6px;font-size:14px}
+#gpsov .btn{width:100%;padding:13px 16px}
 </style></head><body>
 <div class="topnav"><div style="display:flex;gap:8px;align-items:center"><div class="logo"><span class="mark"></span>HSIMS KPI</div><button class="logo" id="sync" data-dr="sync" style="font:inherit;font-size:.85rem;cursor:pointer;color:inherit"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.35 10.04A7.49 7.49 0 0 0 12 4C9.11 4 6.6 5.64 5.35 8.04A5.994 5.994 0 0 0 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/></svg><span id="synct" class="hm"></span></button></div><nav class="navlinks" id="nav"></nav><div class="menu-wrap"><button type="button" class="menu-btn" id="menuBtn" aria-label="Buka menu" aria-expanded="false" aria-controls="mmenu"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></button><nav class="mmenu" id="mmenu" aria-label="Menu"></nav></div></div>
 <main class="app" id="app"></main>
@@ -386,7 +392,7 @@ document.addEventListener('click',e=>{const t=e.target.closest('button,[data-go]
 if(q.go){F=null;page=q.go;draw();scrollTo(0,0);return}
 if(q.v){view=q.v;draw();return}
 if(q.tf){F={code:q.tf,j:Math.min(21,Math.max(8,new Date().getHours())),p:S.petugas||'',k:'',ans:{}};GPS={ok:false,msg:'Memverifikasi lokasi…'};draw();scrollTo(0,0);gpsCheck();return}
-if(q.tfx){gpsStop();F=null;draw();return}
+if(q.tfx){gpsStop();gpsModalClose();F=null;draw();return}
 if(q.tfg){gpsCheck();return}
 if(q.ans){const[i,v]=q.ans.split('|');F.ans[i]=v;const y=scrollY;draw();scrollTo(0,y);return}
 if(q.tfs){submitTl();return}
@@ -458,7 +464,7 @@ function areaSave(){const i=$('#arn'),m=$('#arm');if(!i)return;const n=i.value.t
  const ex=[...new Set([...gcIt(M).map(x=>x.a),...Object.keys(S.ar||{})])].find(x=>x.toUpperCase()==n);
  areaClose();if(ex){gcArea=ex;draw();return toast('Area sudah ada, dipilih')}
  S.ar=S.ar||{};S.ar[n]=1;gcArea=n;save();draw();toast('Area '+n+' ditambahkan. Sekarang tambahkan pekerjaannya.')}
-let F=null,GPS={ok:false,msg:''},geoOpen=false;
+let F=null,GPS={ok:false,msg:''},geoOpen=false,GTRY=false;
 const ITEMS=[['lantai','Lantai & Dinding'],['sabun','Sabun, Tisu & Hand Sanitizer'],['flush','Flush, Kran & Wastafel'],['bau','Bau & Pewangi'],['kloset','Kloset, Urinal & Dudukan']];
 const geo=c=>{const a=SEED.areas.find(x=>x[0]==c);return S.geo[c]||[a[2],a[3]]};
 const unset=c=>{const g=geo(c);return g[0]==-6.229728&&g[1]==106.664123};
@@ -470,13 +476,13 @@ let GWID=null,GTOK=0;
 function gpsStop(){if(GWID!=null){try{navigator.geolocation.clearWatch(GWID)}catch(e){}GWID=null}}
 function gpsErrMsg(e){const ua=navigator.userAgent||'',ios=/iPad|iPhone|iPod/.test(ua)||(navigator.platform=='MacIntel'&&navigator.maxTouchPoints>1),and=/Android/i.test(ua),c=e&&e.code;
  if(window.isSecureContext===false)return['Lokasi hanya bisa dipakai lewat https.','Buka aplikasi dengan alamat berawalan https:// lalu coba lagi.'];
- if(c==1)return['Izin lokasi ditolak.',ios?'iPhone/iPad: (1) Pengaturan › Privasi & Keamanan › Layanan Lokasi › nyalakan, lalu Situs Web Safari › “Saat Menggunakan App”. (2) Di Safari ketuk ikon aA di bilah alamat › Pengaturan Situs Web › Lokasi › Izinkan. Muat ulang halaman, lalu ketuk Cek ulang GPS.':and?'Android: nyalakan Lokasi di panel notifikasi, lalu ketuk ikon gembok di bilah alamat › Izin › Lokasi › Izinkan. Muat ulang halaman, lalu ketuk Cek ulang GPS.':'PC: klik ikon gembok di bilah alamat › Lokasi › Izinkan, lalu muat ulang halaman. Di Windows pastikan Pengaturan › Privasi › Lokasi juga aktif.'];
+ if(c==1)return['Izin lokasi ditolak.','Ketuk “Cek ulang GPS”, lalu pilih “Izinkan Lokasi” pada pop-up.'];
  if(c==2)return['Posisi belum bisa ditentukan.',(ios||and?'Nyalakan Lokasi/GPS HP dan pindah ke dekat jendela atau area terbuka.':'Pastikan layanan lokasi sistem aktif dan perangkat terhubung ke Wi-Fi/internet.')+' Lalu ketuk Cek ulang GPS.'];
  if(c==3)return['Waktu pengambilan lokasi habis.','Pindah ke area dengan sinyal lebih baik (dekat jendela), lalu ketuk Cek ulang GPS.'];
  return['GPS tidak tersedia di perangkat/peramban ini.','Coba peramban lain (Safari/Chrome) atau minta admin menonaktifkan verifikasi GPS (toleransi 0).']}
-function gpsCheck(){gpsStop();if(!F)return;const t=tol(),tok=++GTOK;
+function gpsRun(){gpsStop();if(!F)return;const t=tol(),tok=++GTOK;
  if(!t){GPS={ok:true,msg:'Verifikasi GPS dinonaktifkan',hint:''};return gpsShow()}
- const fail=e=>{const m=gpsErrMsg(e);GPS={ok:false,msg:m[0],hint:m[1]};gpsShow()};
+ const fail=e=>{const m=gpsErrMsg(e);GPS={ok:false,msg:m[0],hint:m[1]};gpsShow();if(e&&e.code==1&&F){gpsModal('denied',GTRY);GTRY=false}};
  if(window.isSecureContext===false)return fail({code:0});
  if(!navigator.geolocation)return fail({code:0});
  const g=geo(F.code);let best=null,finished=false,timer=null;
@@ -492,6 +498,26 @@ function gpsCheck(){gpsStop();if(!F)return;const t=tol(),tok=++GTOK;
    if(high){gpsStop();return start(false)}
    if(best)return final();stop();fail(e)},{enableHighAccuracy:high,maximumAge:high?0:30000,timeout:high?12000:15000})}catch(x){stop();fail({code:0})}};
  timer=setTimeout(final,25000);start(true)}
+function gpsModalClose(){const o=document.getElementById('gpsov');if(o)o.remove()}
+function gpsModal(kind,again){gpsModalClose();if(!F)return;const ua=navigator.userAgent||'',ios=/iPad|iPhone|iPod/.test(ua)||(navigator.platform=='MacIntel'&&navigator.maxTouchPoints>1),and=/Android/i.test(ua);
+ const steps=ios?['Ketuk ikon <b>aA</b> di bilah alamat Safari','Pilih <b>Pengaturan Situs Web</b>','Ubah <b>Lokasi</b> menjadi <b>Izinkan</b>','Kembali ke sini, ketuk <b>Coba lagi</b>']:and?['Ketuk ikon <b>gembok</b> di bilah alamat','Pilih <b>Izin</b> › <b>Lokasi</b> › <b>Izinkan</b>','Pastikan <b>Lokasi</b> HP menyala','Kembali ke sini, ketuk <b>Coba lagi</b>']:['Klik ikon <b>gembok</b> di bilah alamat','Ubah <b>Lokasi</b> menjadi <b>Izinkan</b>','Kembali ke sini, klik <b>Coba lagi</b>'];
+ const o=document.createElement('div');o.id='gpsov';
+ o.innerHTML=kind=='ask'
+ ?`<div class="gb" role="dialog" aria-modal="true"><div class="gi">📍</div><h2>Izinkan akses lokasi</h2><p class="sub">Lokasi hanya dipakai untuk memastikan Anda berada di toilet saat mengisi checklist. Setelah Anda ketuk tombol di bawah, peramban akan menampilkan pop-up — pilih <b>${ios?'Izinkan':'Izinkan / Allow'}</b>.</p><button class="btn acc" data-gpsa="go">Izinkan Lokasi</button><button class="btn" data-gpsa="x">Nanti</button></div>`
+ :`<div class="gb" role="dialog" aria-modal="true"><div class="gi">🔒</div><h2>Izin lokasi diblokir</h2><p class="sub">${again?'<b class="bad">Masih ditolak.</b> ':''}Pilihan “Jangan Izinkan” tersimpan di peramban. ${ios?'Coba <b>Muat ulang halaman</b> dulu — Safari biasanya menanyakan izin lagi. Jika tidak muncul, ubah sekali:':'Ubah sekali saja:'}</p><ol>${steps.map(x=>'<li>'+x+'</li>').join('')}</ol>${ios?'<p class="sub">Jika masih gagal: Pengaturan › Privasi &amp; Keamanan › Layanan Lokasi (nyala), lalu Situs Web Safari › “Saat Menggunakan App”.</p>':''}<button class="btn acc" data-gpsa="reload">Muat ulang &amp; izinkan lagi</button><button class="btn" data-gpsa="retry">Coba lagi</button><button class="btn" data-gpsa="x">Tutup</button></div>`;
+ document.body.append(o)}
+async function gpsCheck(){if(!F)return;
+ if(!tol()||!navigator.geolocation||window.isSecureContext===false)return gpsRun();
+ let st='unknown';
+ try{if(navigator.permissions&&navigator.permissions.query){const p=await navigator.permissions.query({name:'geolocation'});st=p.state;p.onchange=()=>{if(!F)return;if(p.state=='granted'){gpsModalClose();gpsRun()}}}}catch(e){}
+ if(!F)return;
+ if(st=='denied'||st=='prompt'){GPS={ok:false,msg:'Menunggu izin lokasi…',hint:'Ketuk “Izinkan Lokasi” pada pop-up.'};gpsShow();return gpsModal('ask')}
+ gpsRun()}
+document.addEventListener('click',async e=>{const b=e.target.closest('[data-gpsa]');if(!b)return;const a=b.dataset.gpsa;
+ if(a=='x'){gpsModalClose();return}
+ if(a=='reload'){location.reload();return}
+ if(a=='go'||a=='retry'){gpsModalClose();GTRY=true;gpsRun();return}
+ });
 function tlForm(){const a=SEED.areas.find(x=>x[0]==F.code);
  return`<div class="row"><div><p class="eyebrow">${a[0]} · ${F.j<14?'Shift Pagi':'Shift Sore'}</p><h1>${a[1]}</h1></div><button class="btn" data-tfx="1">← Kembali</button></div>
 <div class="card"><div class="row"><span id="gps" class="pill ${GPS.ok?'ok':'bad'}">${esc(GPS.msg)}</span><button class="btn sm" data-tfg="1">Cek ulang GPS</button></div><div id="gpsh" class="sub" style="margin-top:8px" ${GPS.hint?'':'hidden'}>${esc(GPS.hint||'')}</div><div class="f" style="margin-top:12px"><label>Jam cek<select id="tfj">${H.map(h=>`<option value="${h}" ${h==F.j?'selected':''}>${pd(h)}.00</option>`).join('')}</select></label><label>Nama petugas<input id="tfp" value="${esc(F.p)}" placeholder="Nama petugas"></label></div></div>
@@ -501,7 +527,7 @@ ${ITEMS.map(([id,l],i)=>`<div class="card"><div class="row"><b>${l}</b><span cla
 function submitTl(){if(!canSub())return;const a=F.code,d=TODAY,sl=+F.j;S.petugas=F.p.trim();
  S.tc=S.tc.filter(x=>!(x.date==d&&x.slot==sl&&x.area==a));
  S.tc.push({id:Date.now(),date:d,slot:sl,area:a,p:F.p.trim(),ans:F.ans,k:F.k.trim(),dist:GPS.dist??null,ts:new Date().toISOString()});
- const r=(S.tl[d]=S.tl[d]||{});r[a]=r[a]||Array(14).fill(0);r[a][sl-8]=1;M=d.slice(0,7);save();gpsStop();F=null;draw();scrollTo(0,0);toast('Checklist tersimpan')}
+ const r=(S.tl[d]=S.tl[d]||{});r[a]=r[a]||Array(14).fill(0);r[a][sl-8]=1;M=d.slice(0,7);save();gpsStop();gpsModalClose();F=null;draw();scrollTo(0,0);toast('Checklist tersimpan')}
 V.tl=function(){if(F)return tlForm();
  const hr=Math.min(21,Math.max(8,new Date().getHours())),td_=S.tc.filter(x=>x.date==TODAY).sort((a,b)=>b.ts.localeCompare(a.ts));
  const vals=x=>Object.values(x.ans),bad=td_.filter(x=>vals(x).includes('bad')).length,wr=td_.filter(x=>vals(x).includes('warn')&&!vals(x).includes('bad')).length;
