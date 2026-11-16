@@ -256,7 +256,7 @@ const LOG={'FB-04':FBL(["No", "Tanggal", "Nomor Kamar", "Nama Pasien", "Menu", "
 'SG-04':{h:["NO", "TIMESTAMP", "NAMA PETUGAS POSKO", "NAMA YANG REQUEST", "UNIT", "JAM MULAI", "JAM SELESAI", "PETUGAS YANG MEMBANTU", "PERBANTUAN YANG DIMINTA", "DURASI (Menit)", "PENCAPAIAN", "KETERANGAN KETERLAMBATAN"],sn:()=>MN[+M.slice(5)-1],f:[['pos','Nama petugas posko','t'],['req','Nama yang request','t'],['unit','Unit','t'],['mulai','Jam mulai','tm'],['selesai','Jam selesai','tm'],['bantu','Petugas yang membantu','t'],['minta','Perbantuan yang diminta','t'],['lambat','Keterangan keterlambatan','t']],req:['mulai','selesai'],pre:x=>{x.dur=mins(x.mulai,x.selesai)},ok:x=>+x.dur<=15,
  row:(x,i)=>[i+1,x.ts,x.pos,x.req,x.unit,x.mulai,x.selesai,x.bantu,x.minta,+x.dur,x.ok?'TEPAT WAKTU':'TERLAMBAT',x.lambat]}};
 function logOf(c,m){return((S.vl||{})[m||M]||{})[c]}
-function logCard(k){if(k[0]=='SG-04')return pbCard()+'<details><summary>Log lengkap & input manual (jika lupa Start/Done)</summary>'+logCard0(k)+'</details>';return logCard0(k)}
+function logCard(k){if(k[0]=='SG-03')return rnForm()+'<details><summary>Log lengkap & input manual</summary>'+logCard0(k)+'</details>';if(k[0]=='SG-04')return pbCard()+'<details><summary>Log lengkap & input manual (jika lupa Start/Done)</summary>'+logCard0(k)+'</details>';return logCard0(k)}
 function logCard0(k){const L=LOG[k[0]];if(!L)return'';const rows=logOf(k[0])||[];
  return`<div class="card"><h2>Log ${esc(k[0])} · ${MN[+M.slice(5)-1]} ${M.slice(0,4)} (${rows.length} baris)</h2><p class="sub">Capaian dihitung otomatis dari log ini dan menggantikan input numerator/denominator bulan ini. Kolom ekspor sama dengan sheet bulanan file Excel asli.</p>
 <div class="f" style="margin-top:8px">${L.f.map(([n,l,t])=>`<label>${l}<input data-lf="${n}" type="${t=='n'?'number':t=='tm'?'time':t=='dt'?'datetime-local':'text'}" ${t=='dt'?`value="${D}T08:00"`:''}></label>`).join('')}</div>
@@ -299,7 +299,7 @@ function auto(c,m){m=m||M;{const pa=ptAuto(c,m);if(pa)return pa}
  if(c=='FB-01'||c=='FB-02'){const L=xs('vi',m)[c];if(L&&L.length)return{v:L.length,s:Math.max(0,100-50*L.length),n:L.length,d:''}}
  return null}
 const XF=(n,l,t,v)=>`<label>${l}<input data-xf="${n}" type="${t||'text'}" value="${esc(v??'')}"></label>`;
-function xCard(k){const c=k[0],dm=dim(M);if(c=='SG-03')return ptCard(c);
+function xCard(k){const c=k[0],dm=dim(M);if(c=='SG-03')return'';
  if(c=='SG-01'){const o=xs('va'),d=o.d||{};
   return ptCard(c)+`<div class="card"><h2>Data Amano per hari (input manual) · ${MN[+M.slice(5)-1]} ${M.slice(0,4)}</h2><p class="sub">Jumlah checkpoint Amano yang terpatroli setiap hari. Format ekspor sama dengan sheet “Data Amano 2026”.</p><div class="f" style="margin-top:8px"><label>Target patroli per hari<input type="number" data-xat value="${o.t||432}"></label></div><div class="f" style="margin-top:8px">${Array.from({length:dm},(_,i)=>`<label>Tgl ${i+1}<input type="number" min="0" data-xa="${i+1}" value="${esc(d[i+1]??'')}"></label>`).join('')}</div><div style="margin-top:10px"><button class="btn acc" data-xe="${c}">Ekspor Excel (format file asli)</button></div></div>`}
  if(c=='FB-03'){const dd=ddk(),rec=xs('vq')[dd],g={};QI.forEach(q=>(g[q[2]]=g[q[2]]||[]).push(q));
@@ -379,7 +379,7 @@ const ptList=c=>((S.pt=S.pt||{})[c]=S.pt[c]||[]);
 const ptRec=(c,m)=>(((S.pl||{})[m||M]||{})[c])||[];
 const ptSet=p=>!!p&&typeof p.lat=='number'&&typeof p.lng=='number'&&!(p.lat==0&&p.lng==0);
 const ptTol=()=>S.ptol===undefined?25:+S.ptol;
-function ptAuto(c,m){if(c!='SG-01'&&c!='SG-03')return null;const P=ptList(c).length,R=ptRec(c,m);if(!P||!R.length)return null;
+function ptAuto(c,m){if(c!='SG-01')return null;const P=ptList(c).length,R=ptRec(c,m);if(!P||!R.length)return null;
  const d=P*8*elapsed(m);if(!d)return null;const n=R.filter(r=>r.date<TODAY).length,a=Math.min(1,n/d);return{v:a,s:Math.min(100,a*100),n,d}}
 function vaEff(m){const o=xs('va',m),d={...(o.d||{})},R=ptRec('SG-01',m);if(R.length){const c={};R.forEach(r=>{const k=+r.date.slice(8);c[k]=(c[k]||0)+1});Object.keys(c).forEach(k=>d[k]=c[k])}
  return{t:o.t||(ptList('SG-01').length?ptList('SG-01').length*8:432),d}}
@@ -500,6 +500,35 @@ document.addEventListener('click',async e=>{const b=e.target.closest('[data-ccv]
   const r={n,pos:CC.pos.trim(),w:pd(t.getDate())+'/'+pd(t.getMonth()+1)+'/'+t.getFullYear()+' '+pd(t.getHours())+':'+pd(t.getMinutes())+':'+pd(t.getSeconds()),
    b:n.map((x,i)=>[x.b,x.rk=='T'?NVRT[i]:0]),m:n.map((x,i)=>x.ada=='A'?NVRN[i]+': '+x.jl:'').filter(Boolean).join('; '),t:n.map((x,i)=>x.ada=='A'?NVRN[i]+': '+x.tl:'').filter(Boolean).join('; '),u:CC.pos.trim(),k:''};
   S.petugas=r.pos;((((S.vc=S.vc||{})[M]=S.vc[M]||{})[ddk()]=S.vc[M][ddk()]||{}))[CC.sh]=r;save();CCK='';rd();toast('Checklist CCTV tersimpan')}});
+/* ===== Patroli Ranap (SG-03): mengikuti Google Form "KPI Patroli diluar Jam Kunjung" ===== */
+const RNA=['Ward 6 Nursing Station A','Ward 6 Nursing Station B','Ward 7 Nursing Station A','Ward 7 Nursing Station B','Ward 8 Nursing Station A','Ward 8 Nursing Station B','Ward 9 Nursing Station A','Ward 9 Nursing Station B'];
+const RNW=['Patroli Pertama','Patroli kedua','Patroli Ketigaa','Patroli Keempat','Patroli Kelima','Patroli Keenam','Patroli Ketujuh'];
+let RN={area:'',waktu:'',ket:'',petugas:'',perawat:'',tl:'',nw:[]};
+function rnForm(){const L=(logOf('SG-03')||[]).slice(-8).reverse(),np=RN.nw.length;if(!RN.petugas)RN.petugas=S.petugas||'';
+ const opt=(a,v,ph)=>`<option value="">${ph}</option>`+a.map(x=>`<option ${x==v?'selected':''}>${esc(x)}</option>`).join('');
+ return`<div class="card"><h2>KPI Patroli di luar Jam Kunjung</h2><p class="sub">Isi setiap selesai patroli. Semua kolom wajib, sama seperti form. Foto diunggah ke Drive.</p>
+<div class="f"><label>Area patroli<select data-rn="area">${opt(RNA,RN.area,'Pilih area…')}</select></label><label>Waktu patroli<select data-rn="waktu">${opt(RNW,RN.waktu,'Pilih waktu…')}</select></label></div>
+<div class="f" style="margin-top:10px"><label style="flex:1 1 240px">Keterangan area patroli<input data-rn="ket" value="${esc(RN.ket)}" placeholder="mis. Area Kondusif"></label><label style="flex:1 1 200px">Nama petugas patroli<input data-rn="petugas" value="${esc(RN.petugas)}"></label><label style="flex:1 1 200px">Perawat yang bertugas<input data-rn="perawat" value="${esc(RN.perawat)}"></label><label style="flex:1 1 240px">Tindak lanjut<input data-rn="tl" value="${esc(RN.tl)}" placeholder="mis. Berkoordinasi / Patroli Tidak Tercapai"></label></div>
+<div style="margin-top:12px"><b style="font-size:13px">FOTO VALIDASI PERAWAT</b> <span class="sub">(maks. 5 foto · ${np}/5)</span><div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px">${RN.nw.map((u,j)=>`<div style="position:relative"><img src="${u}" alt="" style="width:84px;height:84px;object-fit:cover;border-radius:10px"><button class="btn sm" data-rnrm="${j}" style="position:absolute;top:2px;right:2px;padding:0 7px">×</button></div>`).join('')}${np<5?`<label class="btn" style="width:84px;height:84px;display:grid;place-items:center;cursor:pointer;text-align:center;font-size:12px">+ Foto<input type="file" accept="image/*" multiple hidden data-rnf="1"></label>`:''}</div></div>
+<p class="sub" id="rnmsg" style="margin:10px 0 0"></p><div style="margin-top:8px"><button class="btn acc" data-rnsave="1" style="width:100%">Kirim patroli</button></div>
+<h2 style="margin-top:16px">Terakhir dikirim</h2><div class="tw"><table><tr><th>Waktu</th><th>Area</th><th>Patroli</th><th>Petugas</th><th>Perawat</th><th>Tindak lanjut</th><th>Foto</th></tr>${L.map(x=>`<tr><td>${esc((x.ts||'').slice(5,16))}</td><td>${esc(x.area)}</td><td>${esc(x.waktu)}</td><td>${esc(x.petugas)}</td><td>${esc(x.perawat)}</td><td style="white-space:normal">${esc(x.tl)}</td><td>${(x.ph||[]).length}</td></tr>`).join('')||'<tr><td colspan="7" class="sub">Belum ada patroli bulan ini.</td></tr>'}</table></div></div>`}
+document.addEventListener('input',e=>{const f=e.target.dataset&&e.target.dataset.rn;if(f)RN[f]=e.target.value});
+document.addEventListener('change',async e=>{const t=e.target;if(!t.dataset||!t.dataset.rnf||!t.files)return;
+ for(const f of [...t.files]){if(RN.nw.length>=5)break;try{const u=URL.createObjectURL(f);RN.nw.push(await shrink(u,1280,.72));URL.revokeObjectURL(u)}catch(x){toast('Foto tidak bisa dibaca')}}
+ const y=scrollY;draw();scrollTo(0,y)});
+document.addEventListener('click',async e=>{const b=e.target.closest('[data-rnrm],[data-rnsave]');if(!b)return;const rd=()=>{const y=scrollY;draw();scrollTo(0,y)};
+ if(b.dataset.rnrm!==undefined){RN.nw.splice(+b.dataset.rnrm,1);rd();return}
+ const msg=t=>{const m=$('#rnmsg');if(m){m.className='sub bad';m.textContent=t}toast(t.slice(0,80),3500)};
+ const need=[['area','Area patroli'],['waktu','Waktu patroli'],['ket','Keterangan area patroli'],['petugas','Nama petugas patroli'],['perawat','Perawat yang bertugas'],['tl','Tindak lanjut']].find(([k])=>!(RN[k]||'').trim());
+ if(need)return msg(need[1]+' wajib diisi');
+ if(!RN.nw.length)return msg('Upload minimal 1 foto validasi perawat');
+ if(!GAS())return msg('Belum tersambung ke penyimpanan, foto belum bisa diunggah');
+ b.disabled=true;b.textContent='Mengirim…';const ids=[];
+ try{for(let j=0;j<RN.nw.length;j++){const r=await gas({action:'putPhoto',mime:'image/jpeg',name:'PatroliRanap_'+TODAY+'_'+RN.area.replace(/\W+/g,'-')+'_'+Date.now()+'_'+j+'.jpg',data:RN.nw[j].split(',')[1]});ids.push(r.id);PHC.set(r.id,RN.nw[j])}}
+ catch(er){b.disabled=false;b.textContent='Kirim patroli';return msg('Gagal mengunggah foto: '+friendly(er))}
+ const row={ts:nowS(),area:RN.area,waktu:RN.waktu,ket:RN.ket.trim(),petugas:RN.petugas.trim(),perawat:RN.perawat.trim(),temuan:'',tl:RN.tl.trim(),ph:ids},mk=TODAY.slice(0,7);
+ row.ok=LOG['SG-03'].ok(row)?1:0;S.petugas=row.petugas;(((S.vl=S.vl||{})[mk]=S.vl[mk]||{})['SG-03']=S.vl[mk]['SG-03']||[]).push(row);
+ RN={area:'',waktu:'',ket:'',petugas:row.petugas,perawat:'',tl:'',nw:[]};M=mk;save();rd();toast('Patroli terkirim')});
 /* ===== Penyiapan kamar: Start / Done per kamar check-out ===== */
 let ktUnit='Ward 9',ktRoom='',ktCls='k2',ktDate='';
 const KCLS=[['vip','VIP',40],['k1','Kelas 1',30],['k2','Kelas 2',20],['k3','Kelas 3',20],['suite','Suite',60]],kStd=k=>(KCLS.find(x=>x[0]==k)||[0,0,20])[2];
@@ -984,7 +1013,7 @@ async function vBuild(kind,c){const wb=new ExcelJS.Workbook();
   [6,12,16,32,18,14,20].forEach((w,i)=>ws.getColumn(i+1).width=w);return['KPI-Patroli-'+c+'-'+M+'.xlsx',await wb.xlsx.writeBuffer()]}
  ({'SG-01':()=>exAmano(wb),'FB-03':()=>exQHSE(wb),'SG-02':()=>exCCTV(wb),'FB-01':()=>exIns(wb,c),'FB-02':()=>exIns(wb,c)})[c]();
  return['KPI-'+c+'-'+M+'.xlsx',await wb.xlsx.writeBuffer()]}
-const VXL=()=>[['rk','Sodexo'],['rk','CSI'],['pe','SG-01'],['pe','SG-03'],['xe','SG-01'],['xe','SG-02'],['xe','FB-01'],['xe','FB-02'],['xe','FB-03'],...Object.keys(LOG).map(c=>['le',c])];
+const VXL=()=>[['rk','Sodexo'],['rk','CSI'],['pe','SG-01'],['xe','SG-01'],['xe','SG-02'],['xe','FB-01'],['xe','FB-02'],['xe','FB-03'],...Object.keys(LOG).map(c=>['le',c])];
 async function vxAll(){const L=VXL();let ok=0;for(const [k,c] of L){try{const [fn,buf]=await vBuild(k,c);if(await upDrive(fn,buf,true)===true)ok++}catch(e){console.error(e)}}return[ok,L.length]}
 // kirim ke Drive sebagai file TERPISAH: rekap + 1 file per KPI
 async function xlSep(loud){let ok=0;const ks=['rk','gc','tl','ct','kt','ins'];
