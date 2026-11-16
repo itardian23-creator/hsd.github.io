@@ -450,7 +450,7 @@ function mmFill(){const M_=$('#mmenu');if(!M_)return;const seen={};let h=`<div c
  PAGES.filter(([k])=>allowed(k)).forEach(([k,n])=>{const g=gOf(k);if(g<0){h+=`<button type="button" data-go="${k}" class="${k==page?'on':''}">${esc(n)}</button>`;return}
   if(seen[g])return;seen[g]=1;h+=`<details ${gOf(page)==g?'open':''}><summary><span>${GRP[g][0]}<small>${((typeof VEN!=='undefined'&&VEN.find(x=>x[0]==GRP[g][0]))||[0,''])[1]}</small></span></summary>${GRP[g][1].filter(allowed).map(x=>`<button type="button" data-go="${x}" class="${x==page?'on':''}">${esc(pname(x))}</button>`).join('')}</details>`});
  M_.innerHTML=h+`<hr><button type="button" data-lo="1" style="color:var(--bad)">⎋ Keluar</button>`}
-function draw(){if(!allowed(page)){const f=PAGES.find(([k])=>allowed(k));page=f?f[0]:'dash'}$('#nav').innerHTML=navH()+`<button data-lo="1" title="Keluar (${esc(authed()||'')})" style="color:var(--bad);font-weight:600">⎋ Keluar</button>`;view='in';mmFill();$('#app').innerHTML=V[page]();if(page=='ins')insApply();if($('#qst'))qApply()}
+function draw(){if(!allowed(page)){const f=PAGES.find(([k])=>allowed(k));page=f?f[0]:'dash'}$('#nav').innerHTML=navH()+`<button data-lo="1" title="Keluar (${esc(authed()||'')})" style="color:var(--bad);font-weight:600">⎋ Keluar</button>`;view='in';mmFill();$('#app').innerHTML=V[page]();if(page=='ins')insApply();if($('#qst'))qApply();if(page=='tl'&&!F)locNeed()}
 function refresh(){if(page=='kt'||page=='gc'||page=='tl'||page=='ins'){const k=page,b=$('#big');if(b){const c=CALC[k](M),v=c.d?c.n/c.d:null;b.textContent=P(c.n,c.d);b.className='big '+(v==null?'':v>=TGT?'ok':v>=.9?'warn':'bad');b.nextElementSibling.firstElementChild.style.width=Math.min(100,v*100||0)+'%';$('#nd').textContent=`${c.n} dari ${c.d} · ${INFO[k][2]}`}}}
 const dl=async(n,t)=>{if(!DLC){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t]));a.download=n;document.body.append(a);a.click();a.remove();return}try{await DLC.save({filename:n,data:t});toast('Tersimpan')}catch(e){if(!e||e.code!='declined')toast('Gagal menyimpan')}};
 document.addEventListener('click',e=>{const t=e.target.closest('button,[data-go]');if(!t)return;const q=t.dataset;
@@ -547,7 +547,7 @@ function gpsErrMsg(e){const ua=navigator.userAgent||'',ios=/iPad|iPhone|iPod/.te
  return['GPS tidak tersedia di perangkat/peramban ini.','Coba peramban lain (Safari/Chrome) atau minta admin menonaktifkan verifikasi GPS (toleransi 0).']}
 function gpsRun(){gpsStop();if(!F)return;const t=tol(),tok=++GTOK;
  if(!t){GPS={ok:true,msg:'Verifikasi GPS dinonaktifkan',hint:''};return gpsShow()}
- const fail=e=>{const m=gpsErrMsg(e);GPS={ok:false,msg:m[0],hint:m[1]};gpsShow();GTRY=false};
+ const fail=e=>{const m=gpsErrMsg(e);GPS={ok:false,msg:m[0],hint:m[1]};gpsShow();if(e&&e.code==1&&F&&GTRY)gpsModal('denied',true);GTRY=false};
  if(window.isSecureContext===false)return fail({code:0});
  if(!navigator.geolocation)return fail({code:0});
  const g=geo(F.code);let best=null,finished=false,timer=null;
@@ -565,18 +565,28 @@ function gpsRun(){gpsStop();if(!F)return;const t=tol(),tok=++GTOK;
  timer=setTimeout(final,25000);
  try{navigator.geolocation.getCurrentPosition(p=>{if(!alive())return;onPos(p);if(alive())start(true)},e=>{if(!alive())return;if(e&&e.code==1){stop();return fail(e)}start(true)},{enableHighAccuracy:true,maximumAge:0,timeout:20000})}catch(x){start(true)}}
 function gpsModalClose(){const o=document.getElementById('gpsov');if(o)o.remove()}
-function gpsModal(kind,again){gpsModalClose();if(!F)return;const ua=navigator.userAgent||'',ios=/iPad|iPhone|iPod/.test(ua)||(navigator.platform=='MacIntel'&&navigator.maxTouchPoints>1),and=/Android/i.test(ua);
+function gpsModal(kind,again){gpsModalClose();if(!F&&kind!='ask'&&kind!='denied')return;const ua=navigator.userAgent||'',ios=/iPad|iPhone|iPod/.test(ua)||(navigator.platform=='MacIntel'&&navigator.maxTouchPoints>1),and=/Android/i.test(ua);
  const steps=ios?['Ketuk ikon <b>aA</b> di bilah alamat Safari','Pilih <b>Pengaturan Situs Web</b>','Ubah <b>Lokasi</b> menjadi <b>Izinkan</b>','Kembali ke sini, ketuk <b>Coba lagi</b>']:and?['Ketuk ikon <b>gembok</b> di bilah alamat','Pilih <b>Izin</b> › <b>Lokasi</b> › <b>Izinkan</b>','Pastikan <b>Lokasi</b> HP menyala','Kembali ke sini, ketuk <b>Coba lagi</b>']:['Klik ikon <b>gembok</b> di bilah alamat','Ubah <b>Lokasi</b> menjadi <b>Izinkan</b>','Kembali ke sini, klik <b>Coba lagi</b>'];
  const o=document.createElement('div');o.id='gpsov';
  o.innerHTML=kind=='ask'
  ?`<div class="gb" role="dialog" aria-modal="true"><div class="gi">📍</div><h2>Izinkan akses lokasi</h2><p class="sub">Lokasi hanya dipakai untuk memastikan Anda berada di toilet saat mengisi checklist. Setelah Anda ketuk tombol di bawah, peramban akan menampilkan pop-up — pilih <b>${ios?'Izinkan':'Izinkan / Allow'}</b>.</p><button class="btn acc" data-gpsa="go">Izinkan Lokasi</button><button class="btn" data-gpsa="x">Nanti</button></div>`
  :`<div class="gb" role="dialog" aria-modal="true"><div class="gi">🔒</div><h2>Izin lokasi diblokir</h2><p class="sub">${again?'<b class="bad">Masih ditolak.</b> ':''}Pilihan “Jangan Izinkan” tersimpan di peramban. ${ios?'Coba <b>Muat ulang halaman</b> dulu — Safari biasanya menanyakan izin lagi. Jika tidak muncul, ubah sekali:':'Ubah sekali saja:'}</p><ol>${steps.map(x=>'<li>'+x+'</li>').join('')}</ol>${ios?'<p class="sub">Jika masih gagal: Pengaturan › Privasi &amp; Keamanan › Layanan Lokasi (nyala), lalu Situs Web Safari › “Saat Menggunakan App”.</p>':''}<button class="btn acc" data-gpsa="reload">Muat ulang &amp; izinkan lagi</button><button class="btn" data-gpsa="retry">Coba lagi</button><button class="btn" data-gpsa="x">Tutup</button></div>`;
  document.body.append(o)}
-function gpsCheck(){if(!F)return;gpsModalClose();gpsRun()}
+/* Minta izin lokasi ke sistem HP sedini mungkin: saat halaman Toilet Umum dibuka (sebelum memilih toilet) */
+let PRIMED=0;
+function primeLoc(){if(!navigator.geolocation||window.isSecureContext===false||Date.now()-PRIMED<30000)return;PRIMED=Date.now();
+ try{navigator.geolocation.getCurrentPosition(()=>{PRIMED=Date.now()+3600000},()=>{},{enableHighAccuracy:false,maximumAge:600000,timeout:60000})}catch(e){}}
+function locReq(){if(!navigator.geolocation)return;try{navigator.geolocation.getCurrentPosition(()=>{PRIMED=Date.now()+3600000;toast('Lokasi diizinkan ✓')},e=>{if(e&&e.code==1)gpsModal('denied',true)},{enableHighAccuracy:false,maximumAge:0,timeout:60000})}catch(x){}}
+async function locState(){let st='unknown';try{if(navigator.permissions&&navigator.permissions.query)st=(await navigator.permissions.query({name:'geolocation'})).state}catch(e){}return st}
+let LASK=0;
+async function locNeed(){if(LASK||!navigator.geolocation||window.isSecureContext===false)return;if(await locState()=='granted')return;LASK=1;if(page=='tl'&&!F)gpsModal('ask')}
+async function gpsCheck(){if(!F)return;gpsModalClose();
+ if(!tol()||!navigator.geolocation||window.isSecureContext===false||await locState()=='granted')return gpsRun();
+ if(!F)return;GPS={ok:false,msg:'Menunggu izin lokasi…',hint:'Ketuk “Izinkan Lokasi” pada pemberitahuan, lalu pilih Izinkan.'};gpsShow();gpsModal('ask')}
 document.addEventListener('click',async e=>{const b=e.target.closest('[data-gpsa]');if(!b)return;const a=b.dataset.gpsa;
  if(a=='x'){gpsModalClose();return}
  if(a=='reload'){location.reload();return}
- if(a=='go'||a=='retry'){gpsModalClose();GTRY=true;gpsRun();return}
+ if(a=='go'||a=='retry'){gpsModalClose();if(F){GTRY=true;gpsRun()}else locReq();return}
  });
 function tlForm(){const a=SEED.areas.find(x=>x[0]==F.code);
  return`<div class="row"><div><p class="eyebrow">${a[0]} · ${F.j<14?'Shift Pagi':'Shift Sore'}</p><h1>${a[1]}</h1></div><button class="btn" data-tfx="1">← Kembali</button></div>
