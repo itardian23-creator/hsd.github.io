@@ -265,8 +265,8 @@ function logCard0(k){const L=LOG[k[0]];if(!L)return'';const rows=logOf(k[0])||[]
 document.addEventListener('click',async e=>{const a=e.target.closest('[data-vl]'),d=e.target.closest('[data-vld]'),x=e.target.closest('[data-vle]');
  if(a){const c=a.dataset.vl,L=LOG[c],o={};document.querySelectorAll('[data-lf]').forEach(i=>o[i.dataset.lf]=i.value.trim());
   if(L.req.some(n=>!o[n]))return toast('Lengkapi kolom wajib: '+L.req.map(n=>L.f.find(f=>f[0]==n)[1]).join(', '));
-  o.ts=nowS();if(L.pre)L.pre(o);o.ok=L.ok(o)?1:0;((((S.vl=S.vl||{})[M]=S.vl[M]||{})[c]=S.vl[M][c]||[])).push(o);save();const y=scrollY;draw();scrollTo(0,y);toast('Baris ditambahkan');return}
- if(d){const[c,i]=d.dataset.vld.split('|');if(confirm('Hapus baris ini?')){logOf(c).splice(+i,1);save();const y=scrollY;draw();scrollTo(0,y)}return}
+  o.ts=nowS();o.o=authed();if(L.pre)L.pre(o);o.ok=L.ok(o)?1:0;((((S.vl=S.vl||{})[M]=S.vl[M]||{})[c]=S.vl[M][c]||[])).push(o);save();const y=scrollY;draw();scrollTo(0,y);toast('Baris ditambahkan');return}
+ if(d){const[c,i]=d.dataset.vld.split('|');if(!own((logOf(c)||[])[+i]))return toast('Hanya pemilik data atau admin yang bisa menghapus');if(confirm('Hapus baris ini?')){logOf(c).splice(+i,1);save();const y=scrollY;draw();scrollTo(0,y)}return}
  if(x){if(!window.ExcelJS)return toast('Pustaka Excel belum termuat (perlu internet)');const c=x.dataset.vle,[fn,buf]=await vBuild('le',c);dl(fn,buf);if(GAS())upDrive(fn,buf,true)}});
 
 /* ===== Laporan per vendor ===== */
@@ -366,8 +366,8 @@ document.addEventListener('click',async e=>{const b=e.target.closest('[data-xq],
  if(ds.xq){const o=Q(),f=o[ddk()]=o[ddk()]||[],i=f.indexOf(ds.xq);i<0?f.push(ds.xq):f.splice(i,1);save();rd();return}
  if(ds.xqs){const o=Q();o[ddk()]=o[ddk()]||[];save();rd();toast('Hari tersimpan');return}
  if(ds.xqx){if(confirm('Hapus data tanggal ini?')){delete Q()[ddk()];save();rd()}return}
- if(ds.xi){const c=ds.xi,o={};document.querySelectorAll('[data-xf]').forEach(i=>o[i.dataset.xf]=i.value.trim());if(!o.desk)return toast('Isi deskripsi insiden');((((S.vi=S.vi||{})[M]=S.vi[M]||{})[c]=S.vi[M][c]||[])).push(o);save();rd();toast('Insiden tersimpan');return}
- if(ds.xid){const[c,i]=ds.xid.split('|');if(confirm('Hapus insiden ini?')){xs('vi')[c].splice(+i,1);save();rd()}return}
+ if(ds.xi){const c=ds.xi,o={};document.querySelectorAll('[data-xf]').forEach(i=>o[i.dataset.xf]=i.value.trim());if(!o.desk)return toast('Isi deskripsi insiden');o.o=authed();((((S.vi=S.vi||{})[M]=S.vi[M]||{})[c]=S.vi[M][c]||[])).push(o);save();rd();toast('Insiden tersimpan');return}
+ if(ds.xid){const[c,i]=ds.xid.split('|');if(!own(xs('vi')[c][+i]))return toast('Hanya pemilik data atau admin yang bisa menghapus');if(confirm('Hapus insiden ini?')){xs('vi')[c].splice(+i,1);save();rd()}return}
  if(ds.xe){if(!window.ExcelJS)return toast('Pustaka Excel belum termuat (perlu internet)');const c=ds.xe,[fn,buf]=await vBuild('xe',c);dl(fn,buf);if(GAS())upDrive(fn,buf,true)}});
 
 /* ===== Patroli per 3 jam berbasis GPS: SG-01 Amano & SG-03 Patroli Ranap ===== */
@@ -413,8 +413,8 @@ document.addEventListener('click',async e=>{const b=e.target.closest('[data-pt],
   if(ptTol()&&!ptSet(p))return toast('Koordinat lokasi ini belum diatur admin',4000);
   PBUSY=true;toast('Memverifikasi lokasi…',3000);const g=await ptGps(p);PBUSY=false;
   if(!g.ok)return toast(g.msg,5000);
-  S.petugas=pn;(((S.pl=S.pl||{})[mk]=S.pl[mk]||{})[c]=S.pl[mk][c]||[]).push({id:Date.now(),date:TODAY,slot:sl,pid:p.id,n:p.n,p:pn,dist:g.dist,ts:nowS()});M=mk;save();rd();toast('Tersimpan · '+p.n);return}
- if(d.ptd){const[c,id]=d.ptd.split('|');if(confirm('Hapus checklist ini?')){const mk=TODAY.slice(0,7);S.pl[mk][c]=S.pl[mk][c].filter(r=>r.id!=id);save();rd()}return}
+  S.petugas=pn;(((S.pl=S.pl||{})[mk]=S.pl[mk]||{})[c]=S.pl[mk][c]||[]).push({id:Date.now(),date:TODAY,slot:sl,pid:p.id,n:p.n,p:pn,dist:g.dist,ts:nowS(),o:authed()});M=mk;save();rd();toast('Tersimpan · '+p.n);return}
+ if(d.ptd){const[c,id]=d.ptd.split('|');const mk=TODAY.slice(0,7),rr=ptRec(c,mk).find(r=>r.id==id);if(rr&&!own(rr))return toast('Hanya pemilik data atau admin yang bisa menghapus');if(confirm('Hapus checklist ini?')){S.pl[mk][c]=S.pl[mk][c].filter(r=>r.id!=id);save();rd()}return}
  if(!isAdmin())return;
  if(d.pta){const c=d.pta,t=$('#ptb_'+c),L=ptList(c);const nm=(t?t.value:'').split('\n').map(s=>s.trim()).filter(Boolean);if(!nm.length)return toast('Isi nama lokasi dulu');let id=Math.max(0,...L.map(x=>+x.id||0));nm.forEach(n=>L.push({id:++id,n,lat:null,lng:null}));PTOPEN=true;save();rd();toast(nm.length+' lokasi ditambahkan');return}
  if(d.ptx){const[c,id]=d.ptx.split('|');if(confirm('Hapus lokasi ini? (riwayat checklist lama tetap tersimpan)')){S.pt[c]=S.pt[c].filter(x=>x.id!=id);PTOPEN=true;save();rd()}return}
@@ -428,6 +428,7 @@ document.addEventListener('change',e=>{const t=e.target,d=t.dataset;if(!d)return
 
 /* ===== Perbantuan Security: Start / Done (batas 15 menit) ===== */
 const PBMAX=15;
+const own=r=>isAdmin()||(!!r&&r.o===authed());
 const pbMine=j=>!j.o||j.o==authed()||isAdmin();
 const pbRun=()=>{const L=(S.pj||[]).filter(pbMine).sort((a,b)=>a.t0.localeCompare(b.t0));
  return L.map(j=>{const m=Math.floor((Date.now()-new Date(j.t0))/60000);
@@ -448,7 +449,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-pb]');if(!
  if(a=='done'){const t0=new Date(j.t0),t1=new Date(),dur=Math.max(1,Math.ceil((t1-t0)/60000)),ok=dur<=PBMAX;let lambat='';
   if(!ok){const q=prompt('Perbantuan melebihi '+PBMAX+' menit ('+dur+' menit). Isi keterangan keterlambatan:');if(q===null)return;lambat=q.trim();if(!lambat)return toast('Keterangan keterlambatan wajib diisi')}
   const dm=t0.getFullYear()+'-'+pd(t0.getMonth()+1)+'-'+pd(t0.getDate()),hm=d=>pd(d.getHours())+':'+pd(d.getMinutes());
-  const row={ts:dm+' '+hm(t0)+':'+pd(t0.getSeconds()),pos:j.pos,req:j.req,unit:j.unit,mulai:hm(t0),selesai:hm(t1),bantu:j.bantu,minta:j.minta,lambat,dur,ok:ok?1:0},mk=dm.slice(0,7);
+  const row={ts:dm+' '+hm(t0)+':'+pd(t0.getSeconds()),pos:j.pos,req:j.req,unit:j.unit,mulai:hm(t0),selesai:hm(t1),bantu:j.bantu,minta:j.minta,lambat,dur,ok:ok?1:0,o:authed()},mk=dm.slice(0,7);
   (((S.vl=S.vl||{})[mk]=S.vl[mk]||{})['SG-04']=S.vl[mk]['SG-04']||[]).push(row);S.pj=S.pj.filter(x=>x.id!=id);save();rd();toast(ok?'Selesai · TEPAT WAKTU ('+dur+' mnt)':'Selesai · TERLAMBAT ('+dur+' mnt)',3000)}});
 setInterval(()=>{const e=$('#pbrun');if(e&&!document.hidden)e.innerHTML=pbRun()},30000);
 
@@ -482,7 +483,7 @@ document.addEventListener('click',async e=>{const b=e.target.closest('[data-ccv]
  if(d.ccv){const[i,k,v]=d.ccv.split('|');CC.n[+i][k]=v;rd();return}
  if(d.ccs){CC.sh=d.ccs;rd();return}
  if(d.ccrm){const[i,ty,j]=d.ccrm.split('|');(ty=='o'?CC.n[+i].ph:CC.nw[+i]).splice(+j,1);rd();return}
- if(d.ccdel){if(confirm('Hapus checklist shift ini?')){const o=((S.vc||{})[M]||{})[ddk()];if(o){delete o[d.ccdel];if(!Object.keys(o).length)delete S.vc[M][ddk()]}save();CCK='';rd()}return}
+ if(d.ccdel){const rr=(((S.vc||{})[M]||{})[ddk()]||{})[d.ccdel];if(rr&&!own(rr))return toast('Hanya pemilik data atau admin yang bisa menghapus');if(confirm('Hapus checklist shift ini?')){const o=((S.vc||{})[M]||{})[ddk()];if(o){delete o[d.ccdel];if(!Object.keys(o).length)delete S.vc[M][ddk()]}save();CCK='';rd()}return}
  if(d.ccsave){const msg=t=>{const m=$('#ccmsg');if(m){m.className='sub bad';m.textContent=t}toast(t.slice(0,80),3500)};
   if(!CC.pos.trim())return msg('Isi nama petugas security');
   for(let i=0;i<3;i++){const x=CC.n[i],nm=NVRN[i];
@@ -499,7 +500,7 @@ document.addEventListener('click',async e=>{const b=e.target.closest('[data-ccv]
   catch(er){b.disabled=false;b.textContent='Coba lagi';return msg('Gagal mengunggah foto: '+friendly(er))}
   const n=CC.n.map(x=>({a:+x.a,b:+x.b,gj:x.gj,sk:x.sk,ir:x.ir,rk:x.rk,tj:x.tj,pn:x.pn,kp:x.kp,ada:x.ada,jl:x.ada=='A'?x.jl.trim():'-',tl:x.ada=='A'?x.tl.trim():'-',ph:x.ph})),t=new Date();
   const r={n,pos:CC.pos.trim(),w:pd(t.getDate())+'/'+pd(t.getMonth()+1)+'/'+t.getFullYear()+' '+pd(t.getHours())+':'+pd(t.getMinutes())+':'+pd(t.getSeconds()),
-   b:n.map((x,i)=>[x.b,x.rk=='T'?NVRT[i]:0]),m:n.map((x,i)=>x.ada=='A'?NVRN[i]+': '+x.jl:'').filter(Boolean).join('; '),t:n.map((x,i)=>x.ada=='A'?NVRN[i]+': '+x.tl:'').filter(Boolean).join('; '),u:CC.pos.trim(),k:''};
+   b:n.map((x,i)=>[x.b,x.rk=='T'?NVRT[i]:0]),m:n.map((x,i)=>x.ada=='A'?NVRN[i]+': '+x.jl:'').filter(Boolean).join('; '),t:n.map((x,i)=>x.ada=='A'?NVRN[i]+': '+x.tl:'').filter(Boolean).join('; '),u:CC.pos.trim(),k:'',o:authed()};
   S.petugas=r.pos;((((S.vc=S.vc||{})[M]=S.vc[M]||{})[ddk()]=S.vc[M][ddk()]||{}))[CC.sh]=r;save();CCK='';rd();toast('Checklist CCTV tersimpan')}});
 /* ===== Patroli Ranap (SG-03): mengikuti Google Form "KPI Patroli diluar Jam Kunjung" ===== */
 const RNA=['Ward 6 Nursing Station A','Ward 6 Nursing Station B','Ward 7 Nursing Station A','Ward 7 Nursing Station B','Ward 8 Nursing Station A','Ward 8 Nursing Station B','Ward 9 Nursing Station A','Ward 9 Nursing Station B'];
@@ -527,7 +528,7 @@ document.addEventListener('click',async e=>{const b=e.target.closest('[data-rnrm
  b.disabled=true;b.textContent='Mengirim…';const ids=[];
  try{for(let j=0;j<RN.nw.length;j++){const r=await gas({action:'putPhoto',mime:'image/jpeg',name:'PatroliRanap_'+TODAY+'_'+RN.area.replace(/\W+/g,'-')+'_'+Date.now()+'_'+j+'.jpg',data:RN.nw[j].split(',')[1]});ids.push(r.id);PHC.set(r.id,RN.nw[j])}}
  catch(er){b.disabled=false;b.textContent='Kirim patroli';return msg('Gagal mengunggah foto: '+friendly(er))}
- const row={ts:nowS(),area:RN.area,waktu:RN.waktu,ket:RN.ket.trim(),petugas:RN.petugas.trim(),perawat:RN.perawat.trim(),temuan:'',tl:RN.tl.trim(),ph:ids},mk=TODAY.slice(0,7);
+ const row={ts:nowS(),area:RN.area,waktu:RN.waktu,ket:RN.ket.trim(),petugas:RN.petugas.trim(),perawat:RN.perawat.trim(),temuan:'',tl:RN.tl.trim(),ph:ids,o:authed()},mk=TODAY.slice(0,7);
  row.ok=LOG['SG-03'].ok(row)?1:0;S.petugas=row.petugas;(((S.vl=S.vl||{})[mk]=S.vl[mk]||{})['SG-03']=S.vl[mk]['SG-03']||[]).push(row);
  RN={area:'',waktu:'',ket:'',petugas:row.petugas,perawat:'',tl:'',nw:[]};M=mk;save();rd();toast('Patroli terkirim')});
 /* ===== Penyiapan kamar: Start / Done per kamar check-out ===== */
@@ -547,7 +548,7 @@ function ktFix(){let ch=0;(S.kj||[]).forEach(j=>{if(!j.t1||+j.std>0)return;const
   if(j.cnt&&old!=j.ok){const o=(S.kt[j.date.slice(0,7)]=S.kt[j.date.slice(0,7)]||{}),x=(o[j.date.slice(8,10)]=o[j.date.slice(8,10)]||{});x.s=Math.max(0,(+x.s||0)+(j.ok-old))}});if(ch)save()}
 function ktKet(d){const L=(S.kj||[]).filter(j=>j.t1&&j.date==M+'-'+d&&!j.ok).sort((a,b)=>a.t1.localeCompare(b.t1)),o=((S.kt[M]||{})[d]||{}).k;
  return[L.length?'Melebihi standar: '+L.map(j=>esc(j.room)+' ('+j.dur+'/'+jStd(j)+' mnt)').join(', '):'',o?esc(o):''].filter(Boolean).join(' · ')}
-function ktRun(){const L=(S.kj||[]).filter(j=>!j.t1).sort((a,b)=>a.t0.localeCompare(b.t0));
+function ktRun(){const L=(S.kj||[]).filter(j=>!j.t1&&pbMine(j)).sort((a,b)=>a.t0.localeCompare(b.t0));
  return L.map(j=>{const m=Math.floor((Date.now()-new Date(j.t0))/60000);
   return `<div class="card" style="margin-top:8px"><div class="row"><div><b>${esc(j.unit)} · ${esc(j.room)}</b><div class="sub">Mulai ${fmtT(j.t0)} · ${esc(j.p||'-')} · standar ${j.std} menit</div></div><span class="pill ${m>j.std?'bad':'ok'}">${m} menit</span></div><div class="row" style="justify-content:flex-start;gap:8px;margin-top:10px"><button class="btn acc" data-kj="done|${j.id}">✔ Done</button><button class="btn" data-kj="del|${j.id}">Batal</button></div></div>`}).join('')||'<p class="sub">Belum ada kamar yang sedang dikerjakan.</p>'}
 function ktJobCard(){ktFix();const done=(S.kj||[]).filter(j=>j.t1&&j.date.startsWith(M)).sort((a,b)=>b.t1.localeCompare(a.t1)).slice(0,30),cus=ktRoom&&!(KROOMS[ktUnit]||[]).includes(ktRoom);
@@ -568,8 +569,8 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-kj]');if(!
   if(!room)return toast('Pilih kamar dulu');if(!p)return toast('Isi nama petugas');
   const un=ktUnit,dt=($('#kjd').value||TODAY);
   if(S.kj.some(j=>!j.t1&&j.unit==un&&j.room==room))return toast('Kamar ini sedang dikerjakan');
-  S.petugas=p;S.kj.push({id:Date.now(),date:dt,unit:un,room,cls:ktCls,std:kStd(ktCls),p,t0:new Date().toISOString()});ktRoom='';save();rd();toast('Mulai: '+room);return}
- const j=S.kj.find(x=>x.id==id);if(!j)return;
+  S.petugas=p;S.kj.push({id:Date.now(),o:authed(),date:dt,unit:un,room,cls:ktCls,std:kStd(ktCls),p,t0:new Date().toISOString()});ktRoom='';save();rd();toast('Mulai: '+room);return}
+ const j=S.kj.find(x=>x.id==id);if(!j)return;if(j.t1?!own(j):!pbMine(j))return toast('Data ini milik akun lain');
  if(a=='done'){j.t1=new Date().toISOString();j.dur=Math.max(1,Math.round((new Date(j.t1)-new Date(j.t0))/60000));j.std=jStd(j);j.ok=j.dur<=j.std?1:0;cnt(j,1);j.cnt=1;save();rd();toast('Selesai · terhitung 1 kamar');return}
  if(a=='del'){if(!confirm(j.t1?'Hapus data kamar ini? Hitungan di rekap ikut berkurang.':'Batalkan pengerjaan kamar ini?'))return;if(j.cnt)cnt(j,-1);S.kj=S.kj.filter(x=>x.id!=id);save();rd()}});
 setInterval(()=>{const e=$('#kjrun');if(e&&!document.hidden)e.innerHTML=ktRun()},30000);
@@ -616,7 +617,7 @@ if(q.tfx){gpsStop();gpsModalClose();F=null;draw();return}
 if(q.tfg){gpsCheck();return}
 if(q.ans){const[i,v]=q.ans.split('|');F.ans[i]=v;const y=scrollY;draw();scrollTo(0,y);return}
 if(q.tfs){submitTl();return}
-if(q.tdel){const r=S.tc.find(x=>x.id==q.tdel);if(r&&confirm('Hapus checklist ini?')){S.tc=S.tc.filter(x=>x.id!=r.id);try{S.tl[r.date][r.area][r.slot-8]=0}catch(e){}save();draw()}return}
+if(q.tdel){const r=S.tc.find(x=>x.id==q.tdel);if(r&&!own(r))return toast('Hanya pemilik data atau admin yang bisa menghapus');if(r&&confirm('Hapus checklist ini?')){S.tc=S.tc.filter(x=>x.id!=r.id);try{S.tl[r.date][r.area][r.slot-8]=0}catch(e){}save();draw()}return}
 if(q.gme){if(!isAdmin())return toast('Hanya admin yang bisa mengatur koordinat');geoOpen=true;navigator.geolocation?navigator.geolocation.getCurrentPosition(p=>{S.geo[q.gme]=[+p.coords.latitude.toFixed(7),+p.coords.longitude.toFixed(7)];save();const y=scrollY;draw();scrollTo(0,y);toast('Koordinat diperbarui')},()=>toast('Izin GPS ditolak'),{enableHighAccuracy:true,timeout:8000}):toast('GPS tidak tersedia');return}
 if(q.rk){repK=q.rk;draw();return}
 if(q.xl){xl(q.xl);return}
@@ -630,13 +631,13 @@ if(q.insv!==undefined){insSet(q.insv);return}
 if(q.insc!==undefined){insClose();return}
 if(q.arok!==undefined){areaSave();return}
 if(q.arc!==undefined){areaClose();return}
-if(q.del){if(confirm('Hapus inspeksi ini?')){S.ins=S.ins.filter(x=>x.id!=q.del);save();draw()}return}
+if(q.del){const ri=S.ins.find(x=>x.id==q.del);if(ri&&!own(ri))return toast('Hanya pemilik data atau admin yang bisa menghapus');if(confirm('Hapus inspeksi ini?')){S.ins=S.ins.filter(x=>x.id!=q.del);save();draw()}return}
 const a=q.act;if(!a)return;
 if((a=='addgc'||a=='stopgc'||a=='addarea')&&!isAdmin())return toast('Hanya admin');
 if(a=='addarea'){areaOpen();return}
 if(a=='stopgc'){const it=S.items.find(i=>i.id==t.dataset.id);if(it&&confirm('Hentikan "'+it.n+'" mulai bulan '+M+'? (bulan sebelumnya tidak berubah)')){it.e=M;save();draw();toast('Pekerjaan dihentikan mulai bulan ini')}return}
 if(a=='addgc'){const n=$('#nn').value.trim(),ar=$('#na').value.trim();if(!n||!ar)return toast('Isi area dan pekerjaan');S.items.push({id:Math.max(0,...S.items.map(i=>i.id))+1,a:ar,n,j:$('#nj').value,f:$('#nf').value,s:M,p:$('#nf').value=='monthly'?[1,0,0,0,0]:$('#nf').value=='2weekly'?[1,0,1,0,0]:[1,1,1,1,0]});gcArea=ar;save();draw();toast('Pekerjaan ditambahkan')}
-if(a=='addins'){const room=($('#ir').value=='__x'?$('#irm').value:$('#ir').value).trim();if(!room)return toast('Pilih / isi nomor kamar');const un=[...document.querySelectorAll('[data-x]:not(.g):not(.x)')];if(un.length){un.forEach(b=>{b.style.outline='2px solid var(--warn)'});setTimeout(()=>un.forEach(b=>b.style.outline=''),2500);un[0].scrollIntoView({block:'center',behavior:'smooth'});return toast(un.length+' item belum dinilai. Semua wajib diisi.')}const dt=$('#id').value,bs=[...document.querySelectorAll('[data-x].x')],rc={date:dt,room,by:$('#ib').value,bad:bs.map(b=>+b.dataset.x),why:Object.fromEntries(bs.filter(b=>b.dataset.s!='u').map(b=>[b.dataset.x,b.dataset.s]))},old=S.ins.find(x=>x.date==dt&&x.room==room);
+if(a=='addins'){const room=($('#ir').value=='__x'?$('#irm').value:$('#ir').value).trim();if(!room)return toast('Pilih / isi nomor kamar');const un=[...document.querySelectorAll('[data-x]:not(.g):not(.x)')];if(un.length){un.forEach(b=>{b.style.outline='2px solid var(--warn)'});setTimeout(()=>un.forEach(b=>b.style.outline=''),2500);un[0].scrollIntoView({block:'center',behavior:'smooth'});return toast(un.length+' item belum dinilai. Semua wajib diisi.')}const dt=$('#id').value,bs=[...document.querySelectorAll('[data-x].x')],rc={date:dt,room,o:authed(),by:$('#ib').value,bad:bs.map(b=>+b.dataset.x),why:Object.fromEntries(bs.filter(b=>b.dataset.s!='u').map(b=>[b.dataset.x,b.dataset.s]))},old=S.ins.find(x=>x.date==dt&&x.room==room);
  if(old)Object.assign(old,rc);else S.ins.push({id:Date.now(),...rc});
  {const dd=dLoad();delete dd[dt+'|'+room];dSave(dd)}insRoom=room;D=dt;M=D.slice(0,7);save();draw();toast(old?'Inspeksi diperbarui':'Inspeksi tersimpan')}
 if(a=='expj')dl('hsims-kpi-hk-'+TODAY+'.json',JSON.stringify(S),'application/json');
@@ -749,7 +750,7 @@ ${ITEMS.map(([id,l],i)=>`<div class="card"><div class="row"><b>${l}</b><span cla
 <button class="btn acc" id="tfs" data-tfs="1" ${canSub()?'':'disabled'}>Simpan checklist</button>`}
 function submitTl(){if(!canSub())return;const a=F.code,d=TODAY,sl=+F.j;S.petugas=F.p.trim();
  S.tc=S.tc.filter(x=>!(x.date==d&&x.slot==sl&&x.area==a));
- S.tc.push({id:Date.now(),date:d,slot:sl,area:a,p:F.p.trim(),ans:F.ans,k:F.k.trim(),dist:GPS.dist??null,ts:new Date().toISOString()});
+ S.tc.push({id:Date.now(),o:authed(),date:d,slot:sl,area:a,p:F.p.trim(),ans:F.ans,k:F.k.trim(),dist:GPS.dist??null,ts:new Date().toISOString()});
  const r=(S.tl[d]=S.tl[d]||{});r[a]=r[a]||Array(14).fill(0);r[a][sl-8]=1;M=d.slice(0,7);save();gpsStop();gpsModalClose();F=null;draw();scrollTo(0,0);toast('Checklist tersimpan')}
 V.tl=function(){if(F)return tlForm();
  const hr=Math.min(21,Math.max(8,new Date().getHours())),td_=S.tc.filter(x=>x.date==TODAY).sort((a,b)=>b.ts.localeCompare(a.ts));
