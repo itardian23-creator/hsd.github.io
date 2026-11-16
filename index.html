@@ -582,7 +582,7 @@ function ptCard(c){const P=ptList(c),adm=isAdmin(),sn=slotNow();if(PSEL[c]==null
  const rows=rec.slice().sort((a,b)=>b.ts.localeCompare(a.ts)).slice(0,60).map(r=>`<tr><td>${slotLbl(r.slot)}</td><td>${esc(r.n)}</td><td>${esc(r.p)}</td><td>${r.dist==null?'–':r.dist+' m'}</td><td>${esc(r.ts.slice(11,16))}</td><td><button class="btn sm" data-ptd="${c}|${r.id}">Hapus</button></td></tr>`).join('');
  return`<div class="card"><div class="row"><h2>Checklist patroli · tiap 3 jam</h2><button class="btn sm" data-pe="${c}">Unduh Excel checklist</button></div>
 <p class="sub">Berdiri di lokasi, pilih slot waktu, lalu ketuk ${PTN[c]}. Lokasi diverifikasi GPS (maks ${ptTol()} m). Jadwal 8× sehari: 00, 03, 06, 09, 12, 15, 18, 21. Bulan berjalan dihitung sampai kemarin.</p>
-<div class="f"><label>Slot waktu<select data-pts="${c}">${PSL.filter(s=>s<=sn).map(s=>`<option value="${s}" ${s==sl?'selected':''}>${slotLbl(s)}</option>`).join('')}</select></label><label>Nama petugas<input id="ptp" size="16" value="${esc(S.petugas||'')}"></label><span class="pill ${P.length&&cnt==P.length?'ok':''}">Slot ini: ${cnt} / ${P.length}</span></div>
+<div class="f"><label>Slot waktu<select data-pts="${c}">${PSL.filter(s=>s<=sn).map(s=>`<option value="${s}" ${s==sl?'selected':''}>${slotLbl(s)}</option>`).join('')}</select></label><label>Nama petugas<input id="ptp" size="16" value="${esc('')}"></label><span class="pill ${P.length&&cnt==P.length?'ok':''}">Slot ini: ${cnt} / ${P.length}</span></div>
 ${P.length?`<div class="grid" style="margin-top:12px">${cards}</div>`:`<p class="sub" style="margin-top:12px">Belum ada ${PTN[c]}. ${adm?'Tambahkan lewat “Titik patroli & koordinat (admin)” di bawah.':'Hubungi admin untuk menambahkan.'}</p>`}
 <div class="adm-only"><h2 style="margin-top:14px">Riwayat hari ini (${rec.length})</h2><div class="tw"><table><tr><th>Slot</th><th>Lokasi</th><th>Petugas</th><th>Jarak</th><th>Jam</th><th></th></tr>${rows||'<tr><td colspan="6" class="sub">Belum ada checklist hari ini.</td></tr>'}</table></div></div>
 ${adm?`<details style="margin-top:12px" ${PTOPEN?'open':''}><summary>Titik patroli & koordinat (admin)</summary><div style="padding-bottom:14px"><div class="f"><label>Toleransi (meter, 0 = GPS nonaktif)<input type="number" id="ptol" min="0" value="${ptTol()}"></label></div>
@@ -622,7 +622,7 @@ const hvTog=(k,a,b)=>`<div class="tgl" style="margin-top:10px"><button data-hv="
 document.addEventListener('click',e=>{const t=e.target.closest('[data-hv]');if(!t)return;const[k,v]=t.dataset.hv.split('|');HV[k]=v;const y=scrollY;draw();scrollTo(0,y)});
 function pbCard(){const all=logOf('SG-04')||[],n0=HV.pb=='m'?0:Math.max(0,all.length-15),rows=all.slice(n0).map((x,j)=>[x,n0+j]).reverse();
  return`<div class="card"><div class="row"><h2>Perbantuan · Start / Done</h2><button class="btn sm" data-vle="SG-04">Unduh Excel</button></div><p class="sub">Isi data lalu ketuk <b>Start</b> saat permintaan perbantuan diterima, dan <b>Done</b> saat selesai. Durasi ≤ ${PBMAX} menit = <b class="ok">TEPAT WAKTU</b>; lebih dari itu = <b class="bad">TERLAMBAT</b> (wajib isi keterangan). Baris otomatis masuk ke log & laporan.</p>
-<div class="f"><label>Nama petugas posko<input id="pbp" size="14" value="${esc(S.petugas||'')}"></label><label>Nama yang request<input id="pbr" size="14"></label><label>Unit<input id="pbu" size="12" placeholder="mis. Ward 9"></label><label>Petugas yang membantu<input id="pbb" size="14"></label><label>Perbantuan yang diminta<input id="pbm" size="26" placeholder="mis. Antar pasien ke radiologi"></label><label>Jam permintaan (kosong = sekarang)<input type="time" id="pbt"></label></div>
+<div class="f"><label>Nama petugas posko<input id="pbp" size="14" value="${esc('')}"></label><label>Nama yang request<input id="pbr" size="14"></label><label>Unit<input id="pbu" size="12" placeholder="mis. Ward 9"></label><label>Petugas yang membantu<input id="pbb" size="14"></label><label>Perbantuan yang diminta<input id="pbm" size="26" placeholder="mis. Antar pasien ke radiologi"></label><label>Jam permintaan (kosong = sekarang)<input type="time" id="pbt"></label></div>
 <div style="margin-top:10px"><button class="btn acc" data-pb="start">▶ Start</button></div>
 <h2 style="margin-top:16px">Sedang berjalan</h2><div id="pbrun">${pbRun()}</div>
 <div class="adm-only"><h2 style="margin-top:16px">${HV.pb=='m'?'Selesai '+MN[+M.slice(5)-1]+' '+M.slice(0,4)+' ('+all.length+')':'Selesai terakhir'}</h2>${hvTog('pb',['t','Terakhir'],['m','Per bulan'])}<div style="margin-top:10px"><button class="btn sm acc" data-vle="SG-04">Unduh Excel</button></div><div class="tw" style="margin-top:10px"><table><tr><th>Tanggal</th><th>Unit</th><th>Diminta</th><th>Mulai</th><th>Selesai</th><th>Durasi</th><th>Status</th></tr>${rows.map(([x,ix])=>`<tr><td>${esc((x.ts||'').slice(8,10))}/${esc((x.ts||'').slice(5,7))}</td><td>${esc(x.unit)}</td><td style="white-space:normal">${esc(x.minta)}</td><td>${esc(x.mulai)}</td><td>${esc(x.selesai)}</td><td>${+x.dur} mnt</td><td class="${x.ok?'ok':'bad'}">${x.ok?'Tepat waktu':'Terlambat'}</td></tr>`).join('')||'<tr><td colspan="7" class="sub">Belum ada data bulan ini.</td></tr>'}</table></div></div></div>`}
@@ -645,7 +645,7 @@ const NVRQ=[['gj','GAMBAR JELAS'],['sk','SUDUT KAMERA SESUAI'],['ir','INFRARED B
 let CC={sh:'P',pos:'',n:null,nw:[[],[],[]]},CCK='';
 const ccBlank=()=>[0,1,2].map(()=>({ph:[]}));
 function ccLoad(){const key=D+'|'+CC.sh;if(CCK==key&&CC.n)return;CCK=key;const rec=(((S.vc||{})[M]||{})[ddk()]||{})[CC.sh];
- CC.n=rec&&rec.n?JSON.parse(JSON.stringify(rec.n)):ccBlank();CC.nw=[[],[],[]];if(rec&&(rec.pos||rec.u))CC.pos=rec.pos||rec.u;else if(!CC.pos)CC.pos=S.petugas||''}
+ CC.n=rec&&rec.n?JSON.parse(JSON.stringify(rec.n)):ccBlank();CC.nw=[[],[],[]];CC.pos=''}
 function ccForm(){ccLoad();const sv=(((S.vc||{})[M]||{})[ddk()])||{},SHN={P:'Pagi 07.00 s/d 19.00 WIB',M:'Malam 19.00 s/d 07.00 WIB'};
  const sec=i=>{const x=CC.n[i],tot=NVRT[i],np=(x.ph||[]).length+CC.nw[i].length;
   return`<div class="card"><h2>${NVRN[i]} terdiri dari ${tot} channel</h2><p class="sub">Isilah sesuai dengan keadaan observasi</p>
@@ -689,12 +689,12 @@ document.addEventListener('click',async e=>{const b=e.target.closest('[data-ccv]
   const n=CC.n.map(x=>({a:+x.a,b:+x.b,gj:x.gj,sk:x.sk,ir:x.ir,rk:x.rk,tj:x.tj,pn:x.pn,kp:x.kp,ada:x.ada,jl:x.ada=='A'?x.jl.trim():'-',tl:x.ada=='A'?x.tl.trim():'-',ph:x.ph})),t=new Date();
   const r={n,pos:CC.pos.trim(),w:pd(t.getDate())+'/'+pd(t.getMonth()+1)+'/'+t.getFullYear()+' '+pd(t.getHours())+':'+pd(t.getMinutes())+':'+pd(t.getSeconds()),
    b:n.map((x,i)=>[x.b,x.rk=='T'?NVRT[i]:0]),m:n.map((x,i)=>x.ada=='A'?NVRN[i]+': '+x.jl:'').filter(Boolean).join('; '),t:n.map((x,i)=>x.ada=='A'?NVRN[i]+': '+x.tl:'').filter(Boolean).join('; '),u:CC.pos.trim(),k:'',o:authed()};
-  S.petugas=r.pos;((((S.vc=S.vc||{})[M]=S.vc[M]||{})[ddk()]=S.vc[M][ddk()]||{}))[CC.sh]=r;save();CCK='';rd();toast('Checklist CCTV tersimpan')}});
+  S.petugas=r.pos;((((S.vc=S.vc||{})[M]=S.vc[M]||{})[ddk()]=S.vc[M][ddk()]||{}))[CC.sh]=r;save();CCK='';CC.pos='';rd();toast('Checklist CCTV tersimpan')}});
 /* ===== Patroli Ranap (SG-03): mengikuti Google Form "KPI Patroli diluar Jam Kunjung" ===== */
 const RNA=['Ward 6 Nursing Station A','Ward 6 Nursing Station B','Ward 7 Nursing Station A','Ward 7 Nursing Station B','Ward 8 Nursing Station A','Ward 8 Nursing Station B','Ward 9 Nursing Station A','Ward 9 Nursing Station B'];
 const RNW=['Patroli Pertama','Patroli kedua','Patroli Ketigaa','Patroli Keempat','Patroli Kelima','Patroli Keenam','Patroli Ketujuh'];
 let RN={area:'',waktu:'',ket:'',petugas:'',perawat:'',tl:'',nw:[]};
-function rnForm(){const all=logOf('SG-03')||[],n0=HV.rn=='m'?0:Math.max(0,all.length-8),L=all.slice(n0).map((x,j)=>[x,n0+j]).reverse(),np=RN.nw.length;if(!RN.petugas)RN.petugas=S.petugas||'';
+function rnForm(){const all=logOf('SG-03')||[],n0=HV.rn=='m'?0:Math.max(0,all.length-8),L=all.slice(n0).map((x,j)=>[x,n0+j]).reverse(),np=RN.nw.length;if(!RN.petugas)RN.petugas='';
  const opt=(a,v,ph)=>`<option value="">${ph}</option>`+a.map(x=>`<option ${x==v?'selected':''}>${esc(x)}</option>`).join('');
  return`<div class="card"><div class="row"><h2>KPI Patroli di luar Jam Kunjung</h2><button class="btn sm" data-vle="SG-03">Unduh Excel</button></div><p class="sub">Isi setiap selesai patroli. Semua kolom wajib, sama seperti form. Foto diunggah ke Drive.</p>
 <div class="f"><label>Area patroli<select data-rn="area">${opt(RNA,RN.area,'Pilih area…')}</select></label><label>Waktu patroli<select data-rn="waktu">${opt(RNW,RN.waktu,'Pilih waktu…')}</select></label></div>
@@ -718,7 +718,7 @@ document.addEventListener('click',async e=>{const b=e.target.closest('[data-rnrm
  catch(er){b.disabled=false;b.textContent='Kirim patroli';return msg('Gagal mengunggah foto: '+friendly(er))}
  const row={ts:nowS(),area:RN.area,waktu:RN.waktu,ket:RN.ket.trim(),petugas:RN.petugas.trim(),perawat:RN.perawat.trim(),temuan:'',tl:RN.tl.trim(),ph:ids,o:authed()},mk=TODAY.slice(0,7);
  row.ok=LOG['SG-03'].ok(row)?1:0;S.petugas=row.petugas;(((S.vl=S.vl||{})[mk]=S.vl[mk]||{})['SG-03']=S.vl[mk]['SG-03']||[]).push(row);
- RN={area:'',waktu:'',ket:'',petugas:row.petugas,perawat:'',tl:'',nw:[]};M=mk;save();rd();toast('Patroli terkirim')});
+ RN={area:'',waktu:'',ket:'',petugas:'',perawat:'',tl:'',nw:[]};M=mk;save();rd();toast('Patroli terkirim')});
 /* ===== Penyiapan kamar: Start / Done per kamar check-out ===== */
 let ktUnit='Ward 9',ktRoom='',ktCls='k2',ktDate='';
 const KCLS=[['vip','VIP',40],['k1','Kelas 1',30],['k2','Kelas 2',20],['k3','Kelas 3',20],['suite','Suite',60]],kStd=k=>(KCLS.find(x=>x[0]==k)||[0,0,20])[2];
@@ -741,7 +741,7 @@ function ktRun(){const L=(S.kj||[]).filter(j=>!j.t1&&pbMine(j)).sort((a,b)=>a.t0
   return `<div class="card" style="margin-top:8px"><div class="row"><div><b>${esc(j.unit)} · ${esc(j.room)}</b><div class="sub">Mulai ${fmtT(j.t0)} · ${esc(j.p||'-')} · standar ${j.std} menit</div></div><span class="pill ${m>j.std?'bad':'ok'}">${m} menit</span></div><div class="row" style="justify-content:flex-start;gap:8px;margin-top:10px"><button class="btn acc" data-kj="done|${j.id}">✔ Done</button><button class="btn" data-kj="del|${j.id}">Batal</button></div></div>`}).join('')||'<p class="sub">Belum ada kamar yang sedang dikerjakan.</p>'}
 function ktJobCard(){ktFix();const done=(S.kj||[]).filter(j=>j.t1&&j.date.startsWith(M)).sort((a,b)=>b.t1.localeCompare(a.t1)),cus=ktRoom&&!(KROOMS[ktUnit]||[]).includes(ktRoom);
  return `<div class="card"><h2>Pembersihan kamar check out</h2><p class="sub">Pilih kamar lalu ketuk <b>Start</b> saat mulai. Kamar baru terhitung <b>1</b> di rekap setelah ketuk <b>Done</b>. Sesuai standar bila durasi ≤ standar waktu kelas.</p>
-<div class="f"><label>Tanggal<input type="date" id="kjd" value="${ktDate||TODAY}"></label><label>Unit<select id="ku">${Object.keys(KROOMS).map(u=>`<option ${u==ktUnit?'selected':''}>${esc(u)}`).join('')}</select></label><label>Kamar<select id="kr">${KPH}${roomOpts(ktUnit,ktRoom,cus)}</select></label><label id="krml" ${cus?'':'hidden'}>Nomor kamar<input id="krm" size="8" placeholder="mis. 9131" value="${esc(cus?ktRoom:'')}"></label><label>Kelas<select id="kcl">${KCLS.map(([v,n,m])=>`<option value="${v}" ${v==ktCls?'selected':''}>${n} · ${m} menit`).join('')}</select></label><label>Petugas<input id="kb" size="14" value="${esc(S.petugas||'')}"></label></div>
+<div class="f"><label>Tanggal<input type="date" id="kjd" value="${ktDate||TODAY}"></label><label>Unit<select id="ku">${Object.keys(KROOMS).map(u=>`<option ${u==ktUnit?'selected':''}>${esc(u)}`).join('')}</select></label><label>Kamar<select id="kr">${KPH}${roomOpts(ktUnit,ktRoom,cus)}</select></label><label id="krml" ${cus?'':'hidden'}>Nomor kamar<input id="krm" size="8" placeholder="mis. 9131" value="${esc(cus?ktRoom:'')}"></label><label>Kelas<select id="kcl">${KCLS.map(([v,n,m])=>`<option value="${v}" ${v==ktCls?'selected':''}>${n} · ${m} menit`).join('')}</select></label><label>Petugas<input id="kb" size="14" value="${esc('')}"></label></div>
 <p class="sub" id="kinfo">Pilih kamar — kelas &amp; standar waktu terisi otomatis dari nomor kamar.</p>
 <div style="margin-top:10px"><button class="btn acc" data-kj="start">▶ Start</button></div>
 <h2 style="margin-top:16px">Sedang dikerjakan</h2><div id="kjrun">${ktRun()}</div>
@@ -773,7 +773,7 @@ function qCount(){const st=$('#qst');if(!st)return;const all=document.querySelec
  st.className='sub '+(ok?'ok':'warn');st.textContent='Terisi '+dn+' / '+all.length+(dn?' · temuan '+bad:'')+(QSAVED?' · ✓ sudah tersimpan untuk tanggal ini (ubah lalu simpan untuk memperbarui)':ok?' · siap disimpan':'')}
 function qApply(){if(!$('#qst'))return;const rec=((S.vq||{})[M]||{})[ddk()],dr=qdL()[D];
  document.querySelectorAll('[data-qx]').forEach(b=>{const k=b.dataset.qx;let v=rec?(rec.includes(k)?'x':'g'):'';if(dr&&dr.m&&dr.m[k]!==undefined)v=dr.m[k];qPaint(b,v)});
- const by=$('#qb');if(by)by.value=(dr&&dr.by)||(S.vqb||{})[D]||S.petugas||'';QSAVED=!!rec;qCount()}
+ const by=$('#qb');if(by)by.value=(dr&&dr.by)||(S.vqb||{})[D]||'';QSAVED=!!rec;qCount()}
 function qClose(){const o=$('#qov');if(o)o.remove();QB=null}
 function qMenu(t){qClose();QB=t;const cur=t.dataset.s||'',o=document.createElement('div');o.id='qov';
  o.style.cssText='position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.45);display:flex;align-items:flex-end;justify-content:center';
@@ -801,7 +801,7 @@ document.addEventListener('click',e=>{const t=e.target.closest('button,[data-go]
 if(q.go){F=null;page=q.go;M=TODAY.slice(0,7);D=TODAY;draw();scrollTo(0,0);return}
 if(q.v){view=q.v;draw();return}
 if(q.th){tlHist=q.th;draw();return}
-if(q.tf){F={code:q.tf,j:Math.min(21,Math.max(8,new Date().getHours())),p:S.petugas||'',k:'',ans:{}};GPS={ok:false,msg:'Memverifikasi lokasi…'};draw();scrollTo(0,0);gpsCheck();return}
+if(q.tf){F={code:q.tf,j:Math.min(21,Math.max(8,new Date().getHours())),p:'',k:'',ans:{}};GPS={ok:false,msg:'Memverifikasi lokasi…'};draw();scrollTo(0,0);gpsCheck();return}
 if(q.tfx){gpsStop();gpsModalClose();F=null;draw();return}
 if(q.tfg){gpsCheck();return}
 if(q.ans){const[i,v]=q.ans.split('|');F.ans[i]=v;const y=scrollY;draw();scrollTo(0,y);return}
