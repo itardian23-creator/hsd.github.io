@@ -162,10 +162,10 @@ const dn=Object.values(rec).reduce((s,a)=>s+a.filter(Boolean).length,0);
 return`<div class="row">${head('tl')}${mbar()}</div>${sumbox('tl')}
 <div class="card"><div class="row"><div class="f"><label>Tanggal<input type="date" id="dt" value="${D}"></label></div><span class="pill">Hari ini: ${dn} / 196</span></div><p class="sub">Ketuk jam untuk menandai area sudah dicek. Jam 08.00–21.00 (14 slot).</p><div class="tw"><table><tr><th>Area</th>${hd}<th></th></tr>${rows}</table></div></div>`},
 kt(){const o=S.kt[M]||{},n=dim(M),y=M.slice(0,4),mo=+M.slice(5),SM=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];let r='',C=0,Z=0;
-for(let d=1;d<=n;d++){const k=pd(d),x=o[k]||{},has=x.c!==undefined&&x.c!=='',c=+x.c||0,s=+x.s||0;C+=c;Z+=s;r+=`<tr><td>${d}</td><td>${d}-${SM[mo-1]}-${y}</td><td><input type="number" min="0" data-kt="${k}" data-f="c" value="${x.c??''}"></td><td><input type="number" min="0" data-kt="${k}" data-f="s" value="${x.s??''}"></td><td id="te${k}">${has&&c?Math.round(s/c*100)+'%':''}</td><td id="td${k}">${has?c-s:''}</td><td id="tg${k}">${has&&c?Math.round((c-s)/c*100)+'%':''}</td><td><input data-kt="${k}" data-f="k" value="${esc(x.k||'')}" placeholder="Keterangan"></td></tr>`}
+for(let d=1;d<=n;d++){const k=pd(d),x=o[k]||{},has=x.c!==undefined&&x.c!=='',c=+x.c||0,s=+x.s||0;C+=c;Z+=s;r+=`<tr><td>${d}</td><td>${d}-${SM[mo-1]}-${y}</td><td id="tc${k}">${has?c:''}</td><td id="ts${k}">${has?s:''}</td><td id="te${k}">${has&&c?Math.round(s/c*100)+'%':''}</td><td id="td${k}">${has?c-s:''}</td><td id="tg${k}">${has&&c?Math.round((c-s)/c*100)+'%':''}</td><td class="sub">${ktKet(k)}</td></tr>`}
 return`<div class="row">${head('kt')}${mbar()}</div>${sumbox('kt')}
 ${ktJobCard()}
-<div class="card"><h2>KECEPATAN PENYIAPAN KAMAR PERAWATAN BULAN ${MU()}</h2><p class="sub">Area Rumah Sakit Pondok Indah Bintaro Jaya. Standar waktu: kelas 2 &amp; 3 = 20 menit · kelas 1 = 30 · VIP = 40 · suite = 60. Isi <b>jumlah kamar check out</b> dan <b>jumlah sesuai standar</b>; kolom tidak sesuai dan persentase terhitung otomatis.</p><div class="tw"><table><tr><th rowspan="2">NO</th><th rowspan="2">TANGGAL</th><th rowspan="2">JUMLAH KAMAR CHEK OUT</th><th colspan="2">SESUAI STANDAR</th><th colspan="2">TIDAK SESUAI STANDAR</th><th rowspan="2">KETERANGAN</th></tr><tr><th>JUMLAH</th><th>%</th><th>JUMLAH</th><th>%</th></tr>${r}<tr><th colspan="2">JUMLAH</th><th id="kc">${C}</th><th id="ks">${Z}</th><th id="ke">${C?(Z/C*100).toFixed(1)+'%':''}</th><th id="kf">${C-Z}</th><th id="kg">${C?((C-Z)/C*100).toFixed(1)+'%':''}</th><th></th></tr></table></div></div>`},
+<div class="card"><h2>KECEPATAN PENYIAPAN KAMAR PERAWATAN BULAN ${MU()}</h2><p class="sub">Area Rumah Sakit Pondok Indah Bintaro Jaya. Standar waktu: kelas 2 &amp; 3 = 20 menit · kelas 1 = 30 · VIP = 40 · suite = 60. Laporan ini terisi <b>otomatis</b> dari kamar yang sudah <b>Done</b> pada kartu di atas (Start → Done). Tidak perlu input manual.</p><div class="tw"><table><tr><th rowspan="2">NO</th><th rowspan="2">TANGGAL</th><th rowspan="2">JUMLAH KAMAR CHEK OUT</th><th colspan="2">SESUAI STANDAR</th><th colspan="2">TIDAK SESUAI STANDAR</th><th rowspan="2">KETERANGAN</th></tr><tr><th>JUMLAH</th><th>%</th><th>JUMLAH</th><th>%</th></tr>${r}<tr><th colspan="2">JUMLAH</th><th id="kc">${C}</th><th id="ks">${Z}</th><th id="ke">${C?(Z/C*100).toFixed(1)+'%':''}</th><th id="kf">${C-Z}</th><th id="kg">${C?((C-Z)/C*100).toFixed(1)+'%':''}</th><th></th></tr></table></div></div>`},
 ins(){const g={};SEED.chk.forEach((c,i)=>(g[c.g]=g[c.g]||[]).push([i,c.n]));
 const l=insList(M).sort((a,b)=>b.date.localeCompare(a.date));
 return`<div class="row">${head('ins')}${mbar()}</div>${sumbox('ins')}
@@ -386,28 +386,36 @@ function ktAuto(room){const c=roomCls(room),i=$('#kinfo');if(c){ktCls=c;const e=
  if(i)i.textContent=c?'Terdeteksi otomatis: '+KCLS.find(x=>x[0]==c)[1]+' · standar '+kStd(c)+' menit (bisa diubah manual, mis. Suite)':'Kelas tidak terdeteksi dari nomor kamar — pilih manual.'}
 const fmtT=iso=>new Date(iso).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}).replace('.',':');
 const KPH='<option value="" disabled selected>Pilih kamar…</option>';
+const jStd=j=>{const v=+j.std;if(v>0)return v;return kStd(KCLS.some(x=>x[0]==j.cls)?j.cls:(roomCls(j.room)||'k2'))};
+function ktCnt(j,n){const o=(S.kt[j.date.slice(0,7)]=S.kt[j.date.slice(0,7)]||{}),x=(o[j.date.slice(8,10)]=o[j.date.slice(8,10)]||{});x.c=Math.max(0,(+x.c||0)+n);if(j.ok)x.s=Math.max(0,(+x.s||0)+n)}
+function ktFix(){let ch=0;(S.kj||[]).forEach(j=>{if(!j.t1||+j.std>0)return;const old=j.ok?1:0;j.std=jStd(j);j.ok=j.dur<=j.std?1:0;ch++;
+  if(j.cnt&&old!=j.ok){const o=(S.kt[j.date.slice(0,7)]=S.kt[j.date.slice(0,7)]||{}),x=(o[j.date.slice(8,10)]=o[j.date.slice(8,10)]||{});x.s=Math.max(0,(+x.s||0)+(j.ok-old))}});if(ch)save()}
+function ktKet(d){const L=(S.kj||[]).filter(j=>j.t1&&j.date==M+'-'+d&&!j.ok).sort((a,b)=>a.t1.localeCompare(b.t1)),o=((S.kt[M]||{})[d]||{}).k;
+ return[L.length?'Melebihi standar: '+L.map(j=>esc(j.room)+' ('+j.dur+'/'+jStd(j)+' mnt)').join(', '):'',o?esc(o):''].filter(Boolean).join(' · ')}
 function ktRun(){const L=(S.kj||[]).filter(j=>!j.t1).sort((a,b)=>a.t0.localeCompare(b.t0));
  return L.map(j=>{const m=Math.floor((Date.now()-new Date(j.t0))/60000);
   return `<div class="card" style="margin-top:8px"><div class="row"><div><b>${esc(j.unit)} · ${esc(j.room)}</b><div class="sub">Mulai ${fmtT(j.t0)} · ${esc(j.p||'-')} · standar ${j.std} menit</div></div><span class="pill ${m>j.std?'bad':'ok'}">${m} menit</span></div><div class="row" style="justify-content:flex-start;gap:8px;margin-top:10px"><button class="btn acc" data-kj="done|${j.id}">✔ Done</button><button class="btn" data-kj="del|${j.id}">Batal</button></div></div>`}).join('')||'<p class="sub">Belum ada kamar yang sedang dikerjakan.</p>'}
-function ktJobCard(){const done=(S.kj||[]).filter(j=>j.t1&&j.date.startsWith(M)).sort((a,b)=>b.t1.localeCompare(a.t1)).slice(0,30),cus=ktRoom&&!(KROOMS[ktUnit]||[]).includes(ktRoom);
+function ktJobCard(){ktFix();const done=(S.kj||[]).filter(j=>j.t1&&j.date.startsWith(M)).sort((a,b)=>b.t1.localeCompare(a.t1)).slice(0,30),cus=ktRoom&&!(KROOMS[ktUnit]||[]).includes(ktRoom);
  return `<div class="card"><h2>Pembersihan kamar check out</h2><p class="sub">Pilih kamar lalu ketuk <b>Start</b> saat mulai. Kamar baru terhitung <b>1</b> di rekap setelah ketuk <b>Done</b>. Sesuai standar bila durasi ≤ standar waktu kelas.</p>
 <div class="f"><label>Tanggal<input type="date" id="kjd" value="${ktDate||TODAY}"></label><label>Unit<select id="ku">${Object.keys(KROOMS).map(u=>`<option ${u==ktUnit?'selected':''}>${esc(u)}`).join('')}</select></label><label>Kamar<select id="kr">${KPH}${roomOpts(ktUnit,ktRoom,cus)}</select></label><label id="krml" ${cus?'':'hidden'}>Nomor kamar<input id="krm" size="8" placeholder="mis. 9131" value="${esc(cus?ktRoom:'')}"></label><label>Kelas<select id="kcl">${KCLS.map(([v,n,m])=>`<option value="${v}" ${v==ktCls?'selected':''}>${n} · ${m} menit`).join('')}</select></label><label>Petugas<input id="kb" size="14" value="${esc(S.petugas||'')}"></label></div>
+<p class="sub" id="kinfo">Pilih kamar — kelas &amp; standar waktu terisi otomatis dari nomor kamar.</p>
 <div style="margin-top:10px"><button class="btn acc" data-kj="start">▶ Start</button></div>
 <h2 style="margin-top:16px">Sedang dikerjakan</h2><div id="kjrun">${ktRun()}</div>
 <h2 style="margin-top:16px">Selesai bulan ini (${done.length})</h2><div class="tw"><table><tr><th>Tanggal</th><th>Kamar</th><th>Petugas</th><th>Mulai</th><th>Selesai</th><th>Durasi</th><th>Status</th><th></th></tr>${done.map(j=>`<tr><td>${esc(j.date.slice(8))}/${esc(j.date.slice(5,7))}</td><td>${esc(j.unit)} · ${esc(j.room)}</td><td>${esc(j.p||'')}</td><td>${fmtT(j.t0)}</td><td>${fmtT(j.t1)}</td><td>${j.dur} mnt</td><td class="${j.ok?'ok':'bad'}">${j.ok?'Sesuai':'Tidak sesuai'} (≤${j.std})</td><td><button class="btn sm" data-kj="del|${j.id}">Hapus</button></td></tr>`).join('')||'<tr><td colspan="8" class="sub">Belum ada yang selesai bulan ini.</td></tr>'}</table></div></div>`}
 document.addEventListener('change',e=>{const t=e.target;
  if(t.id=='ku'){ktUnit=t.value;ktRoom='';$('#kr').innerHTML=KPH+roomOpts(ktUnit);$('#krml').hidden=true}
- else if(t.id=='kr'){$('#krml').hidden=t.value!='__x';ktRoom=t.value=='__x'?'':t.value}
- else if(t.id=='kcl')ktCls=t.value;else if(t.id=='kjd'&&t.value)ktDate=t.value});
+ else if(t.id=='kr'){$('#krml').hidden=t.value!='__x';ktRoom=t.value=='__x'?'':t.value;ktAuto(ktRoom)}
+ else if(t.id=='kcl'){ktCls=t.value;const i=$('#kinfo');if(i)i.textContent='Kelas diatur manual: '+KCLS.find(x=>x[0]==ktCls)[1]+' · standar '+kStd(ktCls)+' menit'}else if(t.id=='kjd'&&t.value)ktDate=t.value});
 document.addEventListener('click',e=>{const b=e.target.closest('[data-kj]');if(!b)return;const[a,id]=b.dataset.kj.split('|'),y=scrollY;S.kj=S.kj||[];
- const rd=()=>{draw();scrollTo(0,y)},cnt=(j,n)=>{const o=(S.kt[j.date.slice(0,7)]=S.kt[j.date.slice(0,7)]||{}),x=(o[j.date.slice(8,10)]=o[j.date.slice(8,10)]||{});x.c=Math.max(0,(+x.c||0)+n);if(j.ok)x.s=Math.max(0,(+x.s||0)+n)};
+ const rd=()=>{draw();scrollTo(0,y)},cnt=ktCnt;
+
  if(a=='start'){const r=$('#kr').value,room=(r=='__x'?$('#krm').value:r||'').trim(),p=$('#kb').value.trim();
   if(!room)return toast('Pilih kamar dulu');if(!p)return toast('Isi nama petugas');
   const un=ktUnit,dt=($('#kjd').value||TODAY);
   if(S.kj.some(j=>!j.t1&&j.unit==un&&j.room==room))return toast('Kamar ini sedang dikerjakan');
-  S.petugas=p;S.kj.push({id:Date.now(),date:dt,unit:un,room,cls:ktCls,std:+ktCls,p,t0:new Date().toISOString()});ktRoom='';save();rd();toast('Mulai: '+room);return}
+  S.petugas=p;S.kj.push({id:Date.now(),date:dt,unit:un,room,cls:ktCls,std:kStd(ktCls),p,t0:new Date().toISOString()});ktRoom='';save();rd();toast('Mulai: '+room);return}
  const j=S.kj.find(x=>x.id==id);if(!j)return;
- if(a=='done'){j.t1=new Date().toISOString();j.dur=Math.max(1,Math.round((new Date(j.t1)-new Date(j.t0))/60000));j.ok=j.dur<=j.std?1:0;cnt(j,1);j.cnt=1;save();rd();toast('Selesai · terhitung 1 kamar');return}
+ if(a=='done'){j.t1=new Date().toISOString();j.dur=Math.max(1,Math.round((new Date(j.t1)-new Date(j.t0))/60000));j.std=jStd(j);j.ok=j.dur<=j.std?1:0;cnt(j,1);j.cnt=1;save();rd();toast('Selesai · terhitung 1 kamar');return}
  if(a=='del'){if(!confirm(j.t1?'Hapus data kamar ini? Hitungan di rekap ikut berkurang.':'Batalkan pengerjaan kamar ini?'))return;if(j.cnt)cnt(j,-1);S.kj=S.kj.filter(x=>x.id!=id);save();rd()}});
 setInterval(()=>{const e=$('#kjrun');if(e&&!document.hidden)e.innerHTML=ktRun()},30000);
 
@@ -428,7 +436,7 @@ function qMenu(t){qClose();QB=t;const cur=t.dataset.s||'',o=document.createEleme
  const O=[['g','✅ Sesuai','var(--ok)'],['x','❌ Tidak sesuai (ada temuan)','var(--bad)'],['','↺ Belum dinilai','var(--ink)']];
  o.innerHTML=`<div style="background:var(--panel);color:var(--ink);width:min(420px,100%);border-radius:22px 22px 0 0;padding:18px 18px calc(18px + env(safe-area-inset-bottom,0px));display:grid;gap:8px"><div class="sub">Penilaian item</div><b style="margin-bottom:4px">${esc(t.firstElementChild.textContent)}</b>${O.map(([v,l,c])=>`<button class="btn" data-qv="${v}" style="text-align:left;padding:13px 14px;border:2px solid ${v==cur?c:'transparent'};color:${c}">${l}</button>`).join('')}<button class="btn" data-qc="1" style="margin-top:4px">Batal</button></div>`;
  o.onclick=e=>{if(e.target===o)qClose()};document.body.append(o)}
-document.addEventListener('input',e=>{if(e.target.id=='qb')qDraft()});
+document.addEventListener('input',e=>{if(e.target.id=='qb')qDraft();if(e.target.id=='krm')ktAuto(e.target.value)});
 document.addEventListener('click',e=>{const t=e.target.closest('[data-qx],[data-qv],[data-qc],[data-qs]');if(!t)return;const ds=t.dataset;
  if(ds.qx!==undefined){qMenu(t);return}
  if(ds.qc){qClose();return}
