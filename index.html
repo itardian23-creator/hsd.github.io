@@ -690,7 +690,7 @@ function gpsRun(){gpsStop();if(!F)return;const t=tol(),tok=++GTOK;
  timer=setTimeout(final,25000);
  try{navigator.geolocation.getCurrentPosition(p=>{if(!alive())return;onPos(p);if(alive())start(true)},e=>{if(!alive())return;if(e&&e.code==1){stop();return fail(e)}start(true)},{enableHighAccuracy:true,maximumAge:0,timeout:20000})}catch(x){start(true)}}
 function gpsModalClose(){const o=document.getElementById('gpsov');if(o)o.remove()}
-function gpsModal(kind,again){gpsModalClose();if(!F&&kind!='ask'&&kind!='denied')return;const ua=navigator.userAgent||'',ios=/iPad|iPhone|iPod/.test(ua)||(navigator.platform=='MacIntel'&&navigator.maxTouchPoints>1),and=/Android/i.test(ua);
+function gpsModal(kind,again){gpsModalClose();return;if(!F&&kind!='ask'&&kind!='denied')return;const ua=navigator.userAgent||'',ios=/iPad|iPhone|iPod/.test(ua)||(navigator.platform=='MacIntel'&&navigator.maxTouchPoints>1),and=/Android/i.test(ua);
  const steps=ios?['Ketuk ikon <b>aA</b> di bilah alamat Safari','Pilih <b>Pengaturan Situs Web</b>','Ubah <b>Lokasi</b> menjadi <b>Izinkan</b>','Kembali ke sini, ketuk <b>Coba lagi</b>']:and?['Ketuk ikon <b>gembok</b> di bilah alamat','Pilih <b>Izin</b> › <b>Lokasi</b> › <b>Izinkan</b>','Pastikan <b>Lokasi</b> HP menyala','Kembali ke sini, ketuk <b>Coba lagi</b>']:['Klik ikon <b>gembok</b> di bilah alamat','Ubah <b>Lokasi</b> menjadi <b>Izinkan</b>','Kembali ke sini, klik <b>Coba lagi</b>'];
  const o=document.createElement('div');o.id='gpsov';
  o.innerHTML=kind=='ask'
@@ -704,10 +704,8 @@ function primeLoc(){if(!navigator.geolocation||window.isSecureContext===false||D
 function locReq(){if(!navigator.geolocation)return;try{navigator.geolocation.getCurrentPosition(()=>{PRIMED=Date.now()+3600000;toast('Lokasi diizinkan ✓')},e=>{if(e&&e.code==1)gpsModal('denied',true)},{enableHighAccuracy:false,maximumAge:0,timeout:60000})}catch(x){}}
 async function locState(){let st='unknown';try{if(navigator.permissions&&navigator.permissions.query)st=(await navigator.permissions.query({name:'geolocation'})).state}catch(e){}return st}
 let LASK=0;
-async function locNeed(){if(LASK||!navigator.geolocation||window.isSecureContext===false)return;if(await locState()=='granted')return;LASK=1;if(page=='tl'&&!F)gpsModal('ask')}
-async function gpsCheck(){if(!F)return;gpsModalClose();
- if(!tol()||!navigator.geolocation||window.isSecureContext===false||await locState()=='granted')return gpsRun();
- if(!F)return;GPS={ok:false,msg:'Menunggu izin lokasi…',hint:'Ketuk “Izinkan Lokasi” pada pemberitahuan, lalu pilih Izinkan.'};gpsShow();gpsModal('ask')}
+function locNeed(){if(LASK||!navigator.geolocation||window.isSecureContext===false)return;LASK=1;try{navigator.geolocation.getCurrentPosition(()=>{},()=>{},{enableHighAccuracy:false,maximumAge:600000,timeout:60000})}catch(e){}}
+async function gpsCheck(){if(!F)return;gpsModalClose();gpsRun()}
 document.addEventListener('click',async e=>{const b=e.target.closest('[data-gpsa]');if(!b)return;const a=b.dataset.gpsa;
  if(a=='x'){gpsModalClose();return}
  if(a=='reload'){location.reload();return}
