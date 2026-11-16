@@ -893,7 +893,7 @@ function gpsErrMsg(e){const ua=navigator.userAgent||'',ios=/iPad|iPhone|iPod/.te
  if(c==2)return['Posisi belum bisa ditentukan.',(ios||and?'Nyalakan Lokasi/GPS HP dan pindah ke dekat jendela atau area terbuka.':'Pastikan layanan lokasi sistem aktif dan perangkat terhubung ke Wi-Fi/internet.')+' Lalu ketuk Cek ulang GPS.'];
  if(c==3)return['Waktu pengambilan lokasi habis.','Pindah ke area dengan sinyal lebih baik (dekat jendela), lalu ketuk Cek ulang GPS.'];
  return['GPS tidak tersedia di perangkat/peramban ini.','Coba peramban lain (Safari/Chrome) atau minta admin menonaktifkan verifikasi GPS (toleransi 0).']}
-function gpsRun(){gpsStop();if(!F)return;const t=tol(),tok=++GTOK;
+function gpsRun(){gpsStop();if(!F)return;if(isAdmin()){GPS={ok:true,msg:'Admin · verifikasi lokasi dilewati',hint:''};return gpsShow()}const t=tol(),tok=++GTOK;
  if(!t){GPS={ok:true,msg:'Verifikasi GPS dinonaktifkan',hint:''};return gpsShow()}
  const fail=e=>{const m=gpsErrMsg(e);GPS={ok:false,msg:m[0],hint:m[1]};gpsShow();if(e&&e.code==1&&F&&GTRY)gpsModal('denied',true);GTRY=false};
  if(window.isSecureContext===false)return fail({code:0});
