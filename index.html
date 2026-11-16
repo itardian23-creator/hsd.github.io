@@ -486,7 +486,7 @@ function fbData(wb,c){
  const Y=M.slice(0,4),ms=ymon().filter(m=>(logOf(c,m)||[]).length).reverse();if(!ms.includes(M))ms.unshift(M);ms.forEach(m=>fbLogSheet(wb,c,m))}
 async function fbBuild(c){const wb=new ExcelJS.Workbook();wb.creator='HSIMS KPI';wb.created=new Date();
  fbProfil(wb,c);if(c=='FB-03')fbFormQHSE(wb);fbGrafik(wb,c);
- if(c=='FB-03')exQHSE(wb);else if(c=='FB-01'||c=='FB-02')exIns(wb,c);else fbData(wb,c);
+ if(c=='FB-03'||c=='FB-01'||c=='FB-02'){const M0=M,ms=ymon().filter(m=>c=='FB-03'?Object.keys(xs('vq',m)).length:((xs('vi',m)[c]||[]).length)).reverse();if(!ms.includes(M0))ms.unshift(M0);ms.forEach(m=>{M=m;try{c=='FB-03'?exQHSE(wb):exIns(wb,c)}catch(e){console.error(e)}});M=M0}else fbData(wb,c);
  wb.worksheets.forEach(w=>{w.pageSetup={orientation:'landscape',paperSize:9,fitToPage:true,fitToWidth:1,fitToHeight:0}});const f=FBF[c];return[f[0]+'. KPI Food Service - '+f[1]+' '+M.slice(0,4)+'.xlsx',await wb.xlsx.writeBuffer()]}
 document.addEventListener('click',async e=>{const b=e.target.closest('[data-fball]');if(!b)return;if(!window.ExcelJS)return toast('Pustaka Excel belum termuat (perlu internet)');
  toast('Menyiapkan 6 file KPI Sodexo…');for(const c of FBCODES){const[fn,buf]=await fbBuild(c);await dl(fn,buf);if(GAS())upDrive(fn,buf,true);await new Promise(r=>setTimeout(r,400))}});
