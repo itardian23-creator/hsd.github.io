@@ -163,6 +163,20 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--acc);outline-off
 /* Tampilan khusus admin: petugas hanya melihat form input */
 .pt .adm-only{display:none!important}
 .pt .stat[data-go] .big,.pt .stat[data-go] .bar,.pt .stat[data-go]>.sub:last-child{display:none}
+.dash{display:grid;gap:12px}.dash h1{font-size:clamp(1.3rem,2.4vw,1.7rem)}
+.dsl{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+.dsc{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 16px;border-radius:16px;background:var(--panel);border:1px solid var(--line);box-shadow:var(--shadow);font:inherit;color:inherit;text-align:left;cursor:pointer}
+.dsc b{font-size:1.05rem}.dsc .dv{text-align:right;display:flex;flex-direction:column}.dsc .dv b{font-size:1.5rem;letter-spacing:-.03em;line-height:1.1}
+.dg{display:grid;gap:12px;grid-template-columns:repeat(3,minmax(0,1fr));align-items:start}
+.dp{background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:12px 12px 8px;box-shadow:var(--shadow);min-width:0}
+.dp h2{font-size:.9rem;margin:0 4px 6px;color:var(--mute);text-transform:uppercase;letter-spacing:.08em}
+.dl{display:grid;gap:2px}
+.dr{display:grid;grid-template-columns:44px minmax(0,1fr) auto;align-items:center;gap:10px;padding:7px 8px;border-radius:12px;border:0;background:none;font:inherit;color:inherit;text-align:left;cursor:pointer;transition:background .2s}
+.dr:hover{background:var(--chip)}.dc{font-size:11px;font-weight:700;color:var(--mute)}
+.dn{display:grid;gap:4px;min-width:0}.dt{font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dr .bar{height:5px;margin:0}.dr b{font-size:1.05rem;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.pt .dr b,.pt .dr .bar,.pt .dsc .dv{display:none}
+@media(max-width:1000px){.dg{grid-template-columns:1fr}}
 </style></head><body>
 <div class="topnav"><div style="display:flex;gap:8px;align-items:center"><div class="logo"><span class="mark"></span>HSIMS</div><button class="logo" id="sync" data-dr="sync" style="font:inherit;font-size:.85rem;cursor:pointer;color:inherit"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.35 10.04A7.49 7.49 0 0 0 12 4C9.11 4 6.6 5.64 5.35 8.04A5.994 5.994 0 0 0 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/></svg><span id="synct" class="hm"></span></button></div><nav class="navlinks" id="nav"></nav><div class="menu-wrap"><button type="button" class="menu-btn" id="menuBtn" aria-label="Buka menu" aria-expanded="false" aria-controls="mmenu"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></button><nav class="mmenu" id="mmenu" aria-label="Menu"></nav></div></div>
 <main class="app" id="app"></main>
@@ -287,10 +301,14 @@ ${VK.map(k=>{const x=vv(k);return`<tr><td>${k[2]}</td><td>${k[0]} ${k[1]}</td><t
 <p class="sub">Metode: skor KPI persen = MIN(100, capaian ÷ target × 100); KPI hitungan (target 0) = 100 − 50 poin per kejadian; skor vendor = rata-rata bertimbang KPI yang berdata. Rating: A ≥ 95 · B 90–94,9 · C 85–89,9 · D &lt; 85. Bobot &amp; ambang adalah usulan Blueprint HSIMS v2.1 sampai kontrak SLA diterima. Rating C → surat peringatan &amp; rencana perbaikan 14 hari; D atau C dua bulan berturut-turut → review kontrak.</p>
 <button class="btn acc" data-vx="csv">Ekspor rekap vendor (CSV)</button></div>`};
 const _dash=V.dash;
-V.dash=()=>{let h=_dash().replace('Housekeeping · PT Provices Indonesia','Hospitality Services · Provices · Sodexo · CSI').replace('<div class="grid">','<h2 style="margin-top:6px">Housekeeping · PT Provices Indonesia</h2><div class="grid">');
- const sc=allowed('sla')?`<h2>Skor vendor SLA</h2><div class="grid">${VEN.map(([v,u])=>{const s=vs(v,M),r=rate(s);return`<button class="card stat" data-go="sla"><div class="sub">${u}</div><h2>${v}</h2><div class="big ${r[1]}">${f1(s)}</div><div class="sub">Rating ${r[0]}</div></button>`}).join('')}</div>`:'';
- const sec=vn=>{const ks=VK.filter(k=>k[2]==vn&&allowed(vkey(k)));return ks.length?`<h2 style="margin-top:6px">${VP[vn][1]}</h2><div class="grid">${ks.map(k=>{const pg=vkey(k);const x=vv(k),st=vst(k,x);return`<button class="card stat" data-go="${pg}"><div class="sub">${k[0]}</div><h2>${k[1]}</h2><div class="big ${st[1]}">${pv(k)(x)}</div><div class="sub">target ${vtg(k)} · ${st[0]}</div></button>`}).join('')}</div>`:''};
- return h.replace(/<div class="card sub">Klik kartu/,sc+sec('Sodexo')+sec('CSI')+'<div class="card sub">Klik kartu')};
+V.dash=()=>{
+ const cl=(v,c)=>v==null?'':v>=TGT?'ok':v>=.9?'warn':'bad';
+ const row=(pg,code,name,val,cls,pct)=>`<button class="dr" data-go="${pg}" title="${esc(name)}"><span class="dc">${esc(code)}</span><span class="dn"><span class="dt">${esc(name)}</span><span class="bar"><i style="width:${Math.max(0,Math.min(100,pct||0))}%"></i></span></span><b class="${cls}">${val}</b></button>`;
+ const panel=(t,rows)=>rows.length?`<section class="dp"><h2>${esc(t)}</h2><div class="dl">${rows.join('')}</div></section>`:'';
+ const prov=Object.keys(CALC).filter(allowed).map(k=>{const c=CALC[k](M),v=c.d?c.n/c.d:null;return row(k,INFO[k][0],INFO[k][1],P(c.n,c.d),cl(v),v==null?0:v*100)});
+ const sec=vn=>VK.filter(k=>k[2]==vn&&allowed(vkey(k))).map(k=>{const x=vv(k),st=vst(k,x);return row(vkey(k),k[0],k[1],pv(k)(x),st[1],x&&x.s)});
+ const sla=allowed('sla')?`<div class="dsl">${VEN.map(([v,u])=>{const s=vs(v,M),r=rate(s);return`<button class="dsc" data-go="sla"><span><span class="sub">${esc(u)} · Skor SLA</span><br><b>${esc(v)}</b></span><span class="dv"><b class="${r[1]}">${f1(s)}</b><span class="sub">Rating ${esc(r[0])}</span></span></button>`}).join('')}</div>`:'';
+ return`<div class="dash"><div class="row"><div><p class="eyebrow">Hospitality Services · Provices · Sodexo · CSI</p><h1>Ringkasan</h1><div class="sub">RSPI Bintaro Jaya · ${MN[+M.slice(5)-1]} ${M.slice(0,4)} · klik baris untuk membuka menu</div></div>${mbar()}</div>${sla}<div class="dg">${panel('Housekeeping · Provices',prov)}${panel(VP.Sodexo[1],sec('Sodexo'))}${panel(VP.CSI[1],sec('CSI'))}</div></div>`};
 document.addEventListener('change',e=>{const t=e.target,q=t.dataset&&t.dataset.vk;if(!q)return;const[c,f]=q.split('|'),o=((S.vk=S.vk||{})[M]=S.vk[M]||{}),x=(o[c]=o[c]||{});x[f]=t.value;save();const y=scrollY;draw();scrollTo(0,y);toast('Tersimpan')});
 document.addEventListener('click',e=>{const s=e.target.closest('[data-vsel]');if(s){const[v,c]=s.dataset.vsel.split('|');VSEL[v]=c;const y=scrollY;draw();scrollTo(0,y);return}const t=e.target.closest('[data-vx]');if(!t)return;let c='vendor,kode,kpi,bulan,numerator,denominator,capaian,skor\n';
  ymon().forEach(m=>{VK.forEach(k=>{const r=vr(k[0],m),x=vv(k,m);if(x)c+=[k[2],k[0],'"'+k[1]+'"',m,r.n??'',r.d??'',k[3]=='c'?x.v:x.v.toFixed(6),x.s.toFixed(1)].join(',')+'\n'});
