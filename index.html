@@ -421,7 +421,8 @@ const vtg=k=>k[3]=='c'?'0 kejadian':Math.round(k[4]*100)+'%';
 const ymon=()=>Array.from({length:12},(_,i)=>M.slice(0,4)+'-'+pd(i+1));
 const VP={Sodexo:['fb','Food Service · PT Sodexo','KPI Sodexo (Food Service)'],CSI:['sg','Security & GA · CSI','KPI CSI (Security)']};
 const vkey=k=>k[0].slice(0,2).toLowerCase()+(+k[0].slice(3));
-function vpage(k){const x=vv(k),st=vst(k,x),r=vr(k[0]),c=k[3]=='c',P_=VP[k[2]];
+let PF=null;
+function vpage(k){if(PF&&PF.c==k[0])return ptForm();const x=vv(k),st=vst(k,x),r=vr(k[0]),c=k[3]=='c',P_=VP[k[2]];
  return`<div class="row"><div><p class="eyebrow">${k[0]} · ${P_[1]}</p><h1>${k[1]}</h1></div>${mbar()}</div>
 <div class="card adm-only"><div class="sub">${k[0]} · Target ${vtg(k)} · Bobot SLA ${k[5]}%</div><div class="big ${st[1]}">${pv(k)(x)}</div><div class="sub">${st[0]} · ${esc(k[6])}</div>
 ${c&&x&&x.v>0?'<p class="bad"><b>⚠ KPI kritis:</b> wajib CAR/NCR dalam 24 jam dan RCA dalam 5 hari kerja.</p>':''}</div>
@@ -810,13 +811,13 @@ function ptGps(p){return new Promise(res=>{const t=ptTol();if(!t)return res({ok:
   e=>fin(e&&e.code==1?{ok:false,msg:'Izin lokasi ditolak. Izinkan lokasi di peramban lalu coba lagi.'}:bad()),{enableHighAccuracy:true,maximumAge:0,timeout:20000})}catch(e){fin(bad())}})}
 function ptCard(c){const P=ptList(c),adm=isAdmin(),sn=slotNow();if(PSEL[c]==null||PSEL[c]>sn)PSEL[c]=sn;const sl=PSEL[c],mk=TODAY.slice(0,7);
  const rec=ptRec(c,mk).filter(r=>r.date==TODAY),has=(pid,s)=>rec.some(r=>r.pid==pid&&r.slot==s),cnt=P.filter(p=>has(p.id,sl)).length;
- const cards=P.map(p=>{const dn=has(p.id,sl);return`<button class="card stat" data-pt="${c}|${p.id}"><div class="row"><b>${esc(p.n)}</b><span class="pill ${dn?'ok':''}">${dn?'✓ '+pd(sl)+'.00':'Belum'}</span></div><div class="sub">${p.lt?esc(p.lt)+(p.new?' · baru 2026':'')+' · ':''}${PSL.filter(s=>s<=sn&&has(p.id,s)).length}/${sn/3+1} slot hari ini${!ptSet(p)&&adm?' · <span class="warn">koordinat belum diatur</span>':''}</div></button>`}).join('');
- const rows=rec.slice().sort((a,b)=>b.ts.localeCompare(a.ts)).slice(0,60).map(r=>`<tr><td>${slotLbl(r.slot)}</td><td>${esc(r.n)}</td><td>${esc(r.p)}</td><td>${r.dist==null?'–':r.dist+' m'}</td><td>${esc(r.ts.slice(11,16))}</td><td style="white-space:normal">${esc(r.ket||'')}</td><td>${(r.ph||[]).map((id,j)=>`<button type="button" class="btn sm" data-insphv="${id}">${j+1}</button>`).join(' ')||'–'}</td><td><button class="btn sm" data-ptd="${c}|${r.id}">Hapus</button></td></tr>`).join('');
+ const cards=P.map(p=>{const dn=has(p.id,sl),tdn=rec.some(r=>r.pid==p.id&&r.slot==sl&&r.st=='tidak');return`<button class="card stat" data-pt="${c}|${p.id}"><div class="row"><b>${esc(p.n)}</b><span class="pill ${dn?(tdn?'bad':'ok'):''}">${dn?(tdn?'⚠ ':'✓ ')+pd(sl)+'.00':'Belum'}</span></div><div class="sub">${p.lt?esc(p.lt)+(p.new?' · baru 2026':'')+' · ':''}${PSL.filter(s=>s<=sn&&has(p.id,s)).length}/${sn/3+1} slot hari ini${!ptSet(p)&&adm?' · <span class="warn">koordinat belum diatur</span>':''}</div></button>`}).join('');
+ const rows=rec.slice().sort((a,b)=>b.ts.localeCompare(a.ts)).slice(0,60).map(r=>`<tr><td>${slotLbl(r.slot)}</td><td>${esc(r.n)}</td><td>${esc(r.p)}</td><td class="${r.st=='tidak'?'bad':r.st=='aman'?'ok':''}">${r.st=='tidak'?'Tidak aman':r.st=='aman'?'Aman':'–'}</td><td>${r.dist==null?'–':r.dist+' m'}</td><td>${esc(r.ts.slice(11,16))}</td><td style="white-space:normal">${esc(r.ket||'')}</td><td>${(r.ph||[]).map((id,j)=>`<button type="button" class="btn sm" data-insphv="${id}">${j+1}</button>`).join(' ')||'–'}</td><td><button class="btn sm" data-ptd="${c}|${r.id}">Hapus</button></td></tr>`).join('');
  return`<div class="card"><div class="row"><h2>Checklist patroli · tiap 3 jam</h2></div>
-<p class="sub">Berdiri di lokasi, pilih slot waktu, lalu ketuk ${PTN[c]} untuk mengisi nama, foto &amp; keterangan (jam tercatat otomatis). Lokasi diverifikasi GPS (maks ${ptTol()} m). Jadwal 8× sehari: 00, 03, 06, 09, 12, 15, 18, 21. Bulan berjalan dihitung sampai kemarin.</p>
+<p class="sub">Berdiri di lokasi, pilih slot waktu, lalu ketuk ${PTN[c]} untuk mengisi nama, pilihan Aman / Tidak aman, foto &amp; keterangan (jam tercatat otomatis). Lokasi diverifikasi GPS (maks ${ptTol()} m). Jadwal 8× sehari: 00, 03, 06, 09, 12, 15, 18, 21. Bulan berjalan dihitung sampai kemarin.</p>
 <div class="f"><label>Slot waktu<select data-pts="${c}">${PSL.filter(s=>s<=sn).map(s=>`<option value="${s}" ${s==sl?'selected':''}>${slotLbl(s)}</option>`).join('')}</select></label><span class="pill ${P.length&&cnt==P.length?'ok':''}">Slot ini: ${cnt} / ${P.length}</span></div>
 ${P.length?`<div class="grid" style="margin-top:12px">${cards}</div>`:`<p class="sub" style="margin-top:12px">Belum ada ${PTN[c]}. ${adm?'Tambahkan lewat “Titik patroli & koordinat (admin)” di bawah.':'Hubungi admin untuk menambahkan.'}</p>`}
-<div class="adm-only"><h2 style="margin-top:14px">Riwayat hari ini (${rec.length})</h2>${c=='SG-01'?`<div style="margin:8px 0"><button class="btn sm acc" data-vle="SG-01">Unduh Excel</button> <button class="btn sm" data-pe="SG-01">Unduh Excel checklist</button></div>`:''}<div class="tw"><table><tr><th>Slot</th><th>Lokasi</th><th>Petugas</th><th>Jarak</th><th>Jam</th><th>Keterangan</th><th>Foto</th><th></th></tr>${rows||'<tr><td colspan="8" class="sub">Belum ada checklist hari ini.</td></tr>'}</table></div></div>
+<div class="adm-only"><h2 style="margin-top:14px">Riwayat hari ini (${rec.length})</h2>${c=='SG-01'?`<div style="margin:8px 0"><button class="btn sm acc" data-vle="SG-01">Unduh Excel</button> <button class="btn sm" data-pe="SG-01">Unduh Excel checklist</button></div>`:''}<div class="tw"><table><tr><th>Slot</th><th>Lokasi</th><th>Petugas</th><th>Status</th><th>Jarak</th><th>Jam</th><th>Keterangan</th><th>Foto</th><th></th></tr>${rows||'<tr><td colspan="9" class="sub">Belum ada checklist hari ini.</td></tr>'}</table></div></div>
 ${adm?`<details style="margin-top:12px" ${PTOPEN?'open':''}><summary>Titik patroli & koordinat (admin)</summary><div style="padding-bottom:14px"><div class="f"><label>Toleransi (meter, 0 = GPS nonaktif)<input type="number" id="ptol" min="0" value="${ptTol()}"></label></div>
 <label class="sub" style="display:block;margin-top:10px">Tambah ${PTN[c]} (satu nama per baris)<textarea id="ptb_${c}" rows="3" style="width:100%" placeholder="mis. Lobby Utama"></textarea></label><p style="margin:8px 0"><button class="btn acc sm" data-pta="${c}">Tambah</button></p>
 <p class="sub">Berdiri di lokasi lalu ketuk “GPS saya” untuk mengisi koordinat. Titik bertanda “belum diatur” belum bisa dipakai petugas.</p>
@@ -849,7 +850,7 @@ document.addEventListener('click',async e=>{const b=e.target.closest('[data-pt],
  if(d.pt){if(PBUSY)return;const[c,pid]=d.pt.split('|'),p=ptList(c).find(x=>x.id==pid);if(!p)return;const sl=PSEL[c]??slotNow(),mk=TODAY.slice(0,7);
   if(ptRec(c,mk).some(r=>r.date==TODAY&&r.slot==sl&&r.pid==pid))return toast('Sudah dicek pada slot '+slotLbl(sl));
   if(ptTol()&&!ptSet(p))return toast('Koordinat lokasi ini belum diatur admin',4000);
-  ptModal(c,p,sl);return}
+  PF={c,pid:p.id,sl,p:S.petugas||'',k:'',img:'',st:'',gps:{ok:false,msg:'Memverifikasi lokasi…',hint:''}};draw();scrollTo(0,0);ptGpsRun();return}
  if(d.ptd){const[c,id]=d.ptd.split('|');const mk=TODAY.slice(0,7),rr=ptRec(c,mk).find(r=>r.id==id);if(rr&&!own(rr))return toast('Hanya pemilik data atau admin yang bisa menghapus');if(confirm('Hapus checklist ini?')){S.pl[mk][c]=S.pl[mk][c].filter(r=>r.id!=id);save();rd()}return}
  if(!isAdmin())return;
  if(d.pta){const c=d.pta,t=$('#ptb_'+c),L=ptList(c);const nm=(t?t.value:'').split('\n').map(s=>s.trim()).filter(Boolean);if(!nm.length)return toast('Isi nama lokasi dulu');let id=Math.max(0,...L.map(x=>+x.id||0));nm.forEach(n=>L.push({id:++id,n,lat:null,lng:null}));PTOPEN=true;save();rd();toast(nm.length+' lokasi ditambahkan');return}
@@ -861,6 +862,59 @@ document.addEventListener('change',e=>{const t=e.target,d=t.dataset;if(!d)return
  if(d.pts){PSEL[d.pts]=+t.value;const y=scrollY;draw();scrollTo(0,y);return}
  if(d.ptl&&isAdmin()){const[c,id,f]=d.ptl.split('|'),p=ptList(c).find(x=>x.id==id);if(p){const v=parseFloat(String(t.value).replace(',','.'));p[f]=isNaN(v)?null:v;save();toast('Koordinat disimpan')}return}
  if(d.ptn&&isAdmin()){const[c,id]=d.ptn.split('|'),p=ptList(c).find(x=>x.id==id);if(p&&t.value.trim()){p.n=t.value.trim();save();toast('Nama disimpan')}}});
+
+/* ===== Form patroli (halaman penuh, seperti Toilet Umum) + pilihan Aman / Tidak aman ===== */
+let PWID=null,PTK=0;
+const ptClk=()=>{const t=new Date();return pd(t.getHours())+'.'+pd(t.getMinutes())+'.'+pd(t.getSeconds())};
+function ptStop(){if(PWID!=null){try{navigator.geolocation.clearWatch(PWID)}catch(e){}PWID=null}}
+function canPt(){return !!(PF&&(!ptTol()||PF.gps.ok)&&PF.p.trim()&&PF.st&&PF.img&&(PF.st=='aman'||PF.k.trim()))}
+function ptfSync(){if(!PF)return;
+ document.querySelectorAll('[data-ptst]').forEach(b=>{const on=PF.st==b.dataset.ptst;b.className=on?(b.dataset.ptst=='aman'?'s-ok':'s-bad'):''});
+ const k=$('#ptfkl');if(k)k.textContent=PF.st=='tidak'?'Keterangan / Temuan (wajib)':'Keterangan (opsional)';
+ const s=$('#ptfs');if(s&&!s.dataset.busy)s.disabled=!canPt()}
+function ptfShow(){const e=$('#pgps');if(e&&PF){e.textContent=PF.gps.msg;e.className='pill '+(PF.gps.ok?'ok':'bad')}
+ const h=$('#pgpsh');if(h){h.textContent=(PF&&PF.gps.hint)||'';h.hidden=!(PF&&PF.gps.hint)}ptfSync()}
+function ptGpsRun(){ptStop();if(!PF)return;const t=ptTol(),tok=++PTK,p=ptList(PF.c).find(x=>x.id==PF.pid);
+ if(!t||!p){PF.gps={ok:true,msg:'Verifikasi GPS dinonaktifkan',hint:''};return ptfShow()}
+ const fail=e=>{if(!PF)return;const m=gpsErrMsg(e);PF.gps={ok:false,msg:m[0],hint:m[1]};ptfShow()};
+ if(window.isSecureContext===false||!navigator.geolocation)return fail({code:0});
+ let best=null,fin=false,timer=null;
+ PF.gps={ok:false,msg:'Memverifikasi lokasi…',hint:'Pastikan GPS/lokasi aktif. Bisa sampai 25 detik.'};ptfShow();
+ const stop=()=>{fin=true;clearTimeout(timer);ptStop()},alive=()=>!fin&&tok==PTK&&!!PF;
+ const final=()=>{if(!alive())return stop();stop();
+  if(best)PF.gps={ok:false,dist:Math.round(best.d),msg:'Anda '+Math.round(best.d)+' m dari titik (akurasi ±'+best.acc+' m). Maks '+t+' m.',hint:'Dekati titik patroli, usahakan dekat jendela/area terbuka, lalu ketuk Cek ulang GPS.'};
+  else PF.gps={ok:false,msg:'Lokasi belum terdeteksi.',hint:'Aktifkan GPS lalu ketuk Cek ulang GPS.'};ptfShow()};
+ const onPos=pos=>{if(!alive())return;const d=hav(pos.coords.latitude,pos.coords.longitude,p.lat,p.lng),acc=Math.round(pos.coords.accuracy||0),eff=Math.max(0,d-Math.min(acc,50));
+  if(!best||eff<best.eff)best={d,acc,eff};
+  if(eff<=t){stop();PF.gps={ok:true,dist:Math.round(d),msg:'Lokasi sesuai · '+Math.round(d)+' m dari titik (±'+acc+' m)',hint:''};return ptfShow()}
+  PF.gps={ok:false,msg:'Mengukur lokasi… '+Math.round(d)+' m dari titik (±'+acc+' m)',hint:''};ptfShow()};
+ timer=setTimeout(final,25000);
+ try{PWID=navigator.geolocation.watchPosition(onPos,e=>{if(!alive())return;if(e&&e.code!=1&&best)return final();stop();fail(e)},{enableHighAccuracy:true,maximumAge:0,timeout:20000})}catch(x){stop();fail({code:0})}}
+function ptForm(){const c=PF.c,p=ptList(c).find(x=>x.id==PF.pid)||{n:'?'};
+ return`<div class="row"><div><p class="eyebrow">${esc(c)} · Slot ${slotLbl(PF.sl)}</p><h1>${esc(p.n)}</h1></div><button class="btn" data-ptfx="1">← Kembali</button></div>
+<div class="card"><div class="row"><span id="pgps" class="pill ${PF.gps.ok?'ok':'bad'}">${esc(PF.gps.msg)}</span><button class="btn sm" data-ptfg="1">Cek ulang GPS</button></div><div id="pgpsh" class="sub" style="margin-top:8px" ${PF.gps.hint?'':'hidden'}>${esc(PF.gps.hint||'')}</div><div class="f" style="margin-top:12px"><label>Jam patroli (otomatis)<input id="ptfclk" value="${ptClk()}" readonly disabled style="width:130px;font-variant-numeric:tabular-nums"></label><label>Nama petugas<input id="ptfp" value="${esc(PF.p)}" placeholder="Nama petugas"></label></div></div>
+<div class="card"><div class="row"><b>Kondisi area</b><span class="pill">1/1</span></div><div class="opt"><button data-ptst="aman" class="${PF.st=='aman'?'s-ok':''}">✓ Aman</button><button data-ptst="tidak" class="${PF.st=='tidak'?'s-bad':''}">⚠ Tidak aman</button></div></div>
+<div class="card"><label class="sub">Foto</label><input type="file" id="ptff" accept="image/*" capture="environment" style="width:100%;margin-top:6px"><img id="ptfi" alt="" src="${PF.img||''}" style="display:${PF.img?'block':'none'};max-width:100%;max-height:220px;border-radius:10px;margin-top:10px"></div>
+<div class="card"><label class="sub" id="ptfkl">${PF.st=='tidak'?'Keterangan / Temuan (wajib)':'Keterangan (opsional)'}</label><textarea id="ptfk" rows="3" style="width:100%;margin-top:6px" placeholder="mis. Area aman &amp; kondusif">${esc(PF.k)}</textarea></div>
+<button class="btn acc" id="ptfs" data-ptfs="1" ${canPt()?'':'disabled'}>Simpan checklist</button>`}
+async function ptfSubmit(){if(!PF||!canPt())return;const c=PF.c,p=ptList(c).find(x=>x.id==PF.pid),sl=PF.sl,mk=TODAY.slice(0,7),btn=$('#ptfs');if(!p)return;
+ if(ptRec(c,mk).some(r=>r.date==TODAY&&r.slot==sl&&r.pid==p.id)){ptStop();PF=null;draw();return toast('Sudah dicek pada slot '+slotLbl(sl))}
+ if(!GAS())return toast('Belum tersambung ke penyimpanan, foto belum bisa diunggah',3500);
+ const img=PF.img;btn.dataset.busy=1;btn.disabled=true;btn.textContent='Mengunggah foto…';let id;
+ try{const r=await gas({action:'putPhoto',mime:'image/jpeg',name:'Amano_'+TODAY+'_'+pd(sl)+'_'+p.n.replace(/\W+/g,'-')+'_'+Date.now()+'.jpg',data:img.split(',')[1]});id=r.id;PHC.set(id,img)}
+ catch(er){delete btn.dataset.busy;btn.disabled=false;btn.textContent='Simpan checklist';return toast('Gagal mengunggah foto: '+friendly(er),3500)}
+ const pn=PF.p.trim(),ket=PF.k.trim()||'Area aman & kondusif';S.petugas=pn;
+ (((S.pl=S.pl||{})[mk]=S.pl[mk]||{})[c]=S.pl[mk][c]||[]).push({id:Date.now(),date:TODAY,slot:sl,pid:p.id,n:p.n,p:pn,st:PF.st,dist:PF.gps.dist??null,ts:nowS(),ket,ph:[id],o:authed()});
+ M=mk;save();ptStop();PF=null;draw();scrollTo(0,0);toast('Tersimpan · '+p.n)}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-ptfx],[data-ptfg],[data-ptst],[data-ptfs]');if(!b||!PF)return;const d=b.dataset;
+ if(d.ptfx!==undefined){ptStop();PF=null;draw();return}
+ if(d.ptfg!==undefined){ptGpsRun();return}
+ if(d.ptst){PF.st=d.ptst;ptfSync();return}
+ if(d.ptfs!==undefined)ptfSubmit()});
+document.addEventListener('input',e=>{const t=e.target;if(!PF)return;if(t.id=='ptfp')PF.p=t.value;else if(t.id=='ptfk')PF.k=t.value;else return;ptfSync()});
+document.addEventListener('change',async ev=>{const t=ev.target;if(!PF||t.id!='ptff')return;const f=t.files[0];if(!f)return;
+ try{const u=URL.createObjectURL(f);PF.img=await shrink(u,1280,.72);URL.revokeObjectURL(u);const i=$('#ptfi');if(i){i.src=PF.img;i.style.display='block'}}catch(x){PF.img='';toast('Foto tidak bisa dibaca')}ptfSync()});
+setInterval(()=>{const e=$('#ptfclk');if(e&&PF)e.value=ptClk()},1000);
 
 /* ===== Perbantuan Security: Start / Done (batas 15 menit) ===== */
 const PBMAX=15;
@@ -1066,7 +1120,7 @@ function draw(){try{document.body.classList.toggle('pt',!isAdmin())}catch(e){}if
 function refresh(){if(page=='kt'||page=='gc'||page=='tl'||page=='ins'){const k=page,b=$('#big');if(b){const c=CALC[k](M),v=c.d?c.n/c.d:null;b.textContent=P(c.n,c.d);b.className='big '+(v==null?'':v>=TGT?'ok':v>=.9?'warn':'bad');b.nextElementSibling.firstElementChild.style.width=Math.min(100,v*100||0)+'%';$('#nd').textContent=`${c.n} dari ${c.d} · ${INFO[k][2]}`}}}
 const dl=async(n,t)=>{if(!DLC){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t]));a.download=n;document.body.append(a);a.click();a.remove();return}try{await DLC.save({filename:n,data:t});toast('Tersimpan')}catch(e){if(!e||e.code!='declined')toast('Gagal menyimpan')}};
 document.addEventListener('click',e=>{const t=e.target.closest('button,[data-go]');if(!t)return;const q=t.dataset;
-if(q.go){F=null;page=q.go;M=TODAY.slice(0,7);D=TODAY;draw();scrollTo(0,0);return}
+if(q.go){F=null;if(PF){ptStop();PF=null}page=q.go;M=TODAY.slice(0,7);D=TODAY;draw();scrollTo(0,0);return}
 if(q.v){view=q.v;draw();return}
 if(q.th){tlHist=q.th;draw();return}
 if(q.tf){F={code:q.tf,j:Math.min(21,Math.max(8,new Date().getHours())),p:'',k:'',ans:{}};GPS={ok:false,msg:'Memverifikasi lokasi…'};draw();scrollTo(0,0);gpsCheck();return}
@@ -1498,9 +1552,9 @@ async function vBuild(kind,c){if((kind=='le'||kind=='xe')&&/^FB-0[1-6]$/.test(c)
  if(kind=='le'){const L=LOG[c],rows=logOf(c)||[],ws=wb.addWorksheet(L.sn());ws.addRow(L.h);const hr=ws.getRow(1);hr.font={bold:true};hr.alignment={horizontal:'center',vertical:'middle',wrapText:true};hr.eachCell(z=>{z.fill={type:'pattern',pattern:'solid',fgColor:{argb:XC.blue}};z.border=XBOX});
   if(L.mt)ws.addRow([MN[+M.slice(5)-1].toUpperCase()]);rows.forEach((r,i)=>{ws.addRow(L.row(r,i)).eachCell(z=>z.border=XBOX)});L.h.forEach((_,i)=>ws.getColumn(i+1).width=i==0?6:22);return['KPI-'+c+'-'+M+'.xlsx',await wb.xlsx.writeBuffer()]}
  if(kind=='pe'){const ws=wb.addWorksheet('Patroli '+MN[+M.slice(5)-1]);ws.addRow(['CHECKLIST PATROLI '+c+' – '+MU()]).font={bold:true,size:14};ws.addRow([]);
-  const hr=ws.addRow(['No','Tanggal','Slot (3 jam)','Titik / Area','Petugas','Jarak GPS (m)','Dicatat']);hr.font={bold:true};hr.eachCell(z=>{z.fill={type:'pattern',pattern:'solid',fgColor:{argb:XC.blue}};z.border=XBOX});
-  ptRec(c).slice().sort((a,b)=>a.date.localeCompare(b.date)||a.slot-b.slot||a.ts.localeCompare(b.ts)).forEach((r,i)=>ws.addRow([i+1,r.date.split('-').reverse().join('/'),slotLbl(r.slot),r.n,r.p,r.dist==null?'–':r.dist,r.ts]).eachCell(z=>z.border=XBOX));
-  [6,12,16,32,18,14,20].forEach((w,i)=>ws.getColumn(i+1).width=w);return['KPI-Patroli-'+c+'-'+M+'.xlsx',await wb.xlsx.writeBuffer()]}
+  const hr=ws.addRow(['No','Tanggal','Slot (3 jam)','Titik / Area','Petugas','Status','Jarak GPS (m)','Dicatat']);hr.font={bold:true};hr.eachCell(z=>{z.fill={type:'pattern',pattern:'solid',fgColor:{argb:XC.blue}};z.border=XBOX});
+  ptRec(c).slice().sort((a,b)=>a.date.localeCompare(b.date)||a.slot-b.slot||a.ts.localeCompare(b.ts)).forEach((r,i)=>ws.addRow([i+1,r.date.split('-').reverse().join('/'),slotLbl(r.slot),r.n,r.p,r.st=='tidak'?'Tidak aman':r.st=='aman'?'Aman':'–',r.dist==null?'–':r.dist,r.ts]).eachCell(z=>z.border=XBOX));
+  [6,12,16,32,18,14,14,20].forEach((w,i)=>ws.getColumn(i+1).width=w);return['KPI-Patroli-'+c+'-'+M+'.xlsx',await wb.xlsx.writeBuffer()]}
  ({'SG-01':()=>exAmano(wb),'FB-03':()=>exQHSE(wb),'SG-02':()=>exCCTV(wb),'FB-01':()=>exIns(wb,c),'FB-02':()=>exIns(wb,c)})[c]();
  return['KPI-'+c+'-'+M+'.xlsx',await wb.xlsx.writeBuffer()]}
 const VXL=()=>[['rk','Sodexo'],['rk','CSI'],['pe','SG-01'],['xe','SG-01'],['xe','SG-02'],['xe','FB-01'],['xe','FB-02'],['xe','FB-03'],...Object.keys(LOG).map(c=>['le',c])];
