@@ -177,6 +177,15 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--acc);outline-off
 .dr .bar{height:5px;margin:0}.dr b{font-size:1.05rem;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
 .pt .dr b,.pt .dr .bar,.pt .dsc .dv{display:none}
 @media(max-width:1000px){.dg{grid-template-columns:1fr}}
+.dtop{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:16px;align-items:center}
+.dtop .dsl{grid-template-columns:repeat(3,minmax(0,1fr))}.dtop .f.mb{margin:0}
+.dr.on{background:var(--chip);box-shadow:inset 3px 0 0 var(--acc)}.dr{padding:5px 8px}
+.dcc{padding:10px 14px 8px}.dct{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:4px}.dct h2{margin:0;text-transform:none;letter-spacing:0;color:var(--ink);font-size:.95rem}
+.dctl{display:flex;gap:8px;align-items:center}.dctl input{font:inherit;padding:4px 8px;border-radius:10px;border:1px solid var(--line);background:var(--chip);color:inherit}
+.dsv{width:100%;height:auto;display:block}.dsv .gl{stroke:var(--line);stroke-width:1}.dsv .gtg{stroke:var(--mute);stroke-width:1;stroke-dasharray:4 4}
+.dsv text{fill:var(--mute);font-size:10px}.dsv .gv{font-size:10px;fill:var(--ink)}.dsv rect{fill:currentColor;cursor:pointer}.dsv .gn{fill:var(--line)}.dsv rect.sel{stroke:var(--ink);stroke-width:1.5}
+.dcn{font-size:11px;margin-top:2px}
+@media(max-width:1000px){.dtop{grid-template-columns:1fr}.dtop .dsl{grid-template-columns:1fr}}
 </style></head><body>
 <div class="topnav"><div style="display:flex;gap:8px;align-items:center"><div class="logo"><span class="mark"></span>HSIMS</div><button class="logo" id="sync" data-dr="sync" style="font:inherit;font-size:.85rem;cursor:pointer;color:inherit"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.35 10.04A7.49 7.49 0 0 0 12 4C9.11 4 6.6 5.64 5.35 8.04A5.994 5.994 0 0 0 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/></svg><span id="synct" class="hm"></span></button></div><nav class="navlinks" id="nav"></nav><div class="menu-wrap"><button type="button" class="menu-btn" id="menuBtn" aria-label="Buka menu" aria-expanded="false" aria-controls="mmenu"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></button><nav class="mmenu" id="mmenu" aria-label="Menu"></nav></div></div>
 <main class="app" id="app"></main>
@@ -301,14 +310,53 @@ ${VK.map(k=>{const x=vv(k);return`<tr><td>${k[2]}</td><td>${k[0]} ${k[1]}</td><t
 <p class="sub">Metode: skor KPI persen = MIN(100, capaian ÷ target × 100); KPI hitungan (target 0) = 100 − 50 poin per kejadian; skor vendor = rata-rata bertimbang KPI yang berdata. Rating: A ≥ 95 · B 90–94,9 · C 85–89,9 · D &lt; 85. Bobot &amp; ambang adalah usulan Blueprint HSIMS v2.1 sampai kontrak SLA diterima. Rating C → surat peringatan &amp; rencana perbaikan 14 hari; D atau C dua bulan berturut-turut → review kontrak.</p>
 <button class="btn acc" data-vx="csv">Ekspor rekap vendor (CSV)</button></div>`};
 const _dash=V.dash;
+let DSH={mode:'m',k:''};
+/* nilai harian: {n,d} atau null */
+function dayVal(pg,date){const m=date.slice(0,7),dd=date.slice(8),L=(c)=>((logOf(c,m)||[]).filter(x=>String(x.tgl||x.ts||x.date||'').slice(0,10)==date));
+ if(pg=='tl'){const r=S.tl[date];if(!r)return null;let n=0;Object.values(r).forEach(a=>n+=a.filter(Boolean).length);return n?{n,d:196}:null}
+ if(pg=='kt'){const o=(S.kt[m]||{})[dd];if(!o||o.c===undefined||o.c===''||!+o.c)return null;return{n:+o.s||0,d:+o.c}}
+ if(pg=='ins'){const l=insList(m).filter(x=>x.date==date);return l.length?{n:l.filter(x=>!(x.bad||[]).length).length,d:l.length}:null}
+ if(pg=='sg1'){const P=ptList('SG-01').length,R=ptRec('SG-01',m).filter(r=>r.date==date);if(R.length&&P)return{n:R.length,d:P*8};const o=xs('va',m).d||{},v=o[+dd]??o[dd];return v==null||v===''?null:{n:+v,d:+xs('va',m).t||432}}
+ if(pg=='sg2'){const o=xs('vc',m)[dd];if(!o)return null;return{n:['P','M'].filter(q=>o[q]).length,d:2}}
+ if(pg=='fb3'){const o=xs('vq',m),a=o[dd]||o[+dd];return a?{n:44-a.length,d:44}:null}
+ if(pg=='sg3'||pg=='sg4'||pg=='fb4'||pg=='fb5'||pg=='fb6'){const c=pg=='sg3'?'SG-03':pg=='sg4'?'SG-04':'FB-0'+pg.slice(2),l=L(c);return l.length?{n:l.filter(x=>x.ok).length,d:l.length}:null}
+ return null}
+const DSHK=()=>{const a=Object.keys(CALC).filter(allowed).map(k=>({pg:k,code:INFO[k][0],name:INFO[k][1],g:'Provices'}));
+ VK.forEach(k=>{const pg=vkey(k);if(allowed(pg))a.push({pg,code:k[0],name:k[1],g:k[2],vk:k})});return a};
+/* nilai bulanan sebagai rasio 0-1 (atau cacah utk KPI kejadian) */
+function monVal(it,m){if(it.vk){const x=vv(it.vk,m);return x?x.v:null}const c=CALC[it.pg](m);return c.d?c.n/c.d:null}
+function dChart(it){const daily=DSH.mode=='h',cnt=it.vk&&it.vk[3]=='c';let vals=[],labs=[],keys=[];
+ if(daily){const n=dim(M);for(let d=1;d<=n;d++){const dt=M+'-'+pd(d),x=dayVal(it.pg,dt);vals.push(x&&x.d?x.n/x.d:null);labs.push(d);keys.push(dt)}}
+ else{ymon().forEach((m,i)=>{vals.push(monVal(it,m));labs.push(MN[i].slice(0,3));keys.push(m)})}
+ const W=1200,H=150,L=34,R=6,T=14,B=20,n=vals.length,bw=(W-L-R)/n,mx=cnt?Math.max(1,...vals.map(v=>v||0)):1,tg=cnt?0:(it.vk?it.vk[4]:1);
+ const y=v=>T+(H-T-B)*(1-v/mx),col=v=>cnt?(v==0?'ok':'bad'):v>=(tg||1)*(it.vk?1:TGT)?'ok':v>=.9?'warn':'bad';
+ let g=`<svg viewBox="0 0 ${W} ${H}" class="dsv" role="img" aria-label="Grafik ${esc(it.name)}">`;
+ (cnt?[0,mx]:[0,.5,1]).forEach(t=>{g+=`<line x1="${L}" x2="${W-R}" y1="${y(t)}" y2="${y(t)}" class="gl"/><text x="${L-4}" y="${y(t)+3}" class="gt" text-anchor="end">${cnt?t:Math.round(t*100)+'%'}</text>`});
+ if(!cnt&&tg&&tg<1)g+=`<line x1="${L}" x2="${W-R}" y1="${y(tg)}" y2="${y(tg)}" class="gtg"/>`;
+ vals.forEach((v,i)=>{const x=L+i*bw+bw*.15,w=bw*.7,ds=daily?'data-dsd':'data-dsm',tt=v==null?'Belum ada data':cnt?v+' kejadian':(v*100).toFixed(1).replace('.',',')+'%';
+  g+=v==null?`<rect x="${x}" y="${H-B-2}" width="${w}" height="2" class="gn" ${ds}="${keys[i]}"><title>${labs[i]}: ${tt}</title></rect>`:`<rect x="${x}" y="${y(v)}" width="${w}" height="${Math.max(1,H-B-y(v))}" rx="2" class="${col(v)} gb${(daily?keys[i]==D:keys[i]==M)?' sel':''}" ${ds}="${keys[i]}"><title>${labs[i]}: ${tt}</title></rect>`;
+  if(!daily&&v!=null)g+=`<text x="${x+w/2}" y="${y(v)-3}" class="gv" text-anchor="middle">${cnt?v:Math.round(v*100)}</text>`;
+  g+=`<text x="${x+w/2}" y="${H-5}" class="gt" text-anchor="middle">${labs[i]}</text>`});
+ return g+'</svg>'}
 V.dash=()=>{
- const cl=(v,c)=>v==null?'':v>=TGT?'ok':v>=.9?'warn':'bad';
- const row=(pg,code,name,val,cls,pct)=>`<button class="dr" data-go="${pg}" title="${esc(name)}"><span class="dc">${esc(code)}</span><span class="dn"><span class="dt">${esc(name)}</span><span class="bar"><i style="width:${Math.max(0,Math.min(100,pct||0))}%"></i></span></span><b class="${cls}">${val}</b></button>`;
- const panel=(t,rows)=>rows.length?`<section class="dp"><h2>${esc(t)}</h2><div class="dl">${rows.join('')}</div></section>`:'';
- const prov=Object.keys(CALC).filter(allowed).map(k=>{const c=CALC[k](M),v=c.d?c.n/c.d:null;return row(k,INFO[k][0],INFO[k][1],P(c.n,c.d),cl(v),v==null?0:v*100)});
- const sec=vn=>VK.filter(k=>k[2]==vn&&allowed(vkey(k))).map(k=>{const x=vv(k),st=vst(k,x);return row(vkey(k),k[0],k[1],pv(k)(x),st[1],x&&x.s)});
- const sla=allowed('sla')?`<div class="dsl">${VEN.map(([v,u])=>{const s=vs(v,M),r=rate(s);return`<button class="dsc" data-go="sla"><span><span class="sub">${esc(u)} · Skor SLA</span><br><b>${esc(v)}</b></span><span class="dv"><b class="${r[1]}">${f1(s)}</b><span class="sub">Rating ${esc(r[0])}</span></span></button>`}).join('')}</div>`:'';
- return`<div class="dash"><div class="row"><div><p class="eyebrow">Hospitality Services · Provices · Sodexo · CSI</p><h1>Ringkasan</h1><div class="sub">RSPI Bintaro Jaya · ${MN[+M.slice(5)-1]} ${M.slice(0,4)} · klik baris untuk membuka menu</div></div>${mbar()}</div>${sla}<div class="dg">${panel('Housekeeping · Provices',prov)}${panel(VP.Sodexo[1],sec('Sodexo'))}${panel(VP.CSI[1],sec('CSI'))}</div></div>`};
+ if(D.slice(0,7)!=M)D=M==TODAY.slice(0,7)?TODAY:M+'-01';
+ const items=DSHK(),daily=DSH.mode=='h';let sel=items.find(i=>i.pg==DSH.k)||items[0];
+ const cl=v=>v==null?'':v>=TGT?'ok':v>=.9?'warn':'bad';
+ const row=(pg,code,name,val,cls,pct)=>`<button class="dr${sel&&sel.pg==pg?' on':''}" data-go="${pg}" data-dsk="${pg}" title="${esc(name)}"><span class="dc">${esc(code)}</span><span class="dn"><span class="dt">${esc(name)}</span><span class="bar"><i style="width:${Math.max(0,Math.min(100,pct||0))}%"></i></span></span><b class="${cls}">${val}</b></button>`;
+ const rowOf=it=>{if(daily){const x=dayVal(it.pg,D),v=x&&x.d?x.n/x.d:null;return row(it.pg,it.code,it.name,v==null?'–':P(x.n,x.d),cl(v),v==null?0:v*100)}
+  if(it.vk){const x=vv(it.vk),st=vst(it.vk,x);return row(it.pg,it.code,it.name,pv(it.vk)(x),st[1],x&&x.s)}
+  const c=CALC[it.pg](M),v=c.d?c.n/c.d:null;return row(it.pg,it.code,it.name,P(c.n,c.d),cl(v),v==null?0:v*100)};
+ const panel=(t,g)=>{const r=items.filter(i=>i.g==g).map(rowOf);return r.length?`<section class="dp"><h2>${esc(t)}</h2><div class="dl">${r.join('')}</div></section>`:''};
+ const sla=allowed('sla')?`<div class="dsl">${VEN.map(([v,u])=>{const s=vs(v,M),r=rate(s);return`<button class="dsc" data-go="sla"><span><span class="sub">${esc(u)}</span><br><b>${esc(v)}</b></span><span class="dv"><b class="${r[1]}">${f1(s)}</b><span class="sub">SLA ${esc(r[0])}</span></span></button>`}).join('')}</div>`:'';
+ const chart=sel?`<section class="dp dcc"><div class="dct"><h2>${esc(sel.code)} · ${esc(sel.name)}</h2><div class="dctl"><div class="tgl"><button data-dsm2="m" class="${daily?'':'on'}">Bulanan</button><button data-dsm2="h" class="${daily?'on':''}">Harian</button></div>${daily?`<input type="date" id="dsd" value="${D}" min="${M}-01" max="${M}-${pd(dim(M))}">`:''}</div></div>${dChart(sel)}<div class="sub dcn">${daily?'Pencapaian per hari bulan '+MN[+M.slice(5)-1]+' '+M.slice(0,4)+' · ketuk batang untuk memilih tanggal'+(['gc','fb1','fb2'].includes(sel.pg)?' · KPI ini belum punya data harian':''):'Pencapaian per bulan tahun '+M.slice(0,4)+' · ketuk batang untuk memilih bulan'} · ketuk baris KPI untuk mengganti grafik, ketuk lagi untuk membuka menunya</div></section>`:'';
+ return`<div class="dash"><div class="dtop"><div><p class="eyebrow">Hospitality Services</p><h1>Ringkasan</h1><div class="sub">RSPI Bintaro Jaya · ${daily?D.split('-').reverse().join('/'):MN[+M.slice(5)-1]+' '+M.slice(0,4)}</div></div>${sla}${mbar()}</div><div class="dg">${panel('Housekeeping · Provices','Provices')}${panel(VP.Sodexo[1],'Sodexo')}${panel(VP.CSI[1],'CSI')}</div>${chart}</div>`};
+document.addEventListener('click',e=>{const t=e.target.closest('[data-dsm2],[data-dsd],[data-dsm],[data-dsk]');if(!t)return;const d=t.dataset;
+ if(d.dsk&&!t.matches('[data-go]'))return;
+ if(d.dsm2){DSH.mode=d.dsm2;draw();return}
+ if(d.dsd){D=d.dsd;draw();return}
+ if(d.dsm){M=d.dsm;D=M==TODAY.slice(0,7)?TODAY:M+'-01';draw();return}},true);
+document.addEventListener('click',e=>{const t=e.target.closest('.dr[data-dsk]');if(!t||page!='dash')return;const k=t.dataset.dsk;if(DSH.k==k||e.detail>1)return;DSH.k=k;e.stopImmediatePropagation();e.preventDefault();draw()},true);
+document.addEventListener('change',e=>{const t=e.target;if(t.id=='dsd'&&t.value){D=t.value;M=D.slice(0,7);draw()}});
 document.addEventListener('change',e=>{const t=e.target,q=t.dataset&&t.dataset.vk;if(!q)return;const[c,f]=q.split('|'),o=((S.vk=S.vk||{})[M]=S.vk[M]||{}),x=(o[c]=o[c]||{});x[f]=t.value;save();const y=scrollY;draw();scrollTo(0,y);toast('Tersimpan')});
 document.addEventListener('click',e=>{const s=e.target.closest('[data-vsel]');if(s){const[v,c]=s.dataset.vsel.split('|');VSEL[v]=c;const y=scrollY;draw();scrollTo(0,y);return}const t=e.target.closest('[data-vx]');if(!t)return;let c='vendor,kode,kpi,bulan,numerator,denominator,capaian,skor\n';
  ymon().forEach(m=>{VK.forEach(k=>{const r=vr(k[0],m),x=vv(k,m);if(x)c+=[k[2],k[0],'"'+k[1]+'"',m,r.n??'',r.d??'',k[3]=='c'?x.v:x.v.toFixed(6),x.s.toFixed(1)].join(',')+'\n'});
