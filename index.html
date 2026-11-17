@@ -1596,6 +1596,8 @@ function m3(b,l,r){
    else if(!(k in r)){if(!(bv!==undefined&&eq(bv,l[k])))o[k]=l[k]}
    else o[k]=m3(bv,l[k],r[k])});
   return o}
+ /* nilai kosong (mis. koordinat bawaan null) tidak boleh menimpa nilai yang sudah diisi di perangkat lain */
+ {const em=v=>v===null||v===undefined||v==='';if(em(l)&&!em(r))return r}
  return l}
 function norm(){S=S||{};S.items=S.items||SEED.items;['gc','tl','kt','ins','tc','kj'].forEach(k=>S[k]=S[k]||(k=='ins'||k=='tc'||k=='kj'?[]:{}));S.geo=S.geo||{};S.users=S.users||{};if(!S.vk)S.vk=JSON.parse(JSON.stringify(SEEDVK))}
 function setSt(s,m){ST=s;STM=m||'';notify(s,m);const b=$('#synct');if(!b)return;const T={off:'Drive: atur',idle:'Sambungkan Drive',sync:'Menyinkronkan…',ok:'Tersinkron '+STM,exp:'Sambungkan ulang',err:'Gagal sinkron'};b.textContent=T[s]||'';const w=$('#sync');if(w){w.title=m||'';w.style.color=s=='err'||s=='exp'?'var(--bad)':s=='ok'?'var(--ok)':''}}
