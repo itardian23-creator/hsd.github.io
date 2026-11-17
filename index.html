@@ -211,6 +211,20 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--acc);outline-off
 .dp .dmi{height:34px}.dr{padding:8px 10px}
 .pt .dr b,.pt .dr .bar{display:none}
 @media(max-width:1000px){.hgrid{grid-template-columns:1fr}.hgrid .hc{grid-column:auto!important}}
+
+.hgrid{grid-template-columns:repeat(12,minmax(0,1fr))}.hgrid>.hc:nth-child(1){grid-column:span 3}.hgrid>.hc:nth-child(2),.hgrid>.hc:nth-child(3),.hgrid>.hc:nth-child(5){grid-column:span 2}.hgrid>.hc:nth-child(4){grid-column:span 3}
+@media(min-width:1001px){
+.app:has(.dash){max-width:none;padding:74px 24px 14px;gap:0}
+.dash{height:calc(100dvh - 88px);grid-template-rows:auto auto auto minmax(0,1fr) auto;gap:10px}
+.dash .dtop{margin:0}.dash .eyebrow{margin:0}.dash .dtb{gap:10px}
+.hc{padding:10px 14px}.hero h1{font-size:1.5rem}.hn{font-size:1.9rem}.hbs{height:52px;margin-top:8px}
+.hg{max-width:150px;margin-top:4px}.hv{font-size:1.5rem;margin-top:-4px}.hs{font-size:12px}
+.dash>.dsl .dsc{padding:6px 16px}.dash>.dsl .dsc .dv b{font-size:1.25rem}
+.dash .dg{min-height:0;align-items:stretch}.dash .dp{display:flex;flex-direction:column;min-height:0;overflow:auto;padding:10px 12px}
+.dash .dl{display:flex;flex-direction:column;flex:1;min-height:0;gap:0}
+.dash .dr{display:flex;flex-direction:column;justify-content:center;flex:1;min-height:40px;padding:3px 8px}.dash .dr .bar{display:none}
+.dash .dp .dmi{height:100%;min-height:14px;max-height:34px;flex:1}
+.dash .dleg{margin:0}}
 </style></head><body>
 <div class="topnav"><div style="display:flex;gap:8px;align-items:center"><div class="logo"><span class="mark"></span>HSIMS</div><button class="logo" id="sync" data-dr="sync" style="font:inherit;font-size:.85rem;cursor:pointer;color:inherit"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.35 10.04A7.49 7.49 0 0 0 12 4C9.11 4 6.6 5.64 5.35 8.04A5.994 5.994 0 0 0 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/></svg><span id="synct" class="hm"></span></button></div><nav class="navlinks" id="nav"></nav><div class="menu-wrap"><button type="button" class="menu-btn" id="menuBtn" aria-label="Buka menu" aria-expanded="false" aria-controls="mmenu"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></button><nav class="mmenu" id="mmenu" aria-label="Menu"></nav></div></div>
 <main class="app" id="app"></main>
@@ -398,7 +412,7 @@ V.dash=()=>{
   if(gi==0)sv+=`<path d="${d}L${pts[pts.length-1][0]} ${ys(0)}L${pts[0][0]} ${ys(0)}Z" fill="${c}" opacity=".12"/>`;
   sv+=`<path d="${d}" fill="none" stroke="${c}" stroke-width="2" stroke-linejoin="round"/>`+(pts.length<40?pts.map(p=>`<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="2.5" fill="${c}"/>`).join(''):'')});
  const st=Math.ceil(n/(daily?6:12));keys.forEach((k,i)=>{if(i%st==0||i==n-1)sv+=`<text x="${xs_(i)}" y="${H-6}" text-anchor="middle">${lab[i]}</text>`;sv+=`<rect x="${xs_(i)-(W-L-R)/n/2}" y="${T}" width="${(W-L-R)/n}" height="${H-T-B}" fill="transparent" style="cursor:pointer" ${daily?'data-dsd':'data-dsm'}="${k}"><title>${lab[i]}</title></rect>`});sv+='</svg>';
- const trend=`<div class="hc" style="grid-column:span 2"><div class="row"><span class="sub">Tren capaian · ${daily?MN[+M.slice(5)-1]+' '+M.slice(0,4):'tahun '+M.slice(0,4)}</span><span class="dleg">${grp.map(([,t,c])=>`<i class="lg" style="color:${c}"></i>${t}`).join(' ')}</span></div>${sv}</div>`;
+ const trend=`<div class="hc"><div class="row"><span class="sub">Tren capaian · ${daily?MN[+M.slice(5)-1]+' '+M.slice(0,4):'tahun '+M.slice(0,4)}</span><span class="dleg">${grp.map(([,t,c])=>`<i class="lg" style="color:${c}"></i>${t}`).join(' ')}</span></div>${sv}</div>`;
  const seg=[['ok','Tercapai',cnt.ok],['warn','Mendekati',cnt.warn],['bad','Di bawah target',cnt.bad],['none','Belum ada data',cnt.none]],tot=items.length||1;
  const comp=`<div class="hc"><div class="row"><span class="sub">Komposisi</span><span class="pill">${items.length} KPI</span></div><div class="stk">${seg.map(([c,,n])=>n?`<i class="s-${c}" style="flex:${n}"></i>`:'').join('')}</div>${seg.map(([c,t,n])=>`<div class="cr"><span><i class="lg s-${c}" style="margin:0 6px 0 0"></i>${t}</span><b>${n} · ${pr(n,tot)}</b></div>`).join('')}</div>`;
  const row=x=>{const it=x.it;return`<button class="dr" data-go="${it.pg}" title="${esc(it.name)}"><span class="dh"><span class="dc">${esc(it.code)}</span><span class="dt">${esc(it.name)}</span><b class="${x.cls}">${x.txt}</b></span><span class="bar"><i class="bg-${x.cls||'none'}" style="width:${x.r==null?0:Math.round(x.r*100)}%"></i></span>${dMini(it)}</button>`};
