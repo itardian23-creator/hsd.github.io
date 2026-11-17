@@ -238,6 +238,17 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--acc);outline-off
 .dash .dleg{text-align:left}
 .dr .dh{grid-template-columns:40px minmax(0,1fr) auto}.dp .dmi{height:30px}
 }
+
+.dax{display:flex;justify-content:space-between;font-size:10px;color:var(--mute);line-height:1;margin-top:2px}
+.dpn{font-size:11px;margin:0 4px 4px}
+.dmi{background:linear-gradient(var(--line),var(--line)) top/100% 1px no-repeat}
+@media(min-width:1001px){.dash .dr{min-height:48px}}
+
+.dash .dp .dmi,.dp .dmi{height:auto!important;max-height:44px;flex:none!important;width:100%;background:none}
+.dmi .gax{stroke:var(--line);stroke-width:1}.dmi .hit{fill:transparent!important;cursor:pointer}.dmi .hit:hover{fill:var(--chip)!important}.dmi .hit.sel{fill:var(--chip)!important;stroke:none!important}
+.dmi circle.gn{fill:var(--mute);opacity:.5}.dmi text.gtx{font-size:9px;fill:var(--mute)}.dmi text.gtx.b{fill:var(--ink);font-weight:700}
+.dmi rect.ok{fill:var(--ok)}.dmi rect.warn{fill:var(--warn)}.dmi rect.bad{fill:var(--bad)}
+.dax{justify-content:flex-start}
 </style></head><body>
 <div class="topnav"><div style="display:flex;gap:8px;align-items:center"><div class="logo"><span class="mark"></span>HSIMS</div><button class="logo" id="sync" data-dr="sync" style="font:inherit;font-size:.85rem;cursor:pointer;color:inherit"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.35 10.04A7.49 7.49 0 0 0 12 4C9.11 4 6.6 5.64 5.35 8.04A5.994 5.994 0 0 0 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/></svg><span id="synct" class="hm"></span></button></div><nav class="navlinks" id="nav"></nav><div class="menu-wrap"><button type="button" class="menu-btn" id="menuBtn" aria-label="Buka menu" aria-expanded="false" aria-controls="mmenu"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></button><nav class="mmenu" id="mmenu" aria-label="Menu"></nav></div></div>
 <main class="app" id="app"></main>
@@ -393,12 +404,15 @@ function dChart(it){const daily=DSH.mode=='h',cnt=it.vk&&it.vk[3]=='c';let vals=
  return g+'</svg>'}
 function dMini(it){const daily=DSH.mode=='h',cnt=it.vk&&it.vk[3]=='c';let vals=[],keys=[],labs=[];
  if(daily){const n=dim(M);for(let d=1;d<=n;d++){const dt=M+'-'+pd(d),x=dayVal(it.pg,dt);vals.push(x&&x.d?x.n/x.d:null);keys.push(dt);labs.push(d)}}
- else ymon().forEach((m,i)=>{vals.push(monVal(it,m));keys.push(m);labs.push(MN[i])});
- const W=300,H=30,n=vals.length,bw=W/n,mx=cnt?Math.max(1,...vals.map(v=>v||0)):1,tg=it.vk?it.vk[4]:1,hh=v=>Math.max(2,(H-2)*v/mx);
+ else ymon().forEach((m,i)=>{vals.push(monVal(it,m));keys.push(m);labs.push('JFMAMJJASOND'[i])});
+ const W=600,H=40,A=30,n=vals.length,bw=W/n,mx=cnt?Math.max(1,...vals.map(v=>v||0)):1,tg=it.vk?it.vk[4]:1,hh=v=>Math.max(2,(A-2)*v/mx);
  const col=v=>cnt?(v==0?'ok':'bad'):v>=(it.vk?(tg||1):TGT)?'ok':v>=.9?'warn':'bad';
- let g=`<svg viewBox="0 0 ${W} ${H}" class="dmi" preserveAspectRatio="none">`;
- vals.forEach((v,i)=>{const x=i*bw+bw*.12,w=bw*.76,sel=daily?keys[i]==D:keys[i]==M,a=daily?'data-dsd':'data-dsm',tt=v==null?'Belum ada data':cnt?v+' kejadian':(v*100).toFixed(1).replace('.',',')+'%';
-  g+=v==null?`<rect x="${x}" y="${H-2}" width="${w}" height="2" class="gn${sel?' sel':''}" ${a}="${keys[i]}"><title>${labs[i]}: ${tt}</title></rect>`:`<rect x="${x}" y="${H-hh(v)}" width="${w}" height="${hh(v)}" rx="1" class="${col(v)}${sel?' sel':''}" ${a}="${keys[i]}"><title>${labs[i]}: ${tt}</title></rect>`});
+ const w=Math.min(daily?12:22,bw*.62),nm=daily?MN[+M.slice(5)-1]:'';
+ let g=`<svg viewBox="0 0 ${W} ${H}" class="dmi" preserveAspectRatio="xMidYMid meet"><line x1="0" x2="${W}" y1="${A}" y2="${A}" class="gax"/>`;
+ vals.forEach((v,i)=>{const cx=i*bw+bw/2,x=cx-w/2,sel=daily?keys[i]==D:keys[i]==M,a=daily?'data-dsd':'data-dsm',tt=v==null?'Belum ada data':cnt?v+' kejadian':(v*100).toFixed(1).replace('.',',')+'%';
+  g+=`<rect x="${i*bw}" y="0" width="${bw}" height="${H}" class="hit${sel?' sel':''}" ${a}="${keys[i]}"><title>${daily?labs[i]+' '+nm:MN[i]}: ${tt}</title></rect>`;
+  g+=v==null?`<circle cx="${cx}" cy="${A-1.5}" r="1.8" class="gn"/>`:`<rect x="${x}" y="${A-hh(v)}" width="${w}" height="${hh(v)}" rx="2" class="${col(v)}" pointer-events="none"/>`;
+  if(!daily||labs[i]==1||labs[i]%5==0)g+=`<text x="${cx}" y="${H-1}" text-anchor="middle" class="gtx${sel?' b':''}">${labs[i]}</text>`});
  return g+'</svg>'}
 V.dash=()=>{
  if(D.slice(0,7)!=M)D=M==TODAY.slice(0,7)?TODAY:M+'-01';
@@ -428,8 +442,8 @@ V.dash=()=>{
  const trend=`<div class="hc"><div class="row"><span class="sub">Tren capaian · ${daily?MN[+M.slice(5)-1]+' '+M.slice(0,4):'tahun '+M.slice(0,4)}</span><span class="dleg">${grp.map(([,t,c])=>`<i class="lg" style="color:${c}"></i>${t}`).join(' ')}</span></div>${sv}</div>`;
  const seg=[['ok','Tercapai',cnt.ok],['warn','Mendekati',cnt.warn],['bad','Di bawah target',cnt.bad],['none','Belum ada data',cnt.none]],tot=items.length||1;
  const comp=`<div class="hc"><div class="row"><span class="sub">Komposisi</span><span class="pill">${items.length} KPI</span></div><div class="stk">${seg.map(([c,,n])=>n?`<i class="s-${c}" style="flex:${n}"></i>`:'').join('')}</div>${seg.map(([c,t,n])=>`<div class="cr"><span><i class="lg s-${c}" style="margin:0 6px 0 0"></i>${t}</span><b>${n} · ${pr(n,tot)}</b></div>`).join('')}</div>`;
- const row=x=>{const it=x.it;return`<button class="dr" data-go="${it.pg}" title="${esc(it.name)}"><span class="dh"><span class="dc">${esc(it.code)}</span><span class="dt">${esc(it.name)}</span><b class="${x.cls}">${x.txt}</b></span><span class="bar"><i class="bg-${x.cls||'none'}" style="width:${x.r==null?0:Math.round(x.r*100)}%"></i></span>${dMini(it)}</button>`};
- const panel=(t,g)=>{const r=rows.filter(x=>x.it.g==g),a=r.filter(x=>x.r!=null),av=a.length?a.reduce((s,x)=>s+x.r,0)/a.length:null;return r.length?`<section class="dp"><div class="row"><h2>${esc(t)}</h2><span class="pill ${cl(av)}">${pc(av)}</span></div><div class="dl">${r.map(row).join('')}</div></section>`:''};
+ const row=x=>{const it=x.it;return`<button class="dr" data-go="${it.pg}" title="${esc(it.name)}"><span class="dh"><span class="dc">${esc(it.code)}</span><span class="dt">${esc(it.name)}</span><b class="${x.cls}">${x.txt}</b></span><span class="bar"><i class="bg-${x.cls||'none'}" style="width:${x.r==null?0:Math.round(x.r*100)}%"></i></span>${dMini(it)}<span class="dax"><span>${it.vk&&it.vk[3]=='c'?'Jumlah kejadian':'Capaian (%)'} per ${daily?'hari · '+MN[+M.slice(5)-1]:'bulan · '+M.slice(0,4)}</span></span></button>`};
+ const panel=(t,g)=>{const r=rows.filter(x=>x.it.g==g),a=r.filter(x=>x.r!=null),av=a.length?a.reduce((s,x)=>s+x.r,0)/a.length:null;return r.length?`<section class="dp"><div class="row"><h2>${esc(t)}</h2><span class="pill ${cl(av)}" title="Rata-rata capaian">${pc(av)}</span></div><div class="sub dpn">Angka kanan = capaian ${daily?dFull(D):'bulan '+MN[+M.slice(5)-1]+' '+M.slice(0,4)} · grafik = tren capaian tiap ${daily?'hari':'bulan'}</div><div class="dl">${r.map(row).join('')}</div></section>`:''};
  const sla=allowed('sla')?`<div class="dsl">${VEN.map(([v,u])=>{const s=vs(v,M),r=rate(s);return`<button class="dsc" data-go="sla"><span><span class="sub">${esc(u)}</span><br><b>${esc(v)}</b></span><span class="dv"><b class="${r[1]}">${f1(s)}</b><span class="sub">SLA ${esc(r[0])}</span></span></button>`}).join('')}</div>`:'';
  const tb=`<div class="dtb"><div class="tgl"><button data-dsm2="m" class="${daily?'':'on'}">Bulanan</button><button data-dsm2="h" class="${daily?'on':''}">Harian</button></div>${daily?`<div class="dnav"><button class="btn sm" data-dsn="-1" aria-label="Hari sebelumnya">‹</button><b class="dfl">${dFull(D)}</b><button class="btn sm" data-dsn="1" aria-label="Hari berikutnya">›</button><button class="btn sm acc" data-dsd="${TODAY}" ${D==TODAY?'disabled':''}>Hari ini</button></div>`:mbar()}</div>`;
  const leg=`<div class="sub dleg">${daily?'Tiap batang = 1 hari di bulan '+MN[+M.slice(5)-1]+' · ketuk untuk memilih tanggal':'Tiap batang = 1 bulan tahun '+M.slice(0,4)+' · ketuk untuk memilih bulan'} · <i class="lg ok"></i>tercapai <i class="lg warn"></i>mendekati <i class="lg bad"></i>di bawah target</div>`;
