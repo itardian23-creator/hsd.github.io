@@ -326,7 +326,7 @@ const KROOMS={"Ward 6":["6101","6102","6103","6104","6105","6106","6107","6108",
 let insUnit='Ward 9';
 let insRoom='';
 const roomOpts=(u,sel,cust)=>(KROOMS[u]||[]).map(r=>`<option ${r==sel?'selected':''}>${esc(r)}`).join('')+`<option value="__x" ${cust?'selected':''}>Lainnya (ketik manual)…`;
-const PAGES=[['dash','Ringkasan'],['gc','1 · General Cleaning'],['tl','2 · Toilet Umum'],['kt','3 · Penyiapan Kamar'],['ins','4 · Inspeksi Vacant Clean'],['fb1','1 · Food Hazard'],['fb2','2 · Kesalahan Diet'],['fb3','3 · Validasi QHSE'],['fb4','4 · Ala Carte'],['fb5','5 · Buka Puasa'],['fb6','6 · Pasien Baru'],['sg1','1 · Patroli Amano'],['sg2','2 · CCTV'],['sg3','3 · Patroli Ranap'],['sg4','4 · Perbantuan'],['sla','Skor Vendor SLA'],['rep','Laporan'],['data','Data'],['akun','Kelola Akun']];
+const PAGES=[['dash','Ringkasan'],['gc','1 · General Cleaning'],['tl','2 · Toilet Umum'],['kt','3 · Penyiapan Kamar'],['ins','4 · Inspeksi Vacant Clean'],['fb1','1 · Food Hazard'],['fb2','2 · Kesalahan Diet'],['fb3','3 · Validasi QHSE'],['fb4','4 · Ala Carte'],['fb5','5 · Buka Puasa'],['fb6','6 · Pasien Baru'],['sg1','1 · Patroli Amano'],['sg2','2 · CCTV'],['sg3','3 · Patroli Ranap'],['sg4','4 · Perbantuan'],['sg5','5 · High Risk CCTV'],['sla','Skor Vendor SLA'],['rep','Laporan'],['data','Data'],['akun','Kelola Akun']];
 const MN=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
 const pd=n=>String(n).padStart(2,'0');const nowDay=()=>{const d=new Date();return d.getFullYear()+'-'+pd(d.getMonth()+1)+'-'+pd(d.getDate())};let TODAY=nowDay();
 let S;try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
@@ -341,7 +341,7 @@ const P=(n,d)=>d?(n/d*100).toFixed(1).replace('.',',')+'%':'–';
 /* ---- perhitungan KPI ---- */
 const gcIt=m=>S.items.filter(i=>(!i.s||m>=i.s)&&(!i.e||m<i.e));
 const isAdmin=()=>{try{const u=authed();return u=='admin'||((S.users||{})[u]||{}).r=='admin'}catch(e){return false}};
-const MENUS=[['dash','Ringkasan'],['gc','General Cleaning'],['tl','Toilet Umum'],['kt','Penyiapan Kamar'],['ins','Inspeksi Vacant Clean'],['fb1','1 · Food Hazard'],['fb2','2 · Kesalahan Diet'],['fb3','3 · Validasi QHSE'],['fb4','4 · Ala Carte'],['fb5','5 · Buka Puasa'],['fb6','6 · Pasien Baru'],['sg1','1 · Patroli Amano'],['sg2','2 · CCTV'],['sg3','3 · Patroli Ranap'],['sg4','4 · Perbantuan'],['sla','Skor Vendor SLA'],['rep','Laporan'],['data','Data']];
+const MENUS=[['dash','Ringkasan'],['gc','General Cleaning'],['tl','Toilet Umum'],['kt','Penyiapan Kamar'],['ins','Inspeksi Vacant Clean'],['fb1','1 · Food Hazard'],['fb2','2 · Kesalahan Diet'],['fb3','3 · Validasi QHSE'],['fb4','4 · Ala Carte'],['fb5','5 · Buka Puasa'],['fb6','6 · Pasien Baru'],['sg1','1 · Patroli Amano'],['sg2','2 · CCTV'],['sg3','3 · Patroli Ranap'],['sg4','4 · Perbantuan'],['sg5','5 · High Risk CCTV'],['sla','Skor Vendor SLA'],['rep','Laporan'],['data','Data']];
 const allowed=k=>{const u=authed();if(u=='admin')return true;const o=(S.users||{})[u]||{};if(k=='akun'&&o.r!='admin')return false;const m=o.m;return !Array.isArray(m)||m.includes(k)};
 const phn=(r,w)=>{const q=(r.ph||{})[w];return q?['b','g','a'].filter(k=>q[k]).length:0};
 function gcCalc(m){let n=0,d=0;gcIt(m).forEach(it=>{const r=(S.gc[m]||{})[it.id]||{},p=r.p||it.p,a=r.a||[];p.forEach((x,i)=>{if(x){d++;if(a[i])n++}})});return{n,d}}
@@ -406,7 +406,8 @@ const VK=[['FB-01','Food Hazard','Sodexo','c',0,20,'Jumlah kejadian food hazard 
 ['SG-01','Kepatuhan Patroli Amano (57 titik)','CSI','p',1,30,'Checkpoint terpatroli / checkpoint terjadwal (8× per 24 jam)'],
 ['SG-02','Kepatuhan Monitoring Checklist CCTV','CSI','p',1,20,'Checklist CCTV terisi / checklist wajib (pagi & malam)'],
 ['SG-03','Patroli Area Rawat Inap di Luar Jam Kunjungan','CSI','p',1,20,'Patroli terlaksana / rencana patroli'],
-['SG-04','Respontime Perbantuan Security ≤ 15 Menit','CSI','p',1,30,'Perbantuan direspons ≤ 15 menit / total perbantuan']];
+['SG-04','Respontime Perbantuan Security ≤ 15 Menit','CSI','p',1,30,'Perbantuan direspons ≤ 15 menit / total perbantuan'],
+['SG-05','Kepatuhan Checklist High Risk Area (Monitor CCTV)','CSI','p',1,20,'Checklist area high risk terisi / checklist wajib (12× per 24 jam, tiap 2 jam, via monitor CCTV no. 10)']];
 const HW={gc:20,tl:25,kt:30,ins:25},VEN=[['Provices','Housekeeping'],['Sodexo','Food Service'],['CSI','Security & GA']];
 const vr=(c,m)=>((S.vk||{})[m||M]||{})[c]||{},has=x=>x!==undefined&&x!==''&&x!==null&&!isNaN(+x);
 function vv(k,m){const X=auto(k[0],m);if(X)return X;const L=logOf(k[0],m);if(L&&L.length){const a=L.filter(x=>x.ok).length/L.length;return{v:a,s:Math.min(100,a/k[4]*100)}}const r=vr(k[0],m);if(k[3]=='c')return has(r.n)?{v:+r.n,s:Math.max(0,100-50*+r.n)}:null;
@@ -426,7 +427,7 @@ function vpage(k){if(PF&&PF.c==k[0])return ptForm();const x=vv(k),st=vst(k,x),r=
  return`<div class="row"><div><p class="eyebrow">${k[0]} · ${P_[1]}</p><h1>${k[1]}</h1></div>${mbar()}</div>
 <div class="card adm-only"><div class="sub">${k[0]} · Target ${vtg(k)} · Bobot SLA ${k[5]}%</div><div class="big ${st[1]}">${pv(k)(x)}</div><div class="sub">${st[0]} · ${esc(k[6])}</div>
 ${c&&x&&x.v>0?'<p class="bad"><b>⚠ KPI kritis:</b> wajib CAR/NCR dalam 24 jam dan RCA dalam 5 hari kerja.</p>':''}</div>
-${['FB-03','SG-03','SG-02','SG-04','SG-01'].includes(k[0])?'':`<div class="card"><h2>Input ${MN[+M.slice(5)-1]} ${M.slice(0,4)}</h2><div class="f" style="margin-top:8px">${c?`<label>Jumlah kejadian<input type="number" min="0" step="1" data-vk="${k[0]}|n" value="${esc(r.n??'')}"></label>`:`<label>Numerator<input type="number" min="0" step="any" data-vk="${k[0]}|n" value="${esc(r.n??'')}"></label><label>Denominator<input type="number" min="0" step="any" data-vk="${k[0]}|d" value="${esc(r.d??'')}"></label><label>Capaian manual % (jika tanpa num/den)<input type="number" min="0" max="100" step="any" data-vk="${k[0]}|p" value="${esc(r.p??'')}"></label>`}<label>Catatan<input data-vk="${k[0]}|k" value="${esc(r.k||'')}"></label></div></div>`}
+${['FB-03','SG-03','SG-02','SG-04','SG-01','SG-05'].includes(k[0])?'':`<div class="card"><h2>Input ${MN[+M.slice(5)-1]} ${M.slice(0,4)}</h2><div class="f" style="margin-top:8px">${c?`<label>Jumlah kejadian<input type="number" min="0" step="1" data-vk="${k[0]}|n" value="${esc(r.n??'')}"></label>`:`<label>Numerator<input type="number" min="0" step="any" data-vk="${k[0]}|n" value="${esc(r.n??'')}"></label><label>Denominator<input type="number" min="0" step="any" data-vk="${k[0]}|d" value="${esc(r.d??'')}"></label><label>Capaian manual % (jika tanpa num/den)<input type="number" min="0" max="100" step="any" data-vk="${k[0]}|p" value="${esc(r.p??'')}"></label>`}<label>Catatan<input data-vk="${k[0]}|k" value="${esc(r.k||'')}"></label></div></div>`}
 ${logCard(k)}${xCard(k)}<div class="card adm-only"><h2>Tren ${M.slice(0,4)}</h2><div class="tw" style="margin-top:8px"><table><tr>${MS.map(m=>`<th>${m}</th>`).join('')}</tr><tr>${ymon().map(m=>{const z=vv(k,m),s2=vst(k,z);return`<td class="${s2[1]}">${pv(k)(z).replace(' kej.','')}</td>`}).join('')}</tr></table></div></div>`}
 VK.forEach(k=>{V[vkey(k)]=()=>vpage(k)});
 V.sla=()=>{const mo=ymon(),cur=v=>{const s=vs(v,M);return rate(s)};
@@ -448,6 +449,7 @@ function dayVal(pg,date){const m=date.slice(0,7),dd=date.slice(8),L=(c)=>((logOf
  if(pg=='kt'){const o=(S.kt[m]||{})[dd];if(!o||o.c===undefined||o.c===''||!+o.c)return null;return{n:+o.s||0,d:+o.c}}
  if(pg=='ins'){const l=insList(m).filter(x=>x.date==date);return l.length?{n:l.filter(x=>!(x.bad||[]).length).length,d:l.length}:null}
  if(pg=='sg1'){const P=ptList('SG-01').length,R=ptRec('SG-01',m).filter(r=>r.date==date);if(R.length&&P)return{n:R.length,d:P*8};const o=xs('va',m).d||{},v=o[+dd]??o[dd];return v==null||v===''?null:{n:+v,d:+xs('va',m).t||432}}
+ if(pg=='sg5'){const P=ptList('SG-05').length,R=ptRec('SG-05',m).filter(r=>r.date==date);return R.length&&P?{n:R.length,d:P*PCFG['SG-05'].n}:null}
  if(pg=='sg2'){const o=xs('vc',m)[dd];if(!o)return null;return{n:['P','M'].filter(q=>o[q]).length,d:2}}
  if(pg=='fb3'){const o=xs('vq',m),a=o[dd]||o[+dd];return a?{n:44-a.length,d:44}:null}
  if(pg=='sg3'||pg=='sg4'||pg=='fb4'||pg=='fb5'||pg=='fb6'){const c=pg=='sg3'?'SG-03':pg=='sg4'?'SG-04':'FB-0'+pg.slice(2),l=L(c);return l.length?{n:l.filter(x=>x.ok).length,d:l.length}:null}
@@ -529,7 +531,7 @@ document.addEventListener('click',e=>{const s=e.target.closest('[data-vsel]');if
   Object.keys(HW).forEach(k=>{const z=CALC[k](m);if(z.d)c+=['Provices',INFO[k][0],'"'+INFO[k][1]+'"',m,z.n,z.d,(z.n/z.d).toFixed(6),Math.min(100,z.n/z.d*100).toFixed(1)].join(',')+'\n'})});
  dl('rekap-vendor-sla-'+M.slice(0,4)+'.csv',c,'text/csv')});
 
-const GRP=[['Provices',['gc','tl','kt','ins']],['Sodexo',['fb1','fb2','fb3','fb4','fb5','fb6']],['CSI',['sg1','sg2','sg3','sg4']]];
+const GRP=[['Provices',['gc','tl','kt','ins']],['Sodexo',['fb1','fb2','fb3','fb4','fb5','fb6']],['CSI',['sg1','sg2','sg3','sg4','sg5']]];
 const gOf=k=>GRP.findIndex(g=>g[1].includes(k)),pname=k=>(PAGES.find(p=>p[0]==k)||[])[1];
 function navH(){const o=[],seen={};PAGES.filter(([k])=>allowed(k)).forEach(([k,n])=>{const g=gOf(k);
  if(g<0)return o.push(`<button data-go="${k}" class="${k==page?'on':''}">${n}</button>`);
@@ -594,7 +596,7 @@ function auto(c,m){m=m||M;{const pa=ptAuto(c,m);if(pa)return pa}
  if(c=='FB-01'||c=='FB-02'){const L=xs('vi',m)[c];if(L&&L.length)return{v:L.length,s:Math.max(0,100-50*L.length),n:L.length,d:''}}
  return null}
 const XF=(n,l,t,v)=>`<label>${l}<input data-xf="${n}" type="${t||'text'}" value="${esc(v??'')}"></label>`;
-function xCard(k){const c=k[0],dm=dim(M);if(c=='SG-03')return'';
+function xCard(k){const c=k[0],dm=dim(M);if(c=='SG-03')return'';if(c=='SG-05')return ptCard(c);
  if(c=='SG-01'){const o=xs('va'),d=o.d||{};
   return ptCard(c)+`<div class="card"><h2>Data Amano per hari (input manual) · ${MN[+M.slice(5)-1]} ${M.slice(0,4)}</h2><p class="sub">Jumlah checkpoint Amano yang terpatroli setiap hari. Format ekspor sama dengan sheet “Data Amano 2026”.</p><div class="f" style="margin-top:8px"><label>Target patroli per hari<input type="number" data-xat value="${o.t||432}"></label></div><div class="f" style="margin-top:8px">${Array.from({length:dm},(_,i)=>`<label>Tgl ${i+1}<input type="number" min="0" data-xa="${i+1}" value="${esc(d[i+1]??'')}"></label>`).join('')}</div><div style="margin-top:10px"><button class="btn acc" data-xe="${c}">Ekspor Excel (format file asli)</button></div></div>`}
  if(c=='FB-03'){const dd=ddk(),rec=xs('vq')[dd],g={};QI.forEach(q=>(g[q[2]]=g[q[2]]||[]).push(q));
@@ -787,17 +789,20 @@ document.addEventListener('click',async e=>{const b=e.target.closest('[data-fbal
  toast('Menyiapkan 6 file KPI Sodexo…');for(const c of FBCODES){const[fn,buf]=await fbBuild(c);await dl(fn,buf);if(GAS())upDrive(fn,buf,true);await new Promise(r=>setTimeout(r,400))}});
 
 /* ===== Patroli per 3 jam berbasis GPS: SG-01 Amano & SG-03 Patroli Ranap ===== */
-const PSL=[0,3,6,9,12,15,18,21],PTN={'SG-01':'titik Amano','SG-03':'area Ranap'};
-let PSEL={'SG-01':null,'SG-03':null},PBUSY=false,PTOPEN=false;
-const slotNow=()=>Math.floor(new Date().getHours()/3)*3;
-const slotLbl=s=>pd(s)+'.00–'+pd((s+3)%24)+'.00';
+const PCFG={'SG-01':{step:3,n:8,pre:'Amano',gps:true},'SG-05':{step:2,n:12,pre:'HighRisk',gps:false}},PTN={'SG-01':'titik Amano','SG-03':'area Ranap','SG-05':'area high risk'};
+const pst=c=>(PCFG[c]||PCFG['SG-01']).step,PS=c=>Array.from({length:24/pst(c)},(_,i)=>i*pst(c));
+let PSEL={'SG-01':null,'SG-03':null,'SG-05':null},PBUSY=false,PTOPEN=false;
+const slotNow=c=>Math.floor(new Date().getHours()/pst(c))*pst(c);
+const slotLbl=(s,c)=>pd(s)+'.00–'+pd((s+pst(c))%24)+'.00';
+const HR_SEED=[['Ruang Server & IT',1],['Kamar Bayi',3],['Ruang OT',4],['Ruang ICU – NICU',5],['Ruang Kitchen',8],['Ruang Customer Relation',9],['Ruang Kasir & Admission Rawat Inap',10],['Parkir Motor B2',11],['Rooftop',12]].map(([n,id])=>({id,n,lt:'Monitor CCTV 10',new:0,lat:null,lng:null}));
+const ptIntro=c=>c=='SG-05'?`Dicek lewat <b>monitor CCTV nomor 10</b>: pilih slot waktu, ketuk area, lalu isi nama, kondisi Aman / Tidak aman, foto (screenshot layar monitor) &amp; keterangan (jam tercatat otomatis). Verifikasi GPS tidak dipakai karena pengecekan dilakukan dari monitor. Jadwal 12× sehari tiap 2 jam: ${PS(c).map(pd).join(', ')}. Bulan berjalan dihitung sampai kemarin.`:`Berdiri di lokasi, pilih slot waktu, lalu ketuk ${PTN[c]} untuk mengisi nama, pilihan Aman / Tidak aman, foto &amp; keterangan (jam tercatat otomatis). Lokasi diverifikasi GPS (maks ${ptTol(c)} m). Jadwal ${PCFG[c].n}× sehari: ${PS(c).map(pd).join(', ')}. Bulan berjalan dihitung sampai kemarin.`;
 const AMANO_SEED=[{"id":1,"n":"Samping Mesin Pompa","lt":"Rooftop","new":0,"lat":null,"lng":null},{"id":2,"n":"Samping Panel Genset","lt":"Lt. 10","new":0,"lat":null,"lng":null},{"id":3,"n":"Ruang Genset","lt":"Lt. 10","new":0,"lat":null,"lng":null},{"id":4,"n":"Exit A Lt. 9","lt":"Lt. 9","new":0,"lat":null,"lng":null},{"id":5,"n":"Exit B Lt. 9","lt":"Lt. 9","new":0,"lat":null,"lng":null},{"id":6,"n":"Exit C Lt. 9","lt":"Lt. 9","new":0,"lat":null,"lng":null},{"id":7,"n":"Koridor Lt. 9","lt":"Lt. 9","new":0,"lat":null,"lng":null},{"id":8,"n":"Exit A Lt. 8","lt":"Lt. 8","new":0,"lat":null,"lng":null},{"id":9,"n":"Exit B Lt. 8","lt":"Lt. 8","new":0,"lat":null,"lng":null},{"id":10,"n":"Exit C Lt. 8","lt":"Lt. 8","new":0,"lat":null,"lng":null},{"id":11,"n":"Exit A Lt. 7","lt":"Lt. 7","new":0,"lat":null,"lng":null},{"id":12,"n":"Exit B Lt. 7","lt":"Lt. 7","new":0,"lat":null,"lng":null},{"id":13,"n":"Exit C Lt.7","lt":"Lt. 7","new":0,"lat":null,"lng":null},{"id":14,"n":"Ruang Tunggu ICU","lt":"Lt. 7","new":0,"lat":null,"lng":null},{"id":15,"n":"Ruang ICU","lt":"Lt. 7","new":0,"lat":null,"lng":null},{"id":16,"n":"Musholla","lt":"Lt. 7","new":0,"lat":null,"lng":null},{"id":17,"n":"Exit A Lt. 6","lt":"Lt. 6","new":0,"lat":null,"lng":null},{"id":18,"n":"Exit B Lt. 6","lt":"Lt. 6","new":0,"lat":null,"lng":null},{"id":19,"n":"Exit C Lt. 6","lt":"Lt. 6","new":0,"lat":null,"lng":null},{"id":20,"n":"Exit A Lt. 5","lt":"Lt. 5","new":0,"lat":null,"lng":null},{"id":21,"n":"Exit B Lt. 5","lt":"Lt. 5","new":0,"lat":null,"lng":null},{"id":22,"n":"Exit C Lt. 5","lt":"Lt. 5","new":0,"lat":null,"lng":null},{"id":23,"n":"Poli Akupuntur","lt":"Lt. 5","new":0,"lat":null,"lng":null},{"id":24,"n":"Balkon lt 5","lt":"Lt. 5","new":1,"lat":null,"lng":null},{"id":25,"n":"Exit A Lt. 3","lt":"Lt. 3","new":0,"lat":null,"lng":null},{"id":26,"n":"Exit B Lt. 3","lt":"Lt. 3","new":0,"lat":null,"lng":null},{"id":27,"n":"Exit C Lt. 3","lt":"Lt. 3","new":0,"lat":null,"lng":null},{"id":28,"n":"Koridor CSSD","lt":"Lt. 3","new":0,"lat":null,"lng":null},{"id":29,"n":"Ruang Tunggu OT","lt":"Lt. 3","new":0,"lat":null,"lng":null},{"id":30,"n":"Ruang Tunggu Depan Lift","lt":"Lt. 3","new":0,"lat":null,"lng":null},{"id":31,"n":"Exit A Lt. 2","lt":"Lt. 2","new":0,"lat":null,"lng":null},{"id":32,"n":"Exit B Lt. 2","lt":"Lt. 2","new":0,"lat":null,"lng":null},{"id":33,"n":"Admision Lt. 2","lt":"Lt. 2","new":0,"lat":null,"lng":null},{"id":34,"n":"Poli Anak","lt":"Lt. 2","new":0,"lat":null,"lng":null},{"id":35,"n":"Poli MC","lt":"Lt. 2","new":0,"lat":null,"lng":null},{"id":36,"n":"Poli Bedah","lt":"Lt. 2","new":0,"lat":null,"lng":null},{"id":37,"n":"Poli Jantung","lt":"Lt. 2","new":0,"lat":null,"lng":null},{"id":38,"n":"Koridor EHCU lt 2","lt":"Lt. 2","new":1,"lat":null,"lng":null},{"id":39,"n":"Exit B Lt. 1","lt":"Lt. 1","new":0,"lat":null,"lng":null},{"id":40,"n":"Samping Escalator Lt. 1","lt":"Lt. 1","new":0,"lat":null,"lng":null},{"id":41,"n":"Parkir Mobil Timur","lt":"Lt. 1","new":0,"lat":null,"lng":null},{"id":42,"n":"Parkir DT","lt":"Lt. 1","new":0,"lat":null,"lng":null},{"id":43,"n":"Emergency Dalam","lt":"Lt. 1","new":0,"lat":null,"lng":null},{"id":44,"n":"Depan FCC","lt":"Lt. 1","new":0,"lat":null,"lng":null},{"id":45,"n":"Pintu Masuk Selatan","lt":"Lt. 1","new":0,"lat":null,"lng":null},{"id":46,"n":"Ruang Radiologi","lt":"Lt. 1","new":0,"lat":null,"lng":null},{"id":47,"n":"Ruang Admission Emergency","lt":"Lt. 1","new":0,"lat":null,"lng":null},{"id":48,"n":"Akses masuk Emergency","lt":"Lt. 1","new":1,"lat":null,"lng":null},{"id":49,"n":"Kitchen","lt":"Basement 1","new":0,"lat":null,"lng":null},{"id":50,"n":"Samping Gudang Umum","lt":"Basement 1","new":0,"lat":null,"lng":null},{"id":51,"n":"Exit A Lt. B1","lt":"Basement 1","new":0,"lat":null,"lng":null},{"id":52,"n":"Exit C Lt. B1","lt":"Basement 1","new":0,"lat":null,"lng":null},{"id":53,"n":"Mortuary","lt":"Basement 1","new":0,"lat":null,"lng":null},{"id":54,"n":"Parkir Motor Lt. B2","lt":"Basement 2","new":0,"lat":null,"lng":null},{"id":55,"n":"Exit B Lt. B2","lt":"Basement 2","new":0,"lat":null,"lng":null},{"id":56,"n":"Exit C Lt. B2","lt":"Basement 2","new":0,"lat":null,"lng":null},{"id":57,"n":"Depan office Secure Parking","lt":"Basement 2","new":0,"lat":null,"lng":null}];
-const ptList=c=>{S.pt=S.pt||{};if(c=='SG-01'&&!S.amSeed&&!(S.pt[c]||[]).length){S.pt[c]=JSON.parse(JSON.stringify(AMANO_SEED));S.amSeed=1}return S.pt[c]=S.pt[c]||[]};
+const ptList=c=>{S.pt=S.pt||{};if(c=='SG-01'&&!S.amSeed&&!(S.pt[c]||[]).length){S.pt[c]=JSON.parse(JSON.stringify(AMANO_SEED));S.amSeed=1}if(c=='SG-05'&&!S.hrSeed&&!(S.pt[c]||[]).length){S.pt[c]=JSON.parse(JSON.stringify(HR_SEED));S.hrSeed=1}return S.pt[c]=S.pt[c]||[]};
 const ptRec=(c,m)=>(((S.pl||{})[m||M]||{})[c])||[];
 const ptSet=p=>!!p&&typeof p.lat=='number'&&typeof p.lng=='number'&&!(p.lat==0&&p.lng==0);
-const ptTol=()=>S.ptol===undefined?25:+S.ptol;
-function ptAuto(c,m){if(c!='SG-01')return null;const P=ptList(c).length,R=ptRec(c,m);if(!P||!R.length)return null;
- const d=P*8*elapsed(m);if(!d)return null;const n=R.filter(r=>r.date<TODAY).length,a=Math.min(1,n/d);return{v:a,s:Math.min(100,a*100),n,d}}
+const ptTol=c=>c&&PCFG[c]&&PCFG[c].gps===false?0:(S.ptol===undefined?25:+S.ptol);
+function ptAuto(c,m){if(!PCFG[c])return null;const P=ptList(c).length,R=ptRec(c,m);if(!P||!R.length)return null;
+ const d=P*PCFG[c].n*elapsed(m);if(!d)return null;const n=R.filter(r=>r.date<TODAY).length,a=Math.min(1,n/d);return{v:a,s:Math.min(100,a*100),n,d}}
 function vaEff(m){const o=xs('va',m),d={...(o.d||{})},R=ptRec('SG-01',m);if(R.length){const c={};R.forEach(r=>{const k=+r.date.slice(8);c[k]=(c[k]||0)+1});Object.keys(c).forEach(k=>d[k]=c[k])}
  return{t:o.t||(ptList('SG-01').length?ptList('SG-01').length*8:432),d}}
 function ptGps(p){return new Promise(res=>{const t=ptTol();if(!t)return res({ok:true,dist:null});
@@ -809,23 +814,23 @@ function ptGps(p){return new Promise(res=>{const t=ptTol();if(!t)return res({ok:
  try{wid=navigator.geolocation.watchPosition(pos=>{const d=hav(pos.coords.latitude,pos.coords.longitude,p.lat,p.lng),acc=Math.round(pos.coords.accuracy||0),eff=Math.max(0,d-Math.min(acc,50));
    if(!best||eff<best.eff)best={d,acc,eff};if(eff<=t)fin({ok:true,dist:Math.round(d)})},
   e=>fin(e&&e.code==1?{ok:false,msg:'Izin lokasi ditolak. Izinkan lokasi di peramban lalu coba lagi.'}:bad()),{enableHighAccuracy:true,maximumAge:0,timeout:20000})}catch(e){fin(bad())}})}
-function ptCard(c){const P=ptList(c),adm=isAdmin(),sn=slotNow();if(PSEL[c]==null||PSEL[c]>sn)PSEL[c]=sn;const sl=PSEL[c],mk=TODAY.slice(0,7);
+function ptCard(c){const P=ptList(c),adm=isAdmin(),sn=slotNow(c),g=PCFG[c].gps!==false,st=pst(c);if(PSEL[c]==null||PSEL[c]>sn)PSEL[c]=sn;const sl=PSEL[c],mk=TODAY.slice(0,7);
  const rec=ptRec(c,mk).filter(r=>r.date==TODAY),has=(pid,s)=>rec.some(r=>r.pid==pid&&r.slot==s),cnt=P.filter(p=>has(p.id,sl)).length;
- const cards=P.map(p=>{const dn=has(p.id,sl),tdn=rec.some(r=>r.pid==p.id&&r.slot==sl&&r.st=='tidak');return`<button class="card stat" data-pt="${c}|${p.id}"><div class="row"><b>${esc(p.n)}</b><span class="pill ${dn?(tdn?'bad':'ok'):''}">${dn?(tdn?'⚠ ':'✓ ')+pd(sl)+'.00':'Belum'}</span></div><div class="sub">${p.lt?esc(p.lt)+(p.new?' · baru 2026':'')+' · ':''}${PSL.filter(s=>s<=sn&&has(p.id,s)).length}/${sn/3+1} slot hari ini${!ptSet(p)&&adm?' · <span class="warn">koordinat belum diatur</span>':''}</div></button>`}).join('');
- const rows=rec.slice().sort((a,b)=>b.ts.localeCompare(a.ts)).slice(0,60).map(r=>`<tr><td>${slotLbl(r.slot)}</td><td>${esc(r.n)}</td><td>${esc(r.p)}</td><td class="${r.st=='tidak'?'bad':r.st=='aman'?'ok':''}">${r.st=='tidak'?'Tidak aman':r.st=='aman'?'Aman':'–'}</td><td>${r.dist==null?'–':r.dist+' m'}</td><td>${esc(r.ts.slice(11,16))}</td><td style="white-space:normal">${esc(r.ket||'')}</td><td>${(r.ph||[]).map((id,j)=>`<button type="button" class="btn sm" data-insphv="${id}">${j+1}</button>`).join(' ')||'–'}</td><td><button class="btn sm" data-ptd="${c}|${r.id}">Hapus</button></td></tr>`).join('');
- return`<div class="card"><div class="row"><h2>Checklist patroli · tiap 3 jam</h2></div>
-<p class="sub">Berdiri di lokasi, pilih slot waktu, lalu ketuk ${PTN[c]} untuk mengisi nama, pilihan Aman / Tidak aman, foto &amp; keterangan (jam tercatat otomatis). Lokasi diverifikasi GPS (maks ${ptTol()} m). Jadwal 8× sehari: 00, 03, 06, 09, 12, 15, 18, 21. Bulan berjalan dihitung sampai kemarin.</p>
-<div class="f"><label>Slot waktu<select data-pts="${c}">${PSL.filter(s=>s<=sn).map(s=>`<option value="${s}" ${s==sl?'selected':''}>${slotLbl(s)}</option>`).join('')}</select></label><span class="pill ${P.length&&cnt==P.length?'ok':''}">Slot ini: ${cnt} / ${P.length}</span></div>
+ const cards=P.map(p=>{const dn=has(p.id,sl),tdn=rec.some(r=>r.pid==p.id&&r.slot==sl&&r.st=='tidak');return`<button class="card stat" data-pt="${c}|${p.id}"><div class="row"><b>${esc(p.n)}</b><span class="pill ${dn?(tdn?'bad':'ok'):''}">${dn?(tdn?'⚠ ':'✓ ')+pd(sl)+'.00':'Belum'}</span></div><div class="sub">${p.lt?esc(p.lt)+(p.new?' · baru 2026':'')+' · ':''}${PS(c).filter(s=>s<=sn&&has(p.id,s)).length}/${sn/st+1} slot hari ini${g&&!ptSet(p)&&adm?' · <span class="warn">koordinat belum diatur</span>':''}</div></button>`}).join('');
+ const rows=rec.slice().sort((a,b)=>b.ts.localeCompare(a.ts)).slice(0,60).map(r=>`<tr><td>${slotLbl(r.slot,c)}</td><td>${esc(r.n)}</td><td>${esc(r.p)}</td><td class="${r.st=='tidak'?'bad':r.st=='aman'?'ok':''}">${r.st=='tidak'?'Tidak aman':r.st=='aman'?'Aman':'–'}</td>${g?`<td>${r.dist==null?'–':r.dist+' m'}</td>`:''}<td>${esc(r.ts.slice(11,16))}</td><td style="white-space:normal">${esc(r.ket||'')}</td><td>${(r.ph||[]).map((id,j)=>`<button type="button" class="btn sm" data-insphv="${id}">${j+1}</button>`).join(' ')||'–'}</td><td><button class="btn sm" data-ptd="${c}|${r.id}">Hapus</button></td></tr>`).join('');
+ return`<div class="card"><div class="row"><h2>${c=='SG-05'?'Checklist High Risk Area · tiap '+st+' jam':'Checklist patroli · tiap '+st+' jam'}</h2></div>
+<p class="sub">${ptIntro(c)}</p>
+<div class="f"><label>Slot waktu<select data-pts="${c}">${PS(c).filter(s=>s<=sn).map(s=>`<option value="${s}" ${s==sl?'selected':''}>${slotLbl(s,c)}</option>`).join('')}</select></label><span class="pill ${P.length&&cnt==P.length?'ok':''}">Slot ini: ${cnt} / ${P.length}</span></div>
 ${P.length?`<div class="grid" style="margin-top:12px">${cards}</div>`:`<p class="sub" style="margin-top:12px">Belum ada ${PTN[c]}. ${adm?'Tambahkan lewat “Titik patroli & koordinat (admin)” di bawah.':'Hubungi admin untuk menambahkan.'}</p>`}
-<div class="adm-only"><h2 style="margin-top:14px">Riwayat hari ini (${rec.length})</h2>${c=='SG-01'?`<div style="margin:8px 0"><button class="btn sm acc" data-vle="SG-01">Unduh Excel</button> <button class="btn sm" data-pe="SG-01">Unduh Excel checklist</button></div>`:''}<div class="tw"><table><tr><th>Slot</th><th>Lokasi</th><th>Petugas</th><th>Status</th><th>Jarak</th><th>Jam</th><th>Keterangan</th><th>Foto</th><th></th></tr>${rows||'<tr><td colspan="9" class="sub">Belum ada checklist hari ini.</td></tr>'}</table></div></div>
-${adm?`<details style="margin-top:12px" ${PTOPEN?'open':''}><summary>Titik patroli & koordinat (admin)</summary><div style="padding-bottom:14px"><div class="f"><label>Toleransi (meter, 0 = GPS nonaktif)<input type="number" id="ptol" min="0" value="${ptTol()}"></label></div>
-<label class="sub" style="display:block;margin-top:10px">Tambah ${PTN[c]} (satu nama per baris)<textarea id="ptb_${c}" rows="3" style="width:100%" placeholder="mis. Lobby Utama"></textarea></label><p style="margin:8px 0"><button class="btn acc sm" data-pta="${c}">Tambah</button></p>
-<p class="sub">Berdiri di lokasi lalu ketuk “GPS saya” untuk mengisi koordinat. Titik bertanda “belum diatur” belum bisa dipakai petugas.</p>
-<div class="tw"><table><tr><th>Lantai</th><th>Nama</th><th>Latitude</th><th>Longitude</th><th></th></tr>${P.map(p=>`<tr><td>${esc(p.lt||'')}</td><td><input style="width:170px" data-ptn="${c}|${p.id}" value="${esc(p.n)}"></td><td><input style="width:110px" data-ptl="${c}|${p.id}|lat" value="${p.lat??''}"></td><td><input style="width:110px" data-ptl="${c}|${p.id}|lng" value="${p.lng??''}"></td><td><button class="btn sm" data-ptg="${c}|${p.id}">GPS saya</button> <button class="btn sm" data-ptx="${c}|${p.id}">Hapus</button></td></tr>`).join('')||'<tr><td colspan="5" class="sub">Belum ada titik.</td></tr>'}</table></div></div></details>`:''}</div>`}
+<div class="adm-only"><h2 style="margin-top:14px">Riwayat hari ini (${rec.length})</h2>${PCFG[c]?`<div style="margin:8px 0"><button class="btn sm acc" data-vle="${c}">Unduh Excel</button> <button class="btn sm" data-pe="${c}">Unduh Excel checklist</button></div>`:''}<div class="tw"><table><tr><th>Slot</th><th>Lokasi</th><th>Petugas</th><th>Status</th>${g?'<th>Jarak</th>':''}<th>Jam</th><th>Keterangan</th><th>Foto</th><th></th></tr>${rows||'<tr><td colspan="${g?9:8}" class="sub">Belum ada checklist hari ini.</td></tr>'}</table></div></div>
+${adm?`<details style="margin-top:12px" ${PTOPEN?'open':''}><summary>Titik patroli & koordinat (admin)</summary><div style="padding-bottom:14px">${g?`<div class="f"><label>Toleransi (meter, 0 = GPS nonaktif)<input type="number" id="ptol" min="0" value="${ptTol(c)}"></label></div>`:''}
+<label class="sub" style="display:block;margin-top:10px">Tambah ${PTN[c]} (satu nama per baris)<textarea id="ptb_${c}" rows="3" style="width:100%" placeholder="${c=='SG-05'?'mis. Ruang Genset':'mis. Lobby Utama'}"></textarea></label><p style="margin:8px 0"><button class="btn acc sm" data-pta="${c}">Tambah</button></p>
+${g?'<p class="sub">Berdiri di lokasi lalu ketuk “GPS saya” untuk mengisi koordinat. Titik bertanda “belum diatur” belum bisa dipakai petugas.</p>':'<p class="sub">Daftar area yang dicek lewat monitor CCTV. Nama area bisa diubah, ditambah, atau dihapus.</p>'}
+<div class="tw"><table><tr><th>${g?'Lantai':'Monitor'}</th><th>Nama</th>${g?'<th>Latitude</th><th>Longitude</th>':''}<th></th></tr>${P.map(p=>`<tr><td>${esc(p.lt||'')}</td><td><input style="width:170px" data-ptn="${c}|${p.id}" value="${esc(p.n)}"></td>${g?`<td><input style="width:110px" data-ptl="${c}|${p.id}|lat" value="${p.lat??''}"></td><td><input style="width:110px" data-ptl="${c}|${p.id}|lng" value="${p.lng??''}"></td>`:''}<td>${g?`<button class="btn sm" data-ptg="${c}|${p.id}">GPS saya</button> `:''}<button class="btn sm" data-ptx="${c}|${p.id}">Hapus</button></td></tr>`).join('')||'<tr><td colspan="${g?5:3}" class="sub">Belum ada titik.</td></tr>'}</table></div></div></details>`:''}</div>`}
 function ptModal(c,p,sl){const old=document.getElementById('ptmod');if(old)old.remove();
  const o=document.createElement('div');o.id='ptmod';o.style.cssText='position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.5);display:grid;place-items:center;padding:16px;overflow:auto';
  const clk=()=>{const t=new Date();return pd(t.getDate())+'/'+pd(t.getMonth()+1)+'/'+t.getFullYear()+' '+pd(t.getHours())+':'+pd(t.getMinutes())+':'+pd(t.getSeconds())};
- o.innerHTML='<div style="background:var(--panel);color:var(--ink);width:min(460px,100%);border-radius:18px;padding:18px"><b>'+esc(p.n)+'</b><div class="sub" style="margin:2px 0 10px">'+(p.lt?esc(p.lt)+' · ':'')+'Slot '+slotLbl(sl)+'</div>'
+ o.innerHTML='<div style="background:var(--panel);color:var(--ink);width:min(460px,100%);border-radius:18px;padding:18px"><b>'+esc(p.n)+'</b><div class="sub" style="margin:2px 0 10px">'+(p.lt?esc(p.lt)+' · ':'')+'Slot '+slotLbl(sl,c)+'</div>'
  +'<div class="f" style="display:grid;gap:10px"><label>Nama petugas<input id="ptmn" value="'+esc(S.petugas||'')+'" style="width:100%"></label>'
  +'<label>Waktu patroli (otomatis)<input id="ptmt" readonly value="'+clk()+'" style="width:100%"></label>'
  +'<label>Foto<input type="file" id="ptmf" accept="image/*" style="width:100%"></label><img id="ptmi" alt="" style="display:none;max-width:100%;max-height:200px;border-radius:10px">'
@@ -837,19 +842,19 @@ function ptModal(c,p,sl){const old=document.getElementById('ptmod');if(old)old.r
  q('#ptmf').onchange=async ev=>{const f=ev.target.files[0];if(!f)return;try{const u=URL.createObjectURL(f);img=await shrink(u,1280,.72);URL.revokeObjectURL(u);const i=q('#ptmi');i.src=img;i.style.display='block'}catch(x){img='';msg('Foto tidak bisa dibaca')}};
  q('#ptmok').onclick=async()=>{const pn=q('#ptmn').value.trim(),ket=q('#ptmk').value.trim(),mk=TODAY.slice(0,7);
   if(!pn)return msg('Nama petugas wajib diisi');if(!img)return msg('Foto wajib diambil');if(!ket)return msg('Keterangan wajib diisi');
-  if(ptRec(c,mk).some(r=>r.date==TODAY&&r.slot==sl&&r.pid==p.id)){clearInterval(iv);o.remove();return toast('Sudah dicek pada slot '+slotLbl(sl))}
+  if(ptRec(c,mk).some(r=>r.date==TODAY&&r.slot==sl&&r.pid==p.id)){clearInterval(iv);o.remove();return toast('Sudah dicek pada slot '+slotLbl(sl,c))}
   if(!GAS())return msg('Belum tersambung ke penyimpanan, foto belum bisa diunggah');
   const b=q('#ptmok');b.disabled=true;b.textContent='Memverifikasi lokasi…';msg('');
   const g=await ptGps(p);if(!g.ok){b.disabled=false;b.textContent='Simpan';return msg(g.msg)}
   b.textContent='Mengunggah foto…';let id;
-  try{const r=await gas({action:'putPhoto',mime:'image/jpeg',name:'Amano_'+TODAY+'_'+pd(sl)+'_'+p.n.replace(/\W+/g,'-')+'_'+Date.now()+'.jpg',data:img.split(',')[1]});id=r.id;PHC.set(id,img)}
+  try{const r=await gas({action:'putPhoto',mime:'image/jpeg',name:(PCFG[c]?PCFG[c].pre:'Patroli')+'_'+TODAY+'_'+pd(sl)+'_'+p.n.replace(/\W+/g,'-')+'_'+Date.now()+'.jpg',data:img.split(',')[1]});id=r.id;PHC.set(id,img)}
   catch(er){b.disabled=false;b.textContent='Simpan';return msg('Gagal mengunggah foto: '+friendly(er))}
   S.petugas=pn;(((S.pl=S.pl||{})[mk]=S.pl[mk]||{})[c]=S.pl[mk][c]||[]).push({id:Date.now(),date:TODAY,slot:sl,pid:p.id,n:p.n,p:pn,dist:g.dist,ts:nowS(),ket,ph:[id],o:authed()});M=mk;save();clearInterval(iv);o.remove();const y=scrollY;draw();scrollTo(0,y);toast('Tersimpan · '+p.n)}}
 document.addEventListener('click',async e=>{const b=e.target.closest('[data-pt],[data-ptd],[data-pta],[data-ptg],[data-ptx],[data-pe]');if(!b)return;const d=b.dataset,rd=()=>{const y=scrollY;draw();scrollTo(0,y)};
  if(d.pe){if(!window.ExcelJS)return toast('Pustaka Excel belum termuat (perlu internet)');const[fn,buf]=await vBuild('pe',d.pe);dl(fn,buf);if(GAS())upDrive(fn,buf,true);return}
- if(d.pt){if(PBUSY)return;const[c,pid]=d.pt.split('|'),p=ptList(c).find(x=>x.id==pid);if(!p)return;const sl=PSEL[c]??slotNow(),mk=TODAY.slice(0,7);
-  if(ptRec(c,mk).some(r=>r.date==TODAY&&r.slot==sl&&r.pid==pid))return toast('Sudah dicek pada slot '+slotLbl(sl));
-  if(ptTol()&&!ptSet(p))return toast('Koordinat lokasi ini belum diatur admin',4000);
+ if(d.pt){if(PBUSY)return;const[c,pid]=d.pt.split('|'),p=ptList(c).find(x=>x.id==pid);if(!p)return;const sl=PSEL[c]??slotNow(c),mk=TODAY.slice(0,7);
+  if(ptRec(c,mk).some(r=>r.date==TODAY&&r.slot==sl&&r.pid==pid))return toast('Sudah dicek pada slot '+slotLbl(sl,c));
+  if(ptTol(c)&&!ptSet(p))return toast('Koordinat lokasi ini belum diatur admin',4000);
   PF={c,pid:p.id,sl,p:S.petugas||'',k:'',img:'',st:'',gps:{ok:false,msg:'Memverifikasi lokasi…',hint:''}};draw();scrollTo(0,0);ptGpsRun();return}
  if(d.ptd){const[c,id]=d.ptd.split('|');const mk=TODAY.slice(0,7),rr=ptRec(c,mk).find(r=>r.id==id);if(rr&&!own(rr))return toast('Hanya pemilik data atau admin yang bisa menghapus');if(confirm('Hapus checklist ini?')){S.pl[mk][c]=S.pl[mk][c].filter(r=>r.id!=id);save();rd()}return}
  if(!isAdmin())return;
@@ -867,15 +872,15 @@ document.addEventListener('change',e=>{const t=e.target,d=t.dataset;if(!d)return
 let PWID=null,PTK=0;
 const ptClk=()=>{const t=new Date();return pd(t.getHours())+'.'+pd(t.getMinutes())+'.'+pd(t.getSeconds())};
 function ptStop(){if(PWID!=null){try{navigator.geolocation.clearWatch(PWID)}catch(e){}PWID=null}}
-function canPt(){return !!(PF&&(!ptTol()||PF.gps.ok)&&PF.p.trim()&&PF.st&&PF.img&&(PF.st=='aman'||PF.k.trim()))}
+function canPt(){return !!(PF&&(!ptTol(PF.c)||PF.gps.ok)&&PF.p.trim()&&PF.st&&PF.img&&(PF.st=='aman'||PF.k.trim()))}
 function ptfSync(){if(!PF)return;
  document.querySelectorAll('[data-ptst]').forEach(b=>{const on=PF.st==b.dataset.ptst;b.className=on?(b.dataset.ptst=='aman'?'s-ok':'s-bad'):''});
  const k=$('#ptfkl');if(k)k.textContent=PF.st=='tidak'?'Keterangan / Temuan (wajib)':'Keterangan (opsional)';
  const s=$('#ptfs');if(s&&!s.dataset.busy)s.disabled=!canPt()}
 function ptfShow(){const e=$('#pgps');if(e&&PF){e.textContent=PF.gps.msg;e.className='pill '+(PF.gps.ok?'ok':'bad')}
  const h=$('#pgpsh');if(h){h.textContent=(PF&&PF.gps.hint)||'';h.hidden=!(PF&&PF.gps.hint)}ptfSync()}
-function ptGpsRun(){ptStop();if(!PF)return;const t=ptTol(),tok=++PTK,p=ptList(PF.c).find(x=>x.id==PF.pid);
- if(!t||!p){PF.gps={ok:true,msg:'Verifikasi GPS dinonaktifkan',hint:''};return ptfShow()}
+function ptGpsRun(){ptStop();if(!PF)return;const t=ptTol(PF.c),tok=++PTK,p=ptList(PF.c).find(x=>x.id==PF.pid);
+ if(!t||!p){PF.gps={ok:true,msg:PF.c=='SG-05'?'Pengecekan via monitor CCTV no. 10':'Verifikasi GPS dinonaktifkan',hint:''};return ptfShow()}
  const fail=e=>{if(!PF)return;const m=gpsErrMsg(e);PF.gps={ok:false,msg:m[0],hint:m[1]};ptfShow()};
  if(window.isSecureContext===false||!navigator.geolocation)return fail({code:0});
  let best=null,fin=false,timer=null;
@@ -891,17 +896,17 @@ function ptGpsRun(){ptStop();if(!PF)return;const t=ptTol(),tok=++PTK,p=ptList(PF
  timer=setTimeout(final,25000);
  try{PWID=navigator.geolocation.watchPosition(onPos,e=>{if(!alive())return;if(e&&e.code!=1&&best)return final();stop();fail(e)},{enableHighAccuracy:true,maximumAge:0,timeout:20000})}catch(x){stop();fail({code:0})}}
 function ptForm(){const c=PF.c,p=ptList(c).find(x=>x.id==PF.pid)||{n:'?'};
- return`<div class="row"><div><p class="eyebrow">${esc(c)} · Slot ${slotLbl(PF.sl)}</p><h1>${esc(p.n)}</h1></div><button class="btn" data-ptfx="1">← Kembali</button></div>
-<div class="card"><div class="row"><span id="pgps" class="pill ${PF.gps.ok?'ok':'bad'}">${esc(PF.gps.msg)}</span><button class="btn sm" data-ptfg="1">Cek ulang GPS</button></div><div id="pgpsh" class="sub" style="margin-top:8px" ${PF.gps.hint?'':'hidden'}>${esc(PF.gps.hint||'')}</div><div class="f" style="margin-top:12px"><label>Jam patroli (otomatis)<input id="ptfclk" value="${ptClk()}" readonly disabled style="width:130px;font-variant-numeric:tabular-nums"></label><label>Nama petugas<input id="ptfp" value="${esc(PF.p)}" placeholder="Nama petugas"></label></div></div>
+ return`<div class="row"><div><p class="eyebrow">${esc(c)} · Slot ${slotLbl(PF.sl,c)}</p><h1>${esc(p.n)}</h1></div><button class="btn" data-ptfx="1">← Kembali</button></div>
+<div class="card"><div class="row"><span id="pgps" class="pill ${PF.gps.ok?'ok':'bad'}">${esc(PF.gps.msg)}</span>${ptTol(c)?'<button class="btn sm" data-ptfg="1">Cek ulang GPS</button>':''}</div><div id="pgpsh" class="sub" style="margin-top:8px" ${PF.gps.hint?'':'hidden'}>${esc(PF.gps.hint||'')}</div><div class="f" style="margin-top:12px"><label>${c=='SG-05'?'Jam pengecekan (otomatis)':'Jam patroli (otomatis)'}<input id="ptfclk" value="${ptClk()}" readonly disabled style="width:130px;font-variant-numeric:tabular-nums"></label><label>Nama petugas<input id="ptfp" value="${esc(PF.p)}" placeholder="Nama petugas"></label></div></div>
 <div class="card"><div class="row"><b>Kondisi area</b><span class="pill">1/1</span></div><div class="opt"><button data-ptst="aman" class="${PF.st=='aman'?'s-ok':''}">✓ Aman</button><button data-ptst="tidak" class="${PF.st=='tidak'?'s-bad':''}">⚠ Tidak aman</button></div></div>
-<div class="card"><label class="sub">Foto</label><input type="file" id="ptff" accept="image/*" style="width:100%;margin-top:6px"><img id="ptfi" alt="" src="${PF.img||''}" style="display:${PF.img?'block':'none'};max-width:100%;max-height:220px;border-radius:10px;margin-top:10px"></div>
+<div class="card"><label class="sub">${c=='SG-05'?'Foto / screenshot monitor CCTV':'Foto'}</label><input type="file" id="ptff" accept="image/*" style="width:100%;margin-top:6px"><img id="ptfi" alt="" src="${PF.img||''}" style="display:${PF.img?'block':'none'};max-width:100%;max-height:220px;border-radius:10px;margin-top:10px"></div>
 <div class="card"><label class="sub" id="ptfkl">${PF.st=='tidak'?'Keterangan / Temuan (wajib)':'Keterangan (opsional)'}</label><textarea id="ptfk" rows="3" style="width:100%;margin-top:6px" placeholder="mis. Area aman &amp; kondusif">${esc(PF.k)}</textarea></div>
 <button class="btn acc" id="ptfs" data-ptfs="1" ${canPt()?'':'disabled'}>Simpan checklist</button>`}
 async function ptfSubmit(){if(!PF||!canPt())return;const c=PF.c,p=ptList(c).find(x=>x.id==PF.pid),sl=PF.sl,mk=TODAY.slice(0,7),btn=$('#ptfs');if(!p)return;
- if(ptRec(c,mk).some(r=>r.date==TODAY&&r.slot==sl&&r.pid==p.id)){ptStop();PF=null;draw();return toast('Sudah dicek pada slot '+slotLbl(sl))}
+ if(ptRec(c,mk).some(r=>r.date==TODAY&&r.slot==sl&&r.pid==p.id)){ptStop();PF=null;draw();return toast('Sudah dicek pada slot '+slotLbl(sl,c))}
  if(!GAS())return toast('Belum tersambung ke penyimpanan, foto belum bisa diunggah',3500);
  const img=PF.img;btn.dataset.busy=1;btn.disabled=true;btn.textContent='Mengunggah foto…';let id;
- try{const r=await gas({action:'putPhoto',mime:'image/jpeg',name:'Amano_'+TODAY+'_'+pd(sl)+'_'+p.n.replace(/\W+/g,'-')+'_'+Date.now()+'.jpg',data:img.split(',')[1]});id=r.id;PHC.set(id,img)}
+ try{const r=await gas({action:'putPhoto',mime:'image/jpeg',name:(PCFG[c]?PCFG[c].pre:'Patroli')+'_'+TODAY+'_'+pd(sl)+'_'+p.n.replace(/\W+/g,'-')+'_'+Date.now()+'.jpg',data:img.split(',')[1]});id=r.id;PHC.set(id,img)}
  catch(er){delete btn.dataset.busy;btn.disabled=false;btn.textContent='Simpan checklist';return toast('Gagal mengunggah foto: '+friendly(er),3500)}
  const pn=PF.p.trim(),ket=PF.k.trim()||'Area aman & kondusif';S.petugas=pn;
  (((S.pl=S.pl||{})[mk]=S.pl[mk]||{})[c]=S.pl[mk][c]||[]).push({id:Date.now(),date:TODAY,slot:sl,pid:p.id,n:p.n,p:pn,st:PF.st,dist:PF.gps.dist??null,ts:nowS(),ket,ph:[id],o:authed()});
@@ -1552,12 +1557,12 @@ async function vBuild(kind,c){if((kind=='le'||kind=='xe')&&/^FB-0[1-6]$/.test(c)
  if(kind=='le'){const L=LOG[c],rows=logOf(c)||[],ws=wb.addWorksheet(L.sn());ws.addRow(L.h);const hr=ws.getRow(1);hr.font={bold:true};hr.alignment={horizontal:'center',vertical:'middle',wrapText:true};hr.eachCell(z=>{z.fill={type:'pattern',pattern:'solid',fgColor:{argb:XC.blue}};z.border=XBOX});
   if(L.mt)ws.addRow([MN[+M.slice(5)-1].toUpperCase()]);rows.forEach((r,i)=>{ws.addRow(L.row(r,i)).eachCell(z=>z.border=XBOX)});L.h.forEach((_,i)=>ws.getColumn(i+1).width=i==0?6:22);return['KPI-'+c+'-'+M+'.xlsx',await wb.xlsx.writeBuffer()]}
  if(kind=='pe'){const ws=wb.addWorksheet('Patroli '+MN[+M.slice(5)-1]);ws.addRow(['CHECKLIST PATROLI '+c+' – '+MU()]).font={bold:true,size:14};ws.addRow([]);
-  const hr=ws.addRow(['No','Tanggal','Slot (3 jam)','Titik / Area','Petugas','Status','Jarak GPS (m)','Dicatat','Foto (Drive)']);hr.font={bold:true};hr.eachCell(z=>{z.fill={type:'pattern',pattern:'solid',fgColor:{argb:XC.blue}};z.border=XBOX});
-  ptRec(c).slice().sort((a,b)=>a.date.localeCompare(b.date)||a.slot-b.slot||a.ts.localeCompare(b.ts)).forEach((r,i)=>ws.addRow([i+1,r.date.split('-').reverse().join('/'),slotLbl(r.slot),r.n,r.p,r.st=='tidak'?'Tidak aman':r.st=='aman'?'Aman':'–',r.dist==null?'–':r.dist,r.ts,(r.ph||[]).length?{text:'Buka foto',hyperlink:'https://drive.google.com/file/d/'+r.ph[0]+'/view'}:'–']).eachCell(z=>z.border=XBOX));
+  const hr=ws.addRow(['No','Tanggal','Slot ('+pst(c)+' jam)','Titik / Area','Petugas','Status','Jarak GPS (m)','Dicatat','Foto (Drive)']);hr.font={bold:true};hr.eachCell(z=>{z.fill={type:'pattern',pattern:'solid',fgColor:{argb:XC.blue}};z.border=XBOX});
+  ptRec(c).slice().sort((a,b)=>a.date.localeCompare(b.date)||a.slot-b.slot||a.ts.localeCompare(b.ts)).forEach((r,i)=>ws.addRow([i+1,r.date.split('-').reverse().join('/'),slotLbl(r.slot,c),r.n,r.p,r.st=='tidak'?'Tidak aman':r.st=='aman'?'Aman':'–',r.dist==null?'–':r.dist,r.ts,(r.ph||[]).length?{text:'Buka foto',hyperlink:'https://drive.google.com/file/d/'+r.ph[0]+'/view'}:'–']).eachCell(z=>z.border=XBOX));
   [6,12,16,32,18,14,14,20,14].forEach((w,i)=>ws.getColumn(i+1).width=w);return['KPI-Patroli-'+c+'-'+M+'.xlsx',await wb.xlsx.writeBuffer()]}
  ({'SG-01':()=>exAmano(wb),'FB-03':()=>exQHSE(wb),'SG-02':()=>exCCTV(wb),'FB-01':()=>exIns(wb,c),'FB-02':()=>exIns(wb,c)})[c]();
  return['KPI-'+c+'-'+M+'.xlsx',await wb.xlsx.writeBuffer()]}
-const VXL=()=>[['rk','Sodexo'],['rk','CSI'],['pe','SG-01'],['xe','SG-01'],['xe','SG-02'],['xe','FB-01'],['xe','FB-02'],['xe','FB-03'],...Object.keys(LOG).map(c=>['le',c])];
+const VXL=()=>[['rk','Sodexo'],['rk','CSI'],['pe','SG-01'],['xe','SG-01'],['pe','SG-05'],['xe','SG-05'],['xe','SG-02'],['xe','FB-01'],['xe','FB-02'],['xe','FB-03'],...Object.keys(LOG).map(c=>['le',c])];
 async function vxAll(){const L=VXL();let ok=0;for(const [k,c] of L){try{const [fn,buf]=await vBuild(k,c);if(await upDrive(fn,buf,true)===true)ok++}catch(e){console.error(e)}}return[ok,L.length]}
 // kirim ke Drive sebagai file TERPISAH: rekap + 1 file per KPI
 async function xlSep(loud){let ok=0;const ks=['rk','gc','tl','ct','kt','ins'];
@@ -1769,9 +1774,20 @@ document.addEventListener('change',e=>{const t=e.target;if(t.id=='ur'){const w=$
  addEventListener('scroll',()=>set(false),{passive:true})})();
 
 /* ===== Laporan Security (SG-01..SG-04): workbook LENGKAP mengikuti struktur 4 file Excel asli ===== */
-const SGF={'SG-01':'1 KPI Security - Kepatuhan Patroli Amano tahun 2026.xlsx','SG-02':'2 KPI Kepatuhan Pencapaian Monitoring Checklist CCTV 2026.xlsx','SG-03':'3 KPI Security - Patroli Area Ranap Di Luar Jam Kunjungan 2026.xlsx','SG-04':'4 KPI Security - Respontime Perbantuan Security 2026.xlsx'};
+const SGF={'SG-05':'5 KPI Security - Checklist High Risk Area CCTV 2026.xlsx','SG-01':'1 KPI Security - Kepatuhan Patroli Amano tahun 2026.xlsx','SG-02':'2 KPI Kepatuhan Pencapaian Monitoring Checklist CCTV 2026.xlsx','SG-03':'3 KPI Security - Patroli Area Ranap Di Luar Jam Kunjungan 2026.xlsx','SG-04':'4 KPI Security - Respontime Perbantuan Security 2026.xlsx'};
 const SGSIGN=['Ahmad Mustofa','Leader GA','Fajriansyah','Koordinator HSD'];
 const SGP={
+'SG-05':{n:'Profil Indikator',t:'KPI Checklist High Risk Area (Monitor CCTV)',no:'PI-RSPIBJ-HSD-09',tgl:'01 01 2026',sg:SGSIGN,r:[
+['Dasar Pemikiran','Pengawasan area high risk rumah sakit melalui monitor CCTV nomor 10'],['Dimensi Mutu','Keamanan'],
+['Tujuan','1. Memastikan area high risk terpantau dan dicek secara berkala\n2. Temuan di area high risk segera diketahui dan ditindaklanjuti'],
+['Jenis Indikator','Proses'],['Satuan Pengukuran ','Persentase'],
+['Numerator (Pembilang)','Jumlah checklist area high risk yang terisi'],['Denominator (Penyebut)','Jumlah area high risk x 12 checklist per hari x jumlah hari'],
+['Target Pencapaian','100%'],
+['Kriteria','Kriteria Inklusi : area high risk yang terpantau di monitor CCTV nomor 10 (Ruang Server & IT, Kamar Bayi, Ruang OT, Ruang ICU - NICU, Ruang Kitchen, Ruang Customer Relation, Ruang Kasir & Admission Rawat Inap, Parkir Motor B2, Rooftop)\nKriteria Eksklusi : dicek dan diisi checklist setiap 2 jam sekali (total 12x dalam 24 jam)'],
+['Formula','Jumlah checklist high risk yang terisi X 100\nJumlah checklist high risk yang harus diisi dalam 1 bulan'],
+['Metode Pengumpulan Data','Concurrent'],['Sumber Data','Aplikasi HSIMS (checklist petugas security)'],['Instrumen Pengambilan Data','Checklist HSIMS + foto monitor CCTV'],
+['Periode Pengumpulan Data','Setiap 2 jam'],['Penyajian Data','Diagram batang'],['Periode Analisis dan Pelaporan Data','Tiap bulan'],
+['Penanggungjawab','Penanggung Jawab Indikator : Leader GA\nPenaggung Jawab Pengumpul Data : Security CSI']]},
 'SG-01':{n:'Profil Indikator',t:'KPI Kepatuhan Patroli Amano',no:'PI-RSPIBJ-HSD-05',tgl:'01 02 2025',sg:SGSIGN,r:[
 ['Dasar Pemikiran','Pelaksanaan kepatuhan patroli amano'],['Dimensi Mutu','Keamanan'],
 ['Tujuan','1. Terciptanya lingkungan rumah sakit yang aman dan nyaman untuk semua pasien/ keluarga pasien dan pengunjung\n2. Memastikan bahwa pelaksanaan Patroli Amano dilakukan sesuai prosedur'],
@@ -1900,10 +1916,32 @@ function sgCCTV(wb){const Y=M.slice(0,4),ws=wb.addWorksheet('Summ Daily'),has=m=
   ws.mergeCells(r0+6,1,r0+9,1);const n=ws.getCell(r0+6,1);n.value='N0te : Checklist dilakukan 2 X dalam sehari';n.alignment={wrapText:true,vertical:'top'};n.font={name:'Calibri',size:11}}
  ws.getColumn(1).width=26;for(let k=2;k<=32;k++)ws.getColumn(k).width=6;
  for(let mo=1;mo<=mx;mo++){const m=Y+'-'+pd(mo);if(!has(m)&&m!=M)continue;const _M=M,sv=NVRT.slice();M=m;NVRT.splice(0,3,...PTS(mo));try{exCCTV(wb)}finally{M=_M;NVRT.splice(0,3,...sv)}}}
+function sgHR(wb){const Y=M.slice(0,4),ws=wb.addWorksheet('Data High Risk '+Y),BL='FFBDD7EE',PL='FFDDEBF7',N=PCFG['SG-05'].n,P=ptList('SG-05').length;
+ const S_=(r,k,v,o={})=>{const z=ws.getCell(r,k);if(v!=null)z.value=v;z.font={name:'Calibri',size:12,bold:!!o.b};z.alignment={horizontal:'center',vertical:'middle',wrapText:true};if(o.f)z.fill=sgFill(o.f);z.border=XBOX;if(o.nf)z.numFmt=o.nf;return z};
+ ws.mergeCells('A1:AK1');ws.mergeCells('A2:AK2');ws.mergeCells('A3:AK3');
+ [['A1','KPI CHECKLIST HIGH RISK AREA (MONITOR CCTV)'],['A2','SECURITY UNIT RSPI BINTARO JAYA ']].forEach(([a,v])=>{const z=ws.getCell(a);z.value=v;z.font={name:'Calibri',size:14,bold:true};z.alignment={horizontal:'center'}});
+ for(let r=4;r<=5;r++)for(let k=1;k<=37;k++)S_(r,k,null,{b:r==4,f:BL});
+ S_(4,1,'No',{b:1,f:BL});S_(4,2,'Year / Month Periode '+Y,{b:1,f:BL});S_(4,3,'Jumlah Target Checklist ',{b:1,f:BL});S_(4,4,'Target Checklist per Hari',{b:1,f:BL});S_(4,5,'TANGGAL (Jumlah checklist setiap hari)',{b:1,f:BL});S_(4,36,'TOTAL',{f:BL});S_(5,36,'PENCAPAIAN',{f:BL});
+ for(let d=1;d<=31;d++)S_(5,4+d,d,{f:BL});
+ ['A4:A5','B4:B5','C4:C5','D4:D5','E4:AI4','AJ4:AK4','AJ5:AK5'].forEach(x=>ws.mergeCells(x));
+ for(let mo=1;mo<=12;mo++){const m=Y+'-'+pd(mo),dm=dim(m),t=P*N,r=5+mo,R=ptRec('SG-05',m),c={};R.forEach(x=>{const k=+x.date.slice(8);c[k]=(c[k]||0)+1});let tot=0;
+  S_(r,1,mo,{b:1,f:PL});S_(r,2,MN[mo-1],{b:1,f:PL});S_(r,3,{formula:t+'*'+dm,result:t*dm},{b:1,f:PL});S_(r,4,t);
+  for(let d=1;d<=31;d++){const v=d<=dm&&c[d]!==undefined?c[d]:null;if(v!=null)tot+=v;S_(r,4+d,v)}
+  S_(r,36,{formula:'SUM(E'+r+':AI'+r+')',result:tot},{b:1,f:PL});S_(r,37,{formula:'IF(C'+r+'=0,0,AJ'+r+'/C'+r+')',result:t&&R.length?tot/(t*dm):0},{b:1,f:PL,nf:'0.0%'})}
+ ws.mergeCells('A18:B18');for(let k=1;k<=36;k++)S_(18,k,null);
+ for(let k=3;k<=36;k++){const L=sgCol(k);S_(18,k,{formula:'SUM('+L+'6:'+L+'17)'},{b:k<=3||k==36})}
+ const T=TODAY;ws.getCell('B20').value='Bintaro, '+(+T.slice(8))+' '+MN[+T.slice(5,7)-1]+' '+T.slice(0,4);ws.getCell('B20').font={name:'Calibri',size:12};
+ ws.mergeCells('C21:D21');ws.mergeCells('B22:B24');ws.mergeCells('C22:D24');ws.mergeCells('C25:D25');ws.mergeCells('C26:D26');
+ [['B21','Di Laporkan Oleh',1],['C21','Di periksa dan diketahui Oleh :',1],['B25','Hartoyo',1],['C25','Fajriansyah',1],['B26','Site Commander CSI'],['C26','HSD Coordinator']].forEach(([a,v,b])=>{const z=ws.getCell(a);z.value=v;z.font={name:'Calibri',size:12,bold:!!b};z.alignment={horizontal:'center',vertical:'middle'}});
+ ws.getColumn(1).width=4;ws.getColumn(2).width=28.4;ws.getColumn(3).width=17;ws.getColumn(4).width=17.3;for(let k=5;k<=35;k++)ws.getColumn(k).width=6.5;ws.getColumn(36).width=15.4;ws.getColumn(37).width=11.3;ws.getRow(4).height=33;
+ const w2=wb.addWorksheet('Checklist '+MN[+M.slice(5)-1]);w2.addRow(['CHECKLIST HIGH RISK AREA – '+MN[+M.slice(5)-1].toUpperCase()+' '+Y]).font={bold:true,size:14};w2.addRow([]);
+ const hr=w2.addRow(['No','Tanggal','Slot (2 jam)','Area High Risk','Petugas','Status','Dicatat','Keterangan','Foto (Drive)']);hr.font={bold:true};hr.eachCell(z=>{z.fill={type:'pattern',pattern:'solid',fgColor:{argb:XC.blue}};z.border=XBOX});
+ ptRec('SG-05').slice().sort((a,b)=>a.date.localeCompare(b.date)||a.slot-b.slot||a.ts.localeCompare(b.ts)).forEach((r,i)=>w2.addRow([i+1,r.date.split('-').reverse().join('/'),slotLbl(r.slot,'SG-05'),r.n,r.p,r.st=='tidak'?'Tidak aman':r.st=='aman'?'Aman':'–',r.ts,r.ket||'',(r.ph||[]).length?{text:'Buka foto',hyperlink:'https://drive.google.com/file/d/'+r.ph[0]+'/view'}:'–']).eachCell(z=>z.border=XBOX));
+ [6,12,16,34,18,14,20,34,14].forEach((w,i)=>w2.getColumn(i+1).width=w)}
 const _vBsg=vBuild;
-vBuild=async function(kind,c){if(!/^SG-0[1-4]$/.test(c||'')||(kind!='xe'&&kind!='le'))return _vBsg(kind,c);
+vBuild=async function(kind,c){if(!/^SG-0[1-5]$/.test(c||'')||(kind!='xe'&&kind!='le'))return _vBsg(kind,c);
  const wb=new ExcelJS.Workbook();wb.creator='HSIMS KPI';wb.created=new Date();sgProfil(wb,c);
- if(c=='SG-01')sgAmano(wb);else if(c=='SG-02')sgCCTV(wb);
+ if(c=='SG-01')sgAmano(wb);else if(c=='SG-05')sgHR(wb);else if(c=='SG-02')sgCCTV(wb);
  else{sgDaily(wb,c);const Y=M.slice(0,4);for(let mo=1;mo<=12;mo++){const m=Y+'-'+pd(mo);if((logOf(c,m)||[]).length||m==M)await sgLap(wb,c,m)}}
  return[SGF[c],await wb.xlsx.writeBuffer()]};
 
