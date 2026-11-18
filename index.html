@@ -537,7 +537,7 @@ V.dash=()=>{
  const comp=`<div class="hc"><div class="row"><span class="sub">Komposisi</span><span class="pill">${items.length} KPI</span></div><div class="stk">${seg.map(([c,,n])=>n?`<i class="s-${c}" style="flex:${n}"></i>`:'').join('')}</div>${seg.map(([c,t,n])=>`<div class="cr"><span><i class="lg s-${c}" style="margin:0 6px 0 0"></i>${t}</span><b>${n} · ${pr(n,tot)}</b></div>`).join('')}</div>`;
  const row=x=>{const it=x.it;return`<button class="dr" data-go="${it.pg}" title="${esc(it.name)}"><span class="dh"><span class="dc">${esc(it.code)}</span><span class="dt">${esc(it.name)}</span><b class="${x.cls}">${x.txt}</b></span><span class="bar"><i class="bg-${x.cls||'none'}" style="width:${x.r==null?0:Math.round(x.r*100)}%"></i></span>${dMini(it)}</button>`};
  const panel=(t,g)=>{const r=rows.filter(x=>x.it.g==g),a=r.filter(x=>x.r!=null),av=a.length?a.reduce((s,x)=>s+x.r,0)/a.length:null;return r.length?`<section class="dp"><div class="row"><h2>${esc(t)}</h2><span class="pill ${cl(av)}" title="Rata-rata capaian">${pc(av)}</span></div><div class="sub dpn">Angka kanan = capaian ${daily?dFull(D):'bulan '+MN[+M.slice(5)-1]+' '+M.slice(0,4)} · grafik = tren capaian tiap ${daily?'hari':'bulan'}</div><div class="dl">${r.map(row).join('')}</div></section>`:''};
- const trc=(()=>{if(!allowed('rep'))return'';const d=trD(),R=d?d.rows:[],y=R.filter(x=>x.ikut).length,sc=R.filter(x=>x.ikut&&x.nilai!=null),av=sc.length?sc.reduce((a,x)=>a+x.nilai,0)/sc.length:null,v=R.length?y/R.length:null,c=cl(v);
+ const trc=(()=>{if(!allowed('rep'))return'';const R=trRows(),y=R.filter(x=>x.ikut).length,sc=R.filter(x=>x.ikut&&x.nilai!=null),av=sc.length?sc.reduce((a,x)=>a+x.nilai,0)/sc.length:null,v=R.length?y/R.length:null,c=cl(v);
   return`<button class="dsc" data-go="rep" data-trgo="1"><span><span class="sub">Training · Penilaian</span><br><b>Sudah ikut</b></span><span class="dv"><b class="${c}">${P(y,R.length)}</b><span class="sub">${R.length?(R.length-y)+' belum ikut'+(av==null?'':' · nilai '+av.toFixed(1).replace('.',',')):'Belum ada upload'}</span></span></button>`})();
  const sla=(allowed('sla')||trc)?`<div class="dsl">${allowed('sla')?VEN.map(([v,u])=>{const s=vs(v,M),r=rate(s);return`<button class="dsc" data-go="sla"><span><span class="sub">${esc(u)}</span><br><b>${esc(v)}</b></span><span class="dv"><b class="${r[1]}">${f1(s)}</b><span class="sub">SLA ${esc(r[0])}</span></span></button>`}).join(''):''}${trc}</div>`:'';
  const tb=`<div class="dtb"><div class="tgl"><button data-dsm2="m" class="${daily?'':'on'}">Bulanan</button><button data-dsm2="h" class="${daily?'on':''}">Harian</button></div>${daily?`<div class="dnav"><button class="btn sm" data-dsn="-1" aria-label="Hari sebelumnya">‹</button><b class="dfl">${dFull(D)}</b><button class="btn sm" data-dsn="1" aria-label="Hari berikutnya">›</button><button class="btn sm acc" data-dsd="${TODAY}" ${D==TODAY?'disabled':''}>Hari ini</button></div>`:mbar()}</div>`;
@@ -1997,9 +1997,13 @@ vBuild=async function(kind,c){if(!/^SG-0[1-5]$/.test(c||'')||(kind!='xe'&&kind!=
  try{await phReport(wb,c)}catch(e){console.error('foto laporan',e)}
  return[SGF[c],await wb.xlsx.writeBuffer()]};
 
-/* ===== Laporan Training: upload Excel penilaian peserta (sudah / belum ikut training) ===== */
-let TRF='all';
-const trD=()=>(S.tr||{})[M];
+/* ===== Laporan Training: upload Excel penilaian peserta PER VENDOR (Provices, Sodexo, CSI) ===== */
+let TRF='all',TRFV='all';
+const TRV=['Provices','Sodexo','CSI'];
+const trA=()=>{S.tr=S.tr||{};const o=S.tr[M];if(o&&Array.isArray(o.rows))S.tr[M]={Umum:o};return S.tr[M]||{}};
+const trD=v=>trA()[v];
+const trRows=()=>{const a=trA(),o=[];Object.keys(a).forEach(v=>((a[v]&&a[v].rows)||[]).forEach(x=>o.push(Object.assign({v},x))));return o};
+const trSt=R=>{const y=R.filter(x=>x.ikut),sc=y.filter(x=>x.nilai!=null);return{n:R.length,y:y.length,b:R.length-y.length,sc:sc.length,avg:sc.length?sc.reduce((s,x)=>s+x.nilai,0)/sc.length:null}};
 const trN=s=>String(s==null?'':s).toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
 function trCv(v){if(v==null)return'';if(v instanceof Date)return v.toISOString().slice(0,10);if(typeof v=='object'){if(v.result!==undefined)return trCv(v.result);if(v.richText)return v.richText.map(x=>x.text).join('').trim();if(v.text!==undefined)return trCv(v.text);return''}return String(v).trim()}
 function trYes(s){s=trN(s);if(!s)return null;
@@ -2023,44 +2027,62 @@ async function trParse(file){const wb=new ExcelJS.Workbook();await wb.xlsx.load(
    let ikut=cS>=0?trYes(a[cS]):null;if(ikut==null)ikut=sheetSt!=null?sheetSt:(nilai!=null?1:0);
    out.push({id:Date.now()*1000+out.length,nama,unit:g(a,cU),ikut,nilai,tgl:g(a,cT),ket:g(a,cK),materi:g(a,cJ),sheet:ws.name})})});
  return out}
-function trPage(tabs){const d=trD(),rows=d?d.rows:[],y=rows.filter(x=>x.ikut),b=rows.filter(x=>!x.ikut),sc=y.filter(x=>x.nilai!=null),
- avg=sc.length?sc.reduce((s,x)=>s+x.nilai,0)/sc.length:null,sh=TRF=='y'?y:TRF=='b'?b:rows,f1c=v=>v==null?'–':v.toFixed(1).replace('.',',');
- const stat=(l,v,c,s)=>`<div class="card"><div class="sub">${l}</div><div class="big ${c||''}">${v}</div><div class="sub">${s||''}</div></div>`;
+
+const trF1=v=>v==null?'–':v.toFixed(1).replace('.',',');
+const trStat=(l,v,c,s)=>`<div class="card"><div class="sub">${l}</div><div class="big ${c||''}">${v}</div><div class="sub">${s||''}</div></div>`;
+const trFlt=()=>`<div class="tgl"><button data-trflt="all" class="${TRF=='all'?'on':''}">Semua</button><button data-trflt="y" class="${TRF=='y'?'on':''}">Sudah ikut</button><button data-trflt="b" class="${TRF=='b'?'on':''}">Belum ikut</button></div>`;
+const trSel=R=>TRF=='y'?R.filter(x=>x.ikut):TRF=='b'?R.filter(x=>!x.ikut):R;
+/* kartu upload + hasil, ditempel di tab Provices / Sodexo / CSI */
+function trCard(v){const d=trD(v),rows=d?d.rows:[],s=trSt(rows),sh=trSel(rows);
+ return`<div class="card"><h2>Training ${esc(v)} · Upload penilaian · ${MN[+M.slice(5)-1]} ${M.slice(0,4)}</h2>
+<p class="sub">Unggah file Excel (.xlsx) berisi daftar peserta training ${esc(v)}. Kolom yang dikenali: <b>Nama</b> (wajib), Unit, <b>Status Training</b> (Sudah Ikut / Belum Ikut), <b>Nilai</b>, Tanggal, Materi, Keterangan. Jika tidak ada kolom status, peserta yang punya nilai dianggap sudah ikut; nama sheet “Sudah Ikut” / “Belum Ikut” juga dikenali. Semua sheet dibaca.</p>
+<div class="row" style="justify-content:flex-start;gap:8px;margin-top:10px"><label class="btn acc" style="cursor:pointer">Pilih file Excel<input type="file" data-trfile="${v}" accept=".xlsx" hidden></label><button class="btn" data-trtpl="${v}">Unduh template</button>${d?`<button class="btn" data-trxl="${v}">Unduh rekap (Excel)</button><button class="btn" data-trdel="${v}" style="color:var(--bad)">Hapus data bulan ini</button>`:''}</div>
+${d?`<p class="sub" style="margin-top:10px">File: <b>${esc(d.file)}</b> · diunggah ${esc(d.up)} oleh ${esc(d.by||'-')}</p>`:'<p class="sub" style="margin-top:10px">Belum ada file diunggah untuk bulan ini.</p>'}</div>
+${d?`<div class="grid">${trStat('Total peserta',s.n,'','dalam file')}${trStat('Sudah ikut',s.y,'ok',P(s.y,s.n))}${trStat('Belum ikut',s.b,s.b?'bad':'ok',P(s.b,s.n))}${trStat('Rata-rata nilai',trF1(s.avg),'',s.sc+' peserta bernilai')}</div>
+<div class="card"><div class="row"><h2>Daftar peserta ${esc(v)} (${sh.length})</h2>${trFlt()}</div>
+<div class="tw" style="margin-top:12px"><table><tr><th>No</th><th>Nama</th><th>Unit</th><th>Status</th><th>Nilai</th><th>Tanggal</th><th>Materi</th><th>Keterangan</th></tr>${sh.map((x,i)=>`<tr><td>${i+1}</td><td>${esc(x.nama)}</td><td>${esc(x.unit)}</td><td><span class="pill ${x.ikut?'ok':'bad'}">${x.ikut?'Sudah ikut':'Belum ikut'}</span></td><td>${x.nilai==null?'–':trF1(x.nilai)}</td><td>${esc(x.tgl)}</td><td>${esc(x.materi)}</td><td style="white-space:normal">${esc(x.ket)}</td></tr>`).join('')||'<tr><td colspan="8" class="sub">Tidak ada data.</td></tr>'}</table></div></div>`:''}`}
+/* tab Training · Penilaian = ringkasan gabungan (upload dilakukan di menu tiap vendor) */
+function trPage(tabs){const A=trA(),all=trRows(),T=trSt(all),keys=TRV.concat(Object.keys(A).filter(k=>!TRV.includes(k))),
+ sh=trSel(TRFV=='all'?all:all.filter(x=>x.v==TRFV));
  return`<div class="row"><div><p class="eyebrow">Training · RSPI Bintaro Jaya</p><h1>Laporan</h1></div>${mbar()}</div>${tabs}
-<div class="card"><h2>Upload penilaian training · ${MN[+M.slice(5)-1]} ${M.slice(0,4)}</h2>
-<p class="sub">Unggah file Excel (.xlsx) berisi daftar peserta. Kolom yang dikenali: <b>Nama</b> (wajib), Unit, <b>Status Training</b> (Sudah Ikut / Belum Ikut), <b>Nilai</b>, Tanggal, Materi, Keterangan. Jika tidak ada kolom status, peserta yang punya nilai dianggap sudah ikut; nama sheet seperti “Sudah Ikut” / “Belum Ikut” juga dikenali. Semua sheet dibaca. Belum yakin formatnya? Unduh template.</p>
-<div class="row" style="justify-content:flex-start;gap:8px;margin-top:10px"><label class="btn acc" style="cursor:pointer">Pilih file Excel<input type="file" id="trfile" accept=".xlsx" hidden></label><button class="btn" data-trtpl="1">Unduh template</button>${d?'<button class="btn" data-trxl="1">Unduh rekap (Excel)</button><button class="btn" data-trdel="1" style="color:var(--bad)">Hapus data bulan ini</button>':''}</div>
-${d?`<p class="sub" style="margin-top:10px">File: <b>${esc(d.file)}</b> · diunggah ${esc(d.up)} oleh ${esc(d.by||'-')}</p>`:''}</div>
-${d?`<div class="grid">${stat('Total peserta',rows.length,'', 'dalam file')}${stat('Sudah ikut',y.length,'ok',P(y.length,rows.length))}${stat('Belum ikut',b.length,b.length?'bad':'ok',P(b.length,rows.length))}${stat('Rata-rata nilai',f1c(avg),'',sc.length+' peserta bernilai')}</div>
-<div class="card"><div class="row"><h2>Daftar peserta (${sh.length})</h2><div class="tgl"><button data-trflt="all" class="${TRF=='all'?'on':''}">Semua</button><button data-trflt="y" class="${TRF=='y'?'on':''}">Sudah ikut</button><button data-trflt="b" class="${TRF=='b'?'on':''}">Belum ikut</button></div></div>
-<div class="tw" style="margin-top:12px"><table><tr><th>No</th><th>Nama</th><th>Unit</th><th>Status</th><th>Nilai</th><th>Tanggal</th><th>Materi</th><th>Keterangan</th></tr>${sh.map((x,i)=>`<tr><td>${i+1}</td><td>${esc(x.nama)}</td><td>${esc(x.unit)}</td><td><span class="pill ${x.ikut?'ok':'bad'}">${x.ikut?'Sudah ikut':'Belum ikut'}</span></td><td>${x.nilai==null?'–':f1c(x.nilai)}</td><td>${esc(x.tgl)}</td><td>${esc(x.materi)}</td><td style="white-space:normal">${esc(x.ket)}</td></tr>`).join('')||'<tr><td colspan="8" class="sub">Tidak ada data.</td></tr>'}</table></div></div>`:'<div class="card"><p class="sub">Belum ada file diunggah untuk bulan ini.</p></div>'}`}
-async function trBuild(kind){const wb=new ExcelJS.Workbook();wb.creator='HSIMS KPI';wb.created=new Date();
- const hd=(ws,r,v)=>v.forEach((t,i)=>{const z=ws.getCell(r,i+1);z.value=t;z.font={bold:true};z.fill={type:'pattern',pattern:'solid',fgColor:{argb:XC.blue}};z.border=XBOX;z.alignment={horizontal:'center',vertical:'middle',wrapText:true}});
+<div class="card"><div class="row"><h2>Ringkasan training · ${MU()}</h2>${all.length?'<button class="btn acc" data-trxl="all">Unduh rekap semua (Excel)</button>':''}</div>
+<p class="sub">Upload Excel penilaian dilakukan di menu laporan masing-masing vendor (Provices, Sodexo, CSI). Halaman ini hanya merangkum ketiganya.</p>
+<div class="tw" style="margin-top:12px"><table><tr><th>Vendor</th><th>Total</th><th>Sudah ikut</th><th>Belum ikut</th><th>% ikut</th><th>Rata-rata nilai</th><th>File</th><th></th></tr>${keys.map(v=>{const d=A[v],s=trSt(d?d.rows:[]);return`<tr><td>${esc(v=='Umum'?'Upload lama (tanpa vendor)':v)}</td><td>${d?s.n:'–'}</td><td>${d?s.y:'–'}</td><td>${d?s.b:'–'}</td><td>${d?P(s.y,s.n):'–'}</td><td>${d?trF1(s.avg):'–'}</td><td style="white-space:normal">${d?esc(d.file):'<span class="sub">Belum upload</span>'}</td><td>${TRV.includes(v)?`<button class="btn sm" data-rv="${v}">Buka menu</button>`:d?`<button class="btn sm" data-trdel="${v}" style="color:var(--bad)">Hapus</button>`:''}</td></tr>`}).join('')}
+<tr><td><b>Total</b></td><td><b>${T.n}</b></td><td><b>${T.y}</b></td><td><b>${T.b}</b></td><td><b>${P(T.y,T.n)}</b></td><td><b>${trF1(T.avg)}</b></td><td></td><td></td></tr></table></div></div>
+${all.length?`<div class="card"><div class="row"><h2>Daftar peserta (${sh.length})</h2><div style="display:flex;gap:8px;flex-wrap:wrap"><div class="tgl"><button data-trfv="all" class="${TRFV=='all'?'on':''}">Semua vendor</button>${keys.filter(v=>A[v]).map(v=>`<button data-trfv="${v}" class="${TRFV==v?'on':''}">${esc(v=='Umum'?'Lama':v)}</button>`).join('')}</div>${trFlt()}</div></div>
+<div class="tw" style="margin-top:12px"><table><tr><th>No</th><th>Vendor</th><th>Nama</th><th>Unit</th><th>Status</th><th>Nilai</th><th>Tanggal</th><th>Materi</th><th>Keterangan</th></tr>${sh.map((x,i)=>`<tr><td>${i+1}</td><td>${esc(x.v)}</td><td>${esc(x.nama)}</td><td>${esc(x.unit)}</td><td><span class="pill ${x.ikut?'ok':'bad'}">${x.ikut?'Sudah ikut':'Belum ikut'}</span></td><td>${x.nilai==null?'–':trF1(x.nilai)}</td><td>${esc(x.tgl)}</td><td>${esc(x.materi)}</td><td style="white-space:normal">${esc(x.ket)}</td></tr>`).join('')||'<tr><td colspan="9" class="sub">Tidak ada data.</td></tr>'}</table></div></div>`:'<div class="card"><p class="sub">Belum ada file training diunggah untuk bulan ini.</p></div>'}`}
+/* tempel kartu upload di tab vendor */
+const _repT=V.rep;V.rep=()=>{const h=_repT();return TRV.includes(repV)?h+trCard(repV):h};
+async function trBuild(kind,v){const wb=new ExcelJS.Workbook();wb.creator='HSIMS KPI';wb.created=new Date();
+ const hd=(ws,r,vals)=>vals.forEach((t,i)=>{const z=ws.getCell(r,i+1);z.value=t;z.font={bold:true};z.fill={type:'pattern',pattern:'solid',fgColor:{argb:XC.blue}};z.border=XBOX;z.alignment={horizontal:'center',vertical:'middle',wrapText:true}});
  const W=[6,30,22,18,10,14,26,30],H=['No','Nama','Unit','Status Training','Nilai','Tanggal Training','Materi','Keterangan'];
  if(kind=='tpl'){const ws=wb.addWorksheet('Training');hd(ws,1,H);W.forEach((w,i)=>ws.getColumn(i+1).width=w);
-  [[1,'Contoh Nama A','Housekeeping','Sudah Ikut',85,'2026-11-10','K3 Dasar',''],[2,'Contoh Nama B','Housekeeping','Belum Ikut','','','','Jadwal gelombang 2']].forEach((r,i)=>r.forEach((v,j)=>{ws.getCell(2+i,j+1).value=v}));
+  [[1,'Contoh Nama A',v||'','Sudah Ikut',85,'2026-11-10','K3 Dasar',''],[2,'Contoh Nama B',v||'','Belum Ikut','','','','Jadwal gelombang 2']].forEach((r,i)=>r.forEach((x,j)=>{ws.getCell(2+i,j+1).value=x}));
   for(let r=2;r<=300;r++)ws.getCell(r,4).dataValidation={type:'list',allowBlank:true,formulae:['"Sudah Ikut,Belum Ikut"']};
-  return['Template-Penilaian-Training.xlsx',await wb.xlsx.writeBuffer()]}
- const d=trD(),rows=d?d.rows:[],y=rows.filter(x=>x.ikut),sc=y.filter(x=>x.nilai!=null),avg=sc.length?sc.reduce((s,x)=>s+x.nilai,0)/sc.length:null;
+  return['Template-Penilaian-Training'+(v?'-'+v:'')+'.xlsx',await wb.xlsx.writeBuffer()]}
+ const rows=v=='all'?trRows():((trD(v)||{rows:[]}).rows||[]).map(x=>Object.assign({v},x)),s=trSt(rows);
  const a=wb.addWorksheet('Ringkasan');a.getColumn(1).width=26;a.getColumn(2).width=16;
- a.getCell('A1').value='REKAP PENILAIAN TRAINING '+MU();a.getCell('A1').font={bold:true,size:14};
- [['Total peserta',rows.length],['Sudah ikut',y.length],['Belum ikut',rows.length-y.length],['% sudah ikut',rows.length?y.length/rows.length:0],['Rata-rata nilai',avg==null?'–':+avg.toFixed(1)]].forEach(([l,v],i)=>{const r=3+i;a.getCell(r,1).value=l;a.getCell(r,1).font={bold:true};a.getCell(r,2).value=v;a.getCell(r,1).border=a.getCell(r,2).border=XBOX;if(l[0]=='%')a.getCell(r,2).numFmt='0.0%'});
- const ws=wb.addWorksheet('Peserta');W.forEach((w,i)=>ws.getColumn(i+1).width=w);hd(ws,1,H);
- rows.slice().sort((p,q)=>q.ikut-p.ikut||p.nama.localeCompare(q.nama)).forEach((x,i)=>{const r=ws.addRow([i+1,x.nama,x.unit,x.ikut?'Sudah Ikut':'Belum Ikut',x.nilai,x.tgl,x.materi,x.ket]);r.eachCell({includeEmpty:true},z=>z.border=XBOX);r.getCell(4).fill={type:'pattern',pattern:'solid',fgColor:{argb:x.ikut?XC.ok:XC.or}}});
+ a.getCell('A1').value='REKAP PENILAIAN TRAINING '+(v=='all'?'':v.toUpperCase()+' ')+MU();a.getCell('A1').font={bold:true,size:14};
+ const L=[['Total peserta',s.n],['Sudah ikut',s.y],['Belum ikut',s.b],['% sudah ikut',s.n?s.y/s.n:0],['Rata-rata nilai',s.avg==null?'–':+s.avg.toFixed(1)]];
+ if(v=='all')TRV.concat(Object.keys(trA()).filter(k=>!TRV.includes(k))).forEach(k=>{const d=trD(k);if(d){const z=trSt(d.rows);L.push([k+' · sudah ikut',z.y+' / '+z.n])}});
+ L.forEach(([l,x],i)=>{const r=3+i;a.getCell(r,1).value=l;a.getCell(r,1).font={bold:true};a.getCell(r,2).value=x;a.getCell(r,1).border=a.getCell(r,2).border=XBOX;if(l[0]=='%')a.getCell(r,2).numFmt='0.0%'});
+ const ws=wb.addWorksheet('Peserta'),H2=['No','Vendor'].concat(H.slice(1)),W2=[6,12].concat(W.slice(1));W2.forEach((w,i)=>ws.getColumn(i+1).width=w);hd(ws,1,H2);
+ rows.slice().sort((p,q)=>String(p.v).localeCompare(String(q.v))||q.ikut-p.ikut||p.nama.localeCompare(q.nama)).forEach((x,i)=>{const r=ws.addRow([i+1,x.v,x.nama,x.unit,x.ikut?'Sudah Ikut':'Belum Ikut',x.nilai,x.tgl,x.materi,x.ket]);r.eachCell({includeEmpty:true},z=>z.border=XBOX);r.getCell(5).fill={type:'pattern',pattern:'solid',fgColor:{argb:x.ikut?XC.ok:XC.or}}});
  ws.views=[{state:'frozen',ySplit:1}];
- return['KPI-Training-'+M+'.xlsx',await wb.xlsx.writeBuffer()]}
-document.addEventListener('change',async e=>{const t=e.target;if(t.id!='trfile')return;const f=t.files[0];t.value='';if(!f)return;
+ return['KPI-Training-'+(v=='all'?'Semua':v)+'-'+M+'.xlsx',await wb.xlsx.writeBuffer()]}
+document.addEventListener('change',async e=>{const t=e.target,v=t.dataset&&t.dataset.trfile;if(!v)return;const f=t.files[0];t.value='';if(!f)return;
  if(!window.ExcelJS)return toast('Pustaka Excel belum termuat (perlu internet)');
  try{const rows=await trParse(f);if(!rows.length)return toast('Tidak ada data terbaca. Pastikan ada kolom "Nama" di baris judul.',4500);
-  if(trD()&&!confirm('Data training bulan ini sudah ada ('+trD().rows.length+' orang). Ganti dengan file baru?'))return;
-  S.tr=S.tr||{};S.tr[M]={file:f.name,up:nowS(),by:authed(),rows};TRF='all';save();draw();
-  const y=rows.filter(x=>x.ikut).length;toast(rows.length+' peserta terbaca · '+y+' sudah ikut, '+(rows.length-y)+' belum',3500)}
+  if(trD(v)&&!confirm('Data training '+v+' bulan ini sudah ada ('+trD(v).rows.length+' orang). Ganti dengan file baru?'))return;
+  trA();S.tr[M]=S.tr[M]||{};S.tr[M][v]={file:f.name,up:nowS(),by:authed(),rows};TRF='all';save();draw();
+  const y=rows.filter(x=>x.ikut).length;toast(v+': '+rows.length+' peserta terbaca · '+y+' sudah ikut, '+(rows.length-y)+' belum',3500)}
  catch(er){toast('Gagal membaca Excel: '+String(er&&er.message||er).slice(0,70),4500)}});
-document.addEventListener('click',async e=>{const b=e.target.closest('[data-trflt],[data-trtpl],[data-trxl],[data-trdel]');if(!b)return;const d=b.dataset;
+document.addEventListener('click',async e=>{const b=e.target.closest('[data-trflt],[data-trfv],[data-trtpl],[data-trxl],[data-trdel]');if(!b)return;const d=b.dataset;
  if(d.trflt){TRF=d.trflt;const y=scrollY;draw();scrollTo(0,y);return}
- if(d.trdel!==undefined){if(trD()&&confirm('Hapus data training bulan '+MU()+'?')){delete S.tr[M];save();draw();toast('Data dihapus')}return}
+ if(d.trfv){TRFV=d.trfv;const y=scrollY;draw();scrollTo(0,y);return}
+ if(d.trdel!==undefined){const v=d.trdel;if(trD(v)&&confirm('Hapus data training '+(v=='Umum'?'lama':v)+' bulan '+MU()+'?')){delete S.tr[M][v];save();draw();toast('Data dihapus')}return}
  if(!window.ExcelJS)return toast('Pustaka Excel belum termuat (perlu internet)');
- const[fn,buf]=await trBuild(d.trtpl!==undefined?'tpl':'rek');dl(fn,buf);if(d.trxl!==undefined&&GAS())upDrive(fn,buf,true)});
+ const[fn,buf]=await trBuild(d.trtpl!==undefined?'tpl':'rek',d.trtpl!==undefined?d.trtpl:d.trxl);dl(fn,buf);if(d.trxl!==undefined&&GAS())upDrive(fn,buf,true)});
 
 document.addEventListener('click',e=>{if(e.target.closest('[data-trgo]'))repV='Training'},true);
 
