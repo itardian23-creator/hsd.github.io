@@ -349,7 +349,7 @@ const KROOMS={"Ward 6":["6101","6102","6103","6104","6105","6106","6107","6108",
 let insUnit='Ward 9';
 let insRoom='';
 const roomOpts=(u,sel,cust)=>(KROOMS[u]||[]).map(r=>`<option ${r==sel?'selected':''}>${esc(r)}`).join('')+`<option value="__x" ${cust?'selected':''}>Lainnya (ketik manual)…`;
-const PAGES=[['dash','Ringkasan'],['gc','1 · General Cleaning'],['tl','2 · Toilet Umum'],['kt','3 · Penyiapan Kamar'],['ins','4 · Inspeksi Vacant Clean'],['fb1','1 · Food Hazard'],['fb2','2 · Kesalahan Diet'],['fb3','3 · Validasi QHSE'],['fb4','4 · Ala Carte'],['fb5','5 · Buka Puasa'],['fb6','6 · Pasien Baru'],['sg1','1 · Patroli Amano'],['sg2','2 · CCTV'],['sg3','3 · Patroli Ranap'],['sg4','4 · Perbantuan'],['sg5','5 · High Risk CCTV'],['sla','Skor Vendor SLA'],['rep','Laporan'],['data','Data'],['akun','Kelola Akun']];
+const PAGES=[['dash','Ringkasan'],['gc','1 · General Cleaning'],['tl','2 · Toilet Umum'],['kt','3 · Penyiapan Kamar'],['ins','4 · Inspeksi Vacant Clean'],['fb1','1 · Food Hazard'],['fb2','2 · Kesalahan Diet'],['fb3','3 · Validasi QHSE'],['fb4','4 · Ala Carte'],['fb5','5 · Buka Puasa'],['fb6','6 · Pasien Baru'],['sg1','1 · Patroli Amano'],['sg2','2 · CCTV'],['sg3','3 · Patroli Ranap'],['sg4','4 · Perbantuan'],['sg5','5 · High Risk CCTV'],['sla','Skor Vendor SLA'],['trn','Training'],['rep','Laporan'],['data','Data'],['akun','Kelola Akun']];
 const MN=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
 const pd=n=>String(n).padStart(2,'0');const nowDay=()=>{const d=new Date();return d.getFullYear()+'-'+pd(d.getMonth()+1)+'-'+pd(d.getDate())};let TODAY=nowDay();
 let S;try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
@@ -364,7 +364,7 @@ const P=(n,d)=>d?(n/d*100).toFixed(1).replace('.',',')+'%':'–';
 /* ---- perhitungan KPI ---- */
 const gcIt=m=>S.items.filter(i=>(!i.s||m>=i.s)&&(!i.e||m<i.e));
 const isAdmin=()=>{try{const u=authed();return u=='admin'||((S.users||{})[u]||{}).r=='admin'}catch(e){return false}};
-const MENUS=[['dash','Ringkasan'],['gc','General Cleaning'],['tl','Toilet Umum'],['kt','Penyiapan Kamar'],['ins','Inspeksi Vacant Clean'],['fb1','1 · Food Hazard'],['fb2','2 · Kesalahan Diet'],['fb3','3 · Validasi QHSE'],['fb4','4 · Ala Carte'],['fb5','5 · Buka Puasa'],['fb6','6 · Pasien Baru'],['sg1','1 · Patroli Amano'],['sg2','2 · CCTV'],['sg3','3 · Patroli Ranap'],['sg4','4 · Perbantuan'],['sg5','5 · High Risk CCTV'],['sla','Skor Vendor SLA'],['rep','Laporan'],['data','Data']];
+const MENUS=[['dash','Ringkasan'],['gc','General Cleaning'],['tl','Toilet Umum'],['kt','Penyiapan Kamar'],['ins','Inspeksi Vacant Clean'],['fb1','1 · Food Hazard'],['fb2','2 · Kesalahan Diet'],['fb3','3 · Validasi QHSE'],['fb4','4 · Ala Carte'],['fb5','5 · Buka Puasa'],['fb6','6 · Pasien Baru'],['sg1','1 · Patroli Amano'],['sg2','2 · CCTV'],['sg3','3 · Patroli Ranap'],['sg4','4 · Perbantuan'],['sg5','5 · High Risk CCTV'],['sla','Skor Vendor SLA'],['trn','Training'],['rep','Laporan'],['data','Data']];
 const allowed=k=>{const u=authed();if(u=='admin')return true;const o=(S.users||{})[u]||{};if(k=='akun'&&o.r!='admin')return false;const m=o.m;return !Array.isArray(m)||m.includes(k)};
 const phn=(r,w)=>{const q=(r.ph||{})[w];return q?['b','g','a'].filter(k=>q[k]).length:0};
 function gcCalc(m){let n=0,d=0;gcIt(m).forEach(it=>{const r=(S.gc[m]||{})[it.id]||{},p=r.p||it.p,a=r.a||[];p.forEach((x,i)=>{if(x){d++;if(a[i])n++}})});return{n,d}}
@@ -2085,6 +2085,18 @@ document.addEventListener('click',async e=>{const b=e.target.closest('[data-trfl
  const[fn,buf]=await trBuild(d.trtpl!==undefined?'tpl':'rek',d.trtpl!==undefined?d.trtpl:d.trxl);dl(fn,buf);if(d.trxl!==undefined&&GAS())upDrive(fn,buf,true)});
 
 document.addEventListener('click',e=>{if(e.target.closest('[data-trgo]'))repV='Training'},true);
+
+
+/* ===== Menu Training (navbar): upload Excel laporan training per vendor + ringkasan ===== */
+let trnV='Ringkasan';
+V.trn=()=>{
+ const tabs=`<div class="tgl" style="justify-self:start;flex-wrap:wrap">${[['Ringkasan','Ringkasan'],['Provices','Provices · Housekeeping'],['Sodexo','Sodexo · Food Service'],['CSI','CSI · Security']].map(([v,n])=>`<button data-trnv="${v}" class="${v==trnV?'on':''}">${n}</button>`).join('')}</div>`;
+ if(TRV.includes(trnV))return`<div class="row"><div><p class="eyebrow">Training · RSPI Bintaro Jaya</p><h1>Training ${esc(trnV)}</h1></div>${mbar()}</div>${tabs}${trCard(trnV)}`;
+ return trPage(tabs)
+  .replace('<h1>Laporan</h1>','<h1>Training</h1>')
+  .replace('Upload Excel penilaian dilakukan di menu laporan masing-masing vendor (Provices, Sodexo, CSI). Halaman ini hanya merangkum ketiganya.','Pilih tab vendor (Provices, Sodexo, CSI) di atas untuk mengunggah Excel penilaian training. Tabel ini merangkum ketiganya.')
+  .split('data-rv="').join('data-trnv="').replace('>Buka menu<','>Buka & upload<')};
+document.addEventListener('click',e=>{const a=e.target.closest('[data-trnv]');if(!a)return;trnV=a.dataset.trnv;TRF='all';const y=scrollY;draw();scrollTo(0,y)});
 
 /* ===== Mega menu header (desktop): panel lebar per vendor dengan capaian tiap KPI ===== */
 let MGI=-1,MGT=null,MGO=0;
