@@ -335,7 +335,12 @@ body:has(.dash){background-image:none;background-color:var(--bg-alt)}
 @media(prefers-reduced-motion:reduce){#mega{transition:none}}
 .logo .by{font:inherit;color:inherit}
 @media(max-width:420px){.topnav .logo .by{display:none}}
-.logo:not(#sync) span:last-child{font-weight:800;color:color-mix(in srgb,var(--ink) 50%,transparent);text-shadow:0 0 2px color-mix(in srgb,var(--acc) 80%,transparent),0 0 7px color-mix(in srgb,var(--acc) 60%,transparent),0 0 14px color-mix(in srgb,var(--acc) 40%,transparent)}
+.logo:not(#sync) span:last-child{font-weight:800;color:color-mix(in srgb,var(--ink) 50%,transparent);text-shadow:none}
+@media(max-width:700px){#sync{display:none}
+body[data-sy=ok] .topnav .logo:not(#sync) span:last-child{color:var(--ok);text-shadow:none}
+body[data-sy=bad] .topnav .logo:not(#sync) span:last-child{color:var(--bad);text-shadow:none}
+body[data-sy=ok] .topnav .logo .mark{background:var(--ok);box-shadow:0 0 12px var(--ok)}
+body[data-sy=bad] .topnav .logo .mark{background:var(--bad);box-shadow:0 0 12px var(--bad)}}
 .logo:not(#sync){background:color-mix(in srgb,var(--panel) 14%,transparent);border:1px solid color-mix(in srgb,#fff 60%,transparent);backdrop-filter:blur(16px) saturate(1.6);-webkit-backdrop-filter:blur(16px) saturate(1.6);box-shadow:inset 0 1px 0 rgba(255,255,255,.7),inset 0 -1px 0 rgba(255,255,255,.15),0 8px 24px -12px rgba(15,23,42,.25)}
 </style></head><body>
 <div class="topnav"><div style="display:flex;gap:8px;align-items:center"><div class="logo"><span class="mark"></span><span>HSIMS<span class="by">.ByArdian</span></span></div><button class="logo" id="sync" data-dr="sync" style="font:inherit;font-size:.85rem;cursor:pointer;color:inherit"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.35 10.04A7.49 7.49 0 0 0 12 4C9.11 4 6.6 5.64 5.35 8.04A5.994 5.994 0 0 0 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/></svg><span id="synct" class="hm"></span></button></div><nav class="navlinks" id="nav"></nav><div class="menu-wrap"><button type="button" class="menu-btn" id="menuBtn" aria-label="Buka menu" aria-expanded="false" aria-controls="mmenu"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></button><nav class="mmenu" id="mmenu" aria-label="Menu"></nav></div></div>
@@ -1656,7 +1661,7 @@ function m3(b,l,r){
  {const em=v=>v===null||v===undefined||v==='';if(em(l)&&!em(r))return r}
  return l}
 function norm(){S=S||{};S.items=S.items||SEED.items;['gc','tl','kt','ins','tc','kj'].forEach(k=>S[k]=S[k]||(k=='ins'||k=='tc'||k=='kj'?[]:{}));S.geo=S.geo||{};S.users=S.users||{};if(!S.vk)S.vk=JSON.parse(JSON.stringify(SEEDVK))}
-function setSt(s,m){ST=s;STM=m||'';notify(s,m);const b=$('#synct');if(!b)return;const T={off:'Drive: atur',idle:'Sambungkan Drive',sync:'Menyinkronkan…',ok:'Tersinkron '+STM,exp:'Sambungkan ulang',err:'Gagal sinkron'};b.textContent=T[s]||'';const w=$('#sync');if(w){w.title=m||'';w.style.color=s=='err'||s=='exp'?'var(--bad)':s=='ok'?'var(--ok)':''}}
+function setSt(s,m){ST=s;STM=m||'';notify(s,m);const b=$('#synct');if(!b)return;const T={off:'Drive: atur',idle:'Sambungkan Drive',sync:'Menyinkronkan…',ok:'Tersinkron '+STM,exp:'Sambungkan ulang',err:'Gagal sinkron'};b.textContent=T[s]||'';const w=$('#sync');if(w){w.title=m||'';w.style.color=s=='err'||s=='exp'?'var(--bad)':s=='ok'?'var(--ok)':'';document.body.dataset.sy=s=='err'||s=='exp'?'bad':s=='ok'?'ok':''}}
 const gis=()=>new Promise((ok,no)=>{if(window.google&&google.accounts&&google.accounts.oauth2)return ok();let s=document.querySelector('#gis');if(!s){s=document.createElement('script');s.id='gis';s.src='https://accounts.google.com/gsi/client';document.head.append(s)}s.addEventListener('load',ok);s.addEventListener('error',()=>no(new Error('Gagal memuat Google Identity (cek internet)')))});
 function token(ia){return new Promise((ok,no)=>{
  if(TOK&&Date.now()<TEXP-60000)return ok(TOK);
@@ -1738,7 +1743,7 @@ function notify(s,m){
  const bad=s=='err';
  bn.style.display=bad?'block':'none';
  if(bad)bn.textContent='⚠ Tidak tersambung ke penyimpanan: '+(m||'')+'. Data aman di perangkat ini dan dikirim otomatis begitu tersambung. Ketuk untuk coba lagi.';
- const sy=$('#sync');if(sy)sy.style.color=bad?'var(--bad)':s=='ok'?'var(--ok)':'';
+ const sy=$('#sync');if(sy)sy.style.color=bad?'var(--bad)':s=='ok'?'var(--ok)':'';document.body.dataset.sy=bad?'bad':s=='ok'?'ok':'';
  if(bad&&lastSt!='err')toast('⚠ Tidak tersambung: '+(m||'').slice(0,70));
  else if(s=='ok'&&lastSt=='err')toast('Tersambung kembali ✓');
  lastSt=s;
@@ -2087,6 +2092,8 @@ document.addEventListener('click',async e=>{const b=e.target.closest('[data-trfl
 document.addEventListener('click',e=>{if(e.target.closest('[data-trgo]'))repV='Training'},true);
 
 
+/* di HP: ketuk nama HSIMS.ByArdian = sinkron (tombol awan disembunyikan) */
+document.addEventListener('click',e=>{if(innerWidth>700)return;const l=e.target.closest('.topnav .logo:not(#sync)');if(l){const b=$('#sync');if(b)b.click()}});
 /* ===== Menu Training (navbar): upload Excel laporan training per vendor + ringkasan ===== */
 let trnV='Ringkasan';
 V.trn=()=>{
