@@ -334,7 +334,7 @@ body:has(.dash){background-image:none;background-color:var(--bg-alt)}
 @media(max-width:760px){#mega{display:none}}
 @media(prefers-reduced-motion:reduce){#mega{transition:none}}
 .logo .by{font:inherit;color:inherit}
-@media(max-width:420px){.topnav .logo .by{display:none}}
+
 .logo:not(#sync) span:last-child{font-weight:800;color:color-mix(in srgb,var(--ink) 50%,transparent);text-shadow:none}
 @media(max-width:700px){#sync{display:none}
 body[data-sy=ok] .topnav .logo:not(#sync) span:last-child{color:var(--ok);text-shadow:none}
@@ -354,7 +354,7 @@ const KROOMS={"Ward 6":["6101","6102","6103","6104","6105","6106","6107","6108",
 let insUnit='Ward 9';
 let insRoom='';
 const roomOpts=(u,sel,cust)=>(KROOMS[u]||[]).map(r=>`<option ${r==sel?'selected':''}>${esc(r)}`).join('')+`<option value="__x" ${cust?'selected':''}>Lainnya (ketik manual)…`;
-const PAGES=[['dash','Ringkasan'],['gc','1 · General Cleaning'],['tl','2 · Toilet Umum'],['kt','3 · Penyiapan Kamar'],['ins','4 · Inspeksi Vacant Clean'],['fb1','1 · Food Hazard'],['fb2','2 · Kesalahan Diet'],['fb3','3 · Validasi QHSE'],['fb4','4 · Ala Carte'],['fb5','5 · Buka Puasa'],['fb6','6 · Pasien Baru'],['sg1','1 · Patroli Amano'],['sg2','2 · CCTV'],['sg3','3 · Patroli Ranap'],['sg4','4 · Perbantuan'],['sg5','5 · High Risk CCTV'],['sla','Skor Vendor SLA'],['trn','Training'],['rep','Laporan'],['data','Data'],['akun','Kelola Akun']];
+const PAGES=[['dash','Ringkasan'],['gc','1 · General Cleaning'],['tl','2 · Toilet Umum'],['kt','3 · Penyiapan Kamar'],['ins','4 · Inspeksi Vacant Clean'],['trp','Training'],['fb1','1 · Food Hazard'],['fb2','2 · Kesalahan Diet'],['fb3','3 · Validasi QHSE'],['fb4','4 · Ala Carte'],['fb5','5 · Buka Puasa'],['fb6','6 · Pasien Baru'],['trs','Training'],['sg1','1 · Patroli Amano'],['sg2','2 · CCTV'],['sg3','3 · Patroli Ranap'],['sg4','4 · Perbantuan'],['sg5','5 · High Risk CCTV'],['trc','Training'],['sla','Skor Vendor SLA'],['rep','Laporan'],['data','Data'],['akun','Kelola Akun']];
 const MN=['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
 const pd=n=>String(n).padStart(2,'0');const nowDay=()=>{const d=new Date();return d.getFullYear()+'-'+pd(d.getMonth()+1)+'-'+pd(d.getDate())};let TODAY=nowDay();
 let S;try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
@@ -369,7 +369,7 @@ const P=(n,d)=>d?(n/d*100).toFixed(1).replace('.',',')+'%':'–';
 /* ---- perhitungan KPI ---- */
 const gcIt=m=>S.items.filter(i=>(!i.s||m>=i.s)&&(!i.e||m<i.e));
 const isAdmin=()=>{try{const u=authed();return u=='admin'||((S.users||{})[u]||{}).r=='admin'}catch(e){return false}};
-const MENUS=[['dash','Ringkasan'],['gc','General Cleaning'],['tl','Toilet Umum'],['kt','Penyiapan Kamar'],['ins','Inspeksi Vacant Clean'],['fb1','1 · Food Hazard'],['fb2','2 · Kesalahan Diet'],['fb3','3 · Validasi QHSE'],['fb4','4 · Ala Carte'],['fb5','5 · Buka Puasa'],['fb6','6 · Pasien Baru'],['sg1','1 · Patroli Amano'],['sg2','2 · CCTV'],['sg3','3 · Patroli Ranap'],['sg4','4 · Perbantuan'],['sg5','5 · High Risk CCTV'],['sla','Skor Vendor SLA'],['trn','Training'],['rep','Laporan'],['data','Data']];
+const MENUS=[['dash','Ringkasan'],['gc','General Cleaning'],['tl','Toilet Umum'],['kt','Penyiapan Kamar'],['ins','Inspeksi Vacant Clean'],['trp','Training Provices'],['fb1','1 · Food Hazard'],['fb2','2 · Kesalahan Diet'],['fb3','3 · Validasi QHSE'],['fb4','4 · Ala Carte'],['fb5','5 · Buka Puasa'],['fb6','6 · Pasien Baru'],['trs','Training Sodexo'],['sg1','1 · Patroli Amano'],['sg2','2 · CCTV'],['sg3','3 · Patroli Ranap'],['sg4','4 · Perbantuan'],['sg5','5 · High Risk CCTV'],['trc','Training CSI'],['sla','Skor Vendor SLA'],['rep','Laporan'],['data','Data']];
 const allowed=k=>{const u=authed();if(u=='admin')return true;const o=(S.users||{})[u]||{};if(k=='akun'&&o.r!='admin')return false;const m=o.m;return !Array.isArray(m)||m.includes(k)};
 const phn=(r,w)=>{const q=(r.ph||{})[w];return q?['b','g','a'].filter(k=>q[k]).length:0};
 function gcCalc(m){let n=0,d=0;gcIt(m).forEach(it=>{const r=(S.gc[m]||{})[it.id]||{},p=r.p||it.p,a=r.a||[];p.forEach((x,i)=>{if(x){d++;if(a[i])n++}})});return{n,d}}
@@ -442,7 +442,7 @@ function vv(k,m){const X=auto(k[0],m);if(X)return X;const L=logOf(k[0],m);if(L&&
  const a=has(r.p)?+r.p/100:(has(r.n)&&has(r.d)&&+r.d>0?+r.n/+r.d:null);return a==null?null:{v:a,s:Math.min(100,a/k[4]*100)}}
 function vs(v,m){const it=[];if(v=='Provices')Object.keys(HW).forEach(k=>{const c=CALC[k](m);if(c.d)it.push([HW[k],Math.min(100,c.n/c.d*100)])});
  else VK.filter(k=>k[2]==v).forEach(k=>{const x=vv(k,m);if(x)it.push([k[5],x.s])});
- const w=it.reduce((a,b)=>a+b[0],0);return w?it.reduce((a,b)=>a+b[0]*b[1],0)/w:null}
+ trIt(v,m,it);const w=it.reduce((a,b)=>a+b[0],0);return w?it.reduce((a,b)=>a+b[0]*b[1],0)/w:null}
 const rate=s=>s==null?['–','']:s>=95?['A','ok']:s>=90?['B','warn']:s>=85?['C','warn']:['D','bad'];
 const f1=s=>s==null?'–':s.toFixed(1).replace('.',','),pv=k=>x=>x==null?'–':k[3]=='c'?x.v+' kej.':(x.v*100).toFixed(1).replace('.',',')+'%';
 const vst=(k,x)=>x==null?['Belum ada data','']:k[3]=='c'?(x.v==0?['Tercapai','ok']:['Tidak tercapai','bad']):x.v>=k[4]?['Tercapai','ok']:x.v>=.9?['Mendekati','warn']:['Di bawah target','bad'];
@@ -465,8 +465,8 @@ V.sla=()=>{const mo=ymon(),cur=v=>{const s=vs(v,M);return rate(s)};
 <div class="card"><h2>Skor bulanan ${M.slice(0,4)}</h2><div class="tw" style="margin-top:8px"><table><tr><th>Vendor</th>${MS.map(m=>`<th>${m}</th>`).join('')}<th>YTD</th></tr>${VEN.map(([v])=>`<tr><td><b>${v}</b></td>${mo.map(m=>{const s=vs(v,m);return`<td class="${rate(s)[1]}">${f1(s)}</td>`}).join('')}<td><b>${f1(ytd(v))}</b></td></tr>`).join('')}</table></div></div>
 <div class="card"><h2>Rincian ${MN[+M.slice(5)-1]} ${M.slice(0,4)}</h2><div class="tw" style="margin-top:8px"><table><tr><th>Vendor</th><th>KPI</th><th>Target</th><th>Bobot</th><th>Capaian</th><th>Skor</th></tr>
 ${Object.keys(HW).map(k=>{const c=CALC[k](M);return`<tr><td>Provices</td><td>${INFO[k][0]} ${INFO[k][1]}</td><td>100%</td><td>${HW[k]}%</td><td>${P(c.n,c.d)}</td><td>${c.d?f1(Math.min(100,c.n/c.d*100)):'–'}</td></tr>`}).join('')}
-${VK.map(k=>{const x=vv(k);return`<tr><td>${k[2]}</td><td>${k[0]} ${k[1]}</td><td>${vtg(k)}</td><td>${k[5]}%</td><td>${pv(k)(x)}</td><td>${x?f1(x.s):'–'}</td></tr>`}).join('')}</table></div>
-<p class="sub">Metode: skor KPI persen = MIN(100, capaian ÷ target × 100); KPI hitungan (target 0) = 100 − 50 poin per kejadian; skor vendor = rata-rata bertimbang KPI yang berdata. Rating: A ≥ 95 · B 90–94,9 · C 85–89,9 · D &lt; 85. Bobot &amp; ambang adalah usulan Blueprint HSIMS v2.1 sampai kontrak SLA diterima. Rating C → surat peringatan &amp; rencana perbaikan 14 hari; D atau C dua bulan berturut-turut → review kontrak.</p>
+${VK.map(k=>{const x=vv(k);return`<tr><td>${k[2]}</td><td>${k[0]} ${k[1]}</td><td>${vtg(k)}</td><td>${k[5]}%</td><td>${pv(k)(x)}</td><td>${x?f1(x.s):'–'}</td></tr>`}).join('')}${VEN.map(([v])=>{const d=trDm(v,M);if(!d||!d.rows.length)return'';const z=trSt(d.rows);return`<tr><td>${v}</td><td>TR Training karyawan</td><td>100%</td><td>${TRW}%</td><td>${P(z.y,z.n)}</td><td>${f1(Math.min(100,z.y/z.n*100))}</td></tr>`}).join('')}</table></div>
+<p class="sub">Training karyawan (upload Excel di menu Training tiap vendor) ikut dihitung dengan bobot ${TRW}%: skor = % peserta sudah ikut. Metode: skor KPI persen = MIN(100, capaian ÷ target × 100); KPI hitungan (target 0) = 100 − 50 poin per kejadian; skor vendor = rata-rata bertimbang KPI yang berdata. Rating: A ≥ 95 · B 90–94,9 · C 85–89,9 · D &lt; 85. Bobot &amp; ambang adalah usulan Blueprint HSIMS v2.1 sampai kontrak SLA diterima. Rating C → surat peringatan &amp; rencana perbaikan 14 hari; D atau C dua bulan berturut-turut → review kontrak.</p>
 <button class="btn acc" data-vx="csv">Ekspor rekap vendor (CSV)</button></div>`};
 const _dash=V.dash;
 let DSH={mode:'h',k:''};
@@ -561,7 +561,7 @@ document.addEventListener('click',e=>{const s=e.target.closest('[data-vsel]');if
   Object.keys(HW).forEach(k=>{const z=CALC[k](m);if(z.d)c+=['Provices',INFO[k][0],'"'+INFO[k][1]+'"',m,z.n,z.d,(z.n/z.d).toFixed(6),Math.min(100,z.n/z.d*100).toFixed(1)].join(',')+'\n'})});
  dl('rekap-vendor-sla-'+M.slice(0,4)+'.csv',c,'text/csv')});
 
-const GRP=[['Provices',['gc','tl','kt','ins']],['Sodexo',['fb1','fb2','fb3','fb4','fb5','fb6']],['CSI',['sg1','sg2','sg3','sg4','sg5']]];
+const GRP=[['Provices',['gc','tl','kt','ins','trp']],['Sodexo',['fb1','fb2','fb3','fb4','fb5','fb6','trs']],['CSI',['sg1','sg2','sg3','sg4','sg5','trc']]];
 const gOf=k=>GRP.findIndex(g=>g[1].includes(k)),pname=k=>(PAGES.find(p=>p[0]==k)||[])[1];
 function navH(){const o=[],seen={};PAGES.filter(([k])=>allowed(k)).forEach(([k,n])=>{const g=gOf(k);
  if(g<0)return o.push(`<button data-go="${k}" class="${k==page?'on':''}">${n}</button>`);
@@ -2094,20 +2094,17 @@ document.addEventListener('click',e=>{if(e.target.closest('[data-trgo]'))repV='T
 
 /* di HP: ketuk nama HSIMS.ByArdian = sinkron (tombol awan disembunyikan) */
 document.addEventListener('click',e=>{if(innerWidth>700)return;const l=e.target.closest('.topnav .logo:not(#sync)');if(l){const b=$('#sync');if(b)b.click()}});
-/* ===== Menu Training (navbar): upload Excel laporan training per vendor + ringkasan ===== */
-let trnV='Ringkasan';
-V.trn=()=>{
- const tabs=`<div class="tgl" style="justify-self:start;flex-wrap:wrap">${[['Ringkasan','Ringkasan'],['Provices','Provices · Housekeeping'],['Sodexo','Sodexo · Food Service'],['CSI','CSI · Security']].map(([v,n])=>`<button data-trnv="${v}" class="${v==trnV?'on':''}">${n}</button>`).join('')}</div>`;
- if(TRV.includes(trnV))return`<div class="row"><div><p class="eyebrow">Training · RSPI Bintaro Jaya</p><h1>Training ${esc(trnV)}</h1></div>${mbar()}</div>${tabs}${trCard(trnV)}`;
- return trPage(tabs)
-  .replace('<h1>Laporan</h1>','<h1>Training</h1>')
-  .replace('Upload Excel penilaian dilakukan di menu laporan masing-masing vendor (Provices, Sodexo, CSI). Halaman ini hanya merangkum ketiganya.','Pilih tab vendor (Provices, Sodexo, CSI) di atas untuk mengunggah Excel penilaian training. Tabel ini merangkum ketiganya.')
-  .split('data-rv="').join('data-trnv="').replace('>Buka menu<','>Buka & upload<')};
-document.addEventListener('click',e=>{const a=e.target.closest('[data-trnv]');if(!a)return;trnV=a.dataset.trnv;TRF='all';const y=scrollY;draw();scrollTo(0,y)});
+/* ===== Training per vendor (menu di dropdown Provices / Sodexo / CSI): upload Excel hasil training dari luar aplikasi -> tampil di SLA & Ringkasan ===== */
+const TRK={trp:'Provices',trs:'Sodexo',trc:'CSI'},TRW=10; /* TRW = bobot KPI Training dalam skor SLA vendor (usulan) */
+function trDm(v,m){const o=((S.tr||{})[m]||{});return o[v]&&Array.isArray(o[v].rows)?o[v]:null}
+function trIt(v,m,it){const d=trDm(v,m);if(d&&d.rows.length){const z=trSt(d.rows);it.push([TRW,Math.min(100,z.y/z.n*100)])}}
+Object.keys(TRK).forEach(k=>{V[k]=()=>{const v=TRK[k],d=trDm(v,M),z=d?trSt(d.rows):null;
+ return`<div class="row"><div><p class="eyebrow">TR · ${esc(v)} · Training karyawan</p><h1>Training ${esc(v)}</h1></div>${mbar()}</div>
+<div class="card adm-only"><div class="sub">Training · Bobot SLA ${TRW}% · Target 100% peserta sudah ikut</div><div class="big ${z?(z.y/z.n>=TGT?'ok':z.y/z.n>=.9?'warn':'bad'):''}">${z?P(z.y,z.n):'–'}</div><div class="sub">${z?z.y+' dari '+z.n+' peserta sudah ikut · otomatis masuk skor SLA '+esc(v)+' dan Ringkasan':'Belum ada file training diunggah untuk bulan ini'}</div></div>${trCard(v)}`}});
 
 /* ===== Mega menu header (desktop): panel lebar per vendor dengan capaian tiap KPI ===== */
 let MGI=-1,MGT=null,MGO=0;
-function mgVal(k){const vk=VK.find(z=>vkey(z)==k);
+function mgVal(k){if(TRK[k]){const v=TRK[k],d=trDm(v,M),z=d?trSt(d.rows):null,r=z&&z.n?z.y/z.n:null;return{code:'TR',txt:z?P(z.y,z.n):'–',cls:r==null?'':r>=TGT?'ok':r>=.9?'warn':'bad',d:'Peserta training sudah ikut / total peserta (upload Excel)'}}const vk=VK.find(z=>vkey(z)==k);
  if(vk){const x=vv(vk),st=vst(vk,x);return{code:vk[0],txt:pv(vk)(x),cls:st[1],d:vk[6]}}
  if(CALC[k]){const c=CALC[k](M),v=c.d?c.n/c.d:null;return{code:INFO[k][0],txt:P(c.n,c.d),cls:v==null?'':v>=TGT?'ok':v>=.9?'warn':'bad',d:INFO[k][2]}}
  return{code:'',txt:'',cls:'',d:''}}
@@ -2116,7 +2113,7 @@ function mgClose(){clearTimeout(MGT);const e=document.getElementById('mega');if(
 function mgSoon(){clearTimeout(MGT);MGT=setTimeout(mgClose,200)}
 function mgOpen(i){clearTimeout(MGT);const nav=$('#nav');if(!nav||getComputedStyle(nav).display=='none')return;
  const g=GRP[i],v=g[0],u=(VEN.find(x=>x[0]==v)||[0,''])[1],s=vs(v,M),r=rate(s),ks=g[1].filter(allowed),e=mgEl();
- e.innerHTML=`<div class="mgf"><div class="sub">${esc(u)}</div><h3>${esc(v)}</h3><div class="sub">${MN[+M.slice(5)-1]} ${M.slice(0,4)} · ${ks.length} KPI</div><div class="mgs"><b class="${r[1]}">${f1(s)}</b><span class="pill ${r[1]}">SLA ${esc(r[0])}</span></div>${allowed('sla')?'<button type="button" class="btn sm" data-go="sla">Lihat skor SLA →</button>':''}</div><div class="mgg">${ks.map(k=>{const x=mgVal(k);return`<button type="button" role="menuitem" class="mgi ${k==page?'on':''}" data-go="${k}"><span class="mgc">${esc(x.code)}</span><span class="mgn">${esc(String(pname(k)).replace(/^\d+ · /,''))}</span><span class="mgd">${esc(x.d)}</span><b class="mgv ${x.cls}">${esc(x.txt)}</b></button>`}).join('')}</div>`;
+ e.innerHTML=`<div class="mgf"><div class="sub">${esc(u)}</div><h3>${esc(v)}</h3><div class="sub">${MN[+M.slice(5)-1]} ${M.slice(0,4)} · ${ks.filter(k=>!TRK[k]).length} KPI</div><div class="mgs"><b class="${r[1]}">${f1(s)}</b><span class="pill ${r[1]}">SLA ${esc(r[0])}</span></div>${allowed('sla')?'<button type="button" class="btn sm" data-go="sla">Lihat skor SLA →</button>':''}</div><div class="mgg">${ks.map(k=>{const x=mgVal(k);return`<button type="button" role="menuitem" class="mgi ${k==page?'on':''}" data-go="${k}"><span class="mgc">${esc(x.code)}</span><span class="mgn">${esc(String(pname(k)).replace(/^\d+ · /,''))}</span><span class="mgd">${esc(x.d)}</span><b class="mgv ${x.cls}">${esc(x.txt)}</b></button>`}).join('')}</div>`;
  e.style.top=Math.round(nav.getBoundingClientRect().bottom+8)+'px';e.classList.add('open');MGI=i;MGO=Date.now();
  document.querySelectorAll('[data-grp]').forEach(b=>{const on=+b.dataset.grp==i;b.classList.toggle('mo',on);b.setAttribute('aria-expanded',String(on))})}
 document.addEventListener('mouseover',e=>{const g=e.target.closest&&e.target.closest('[data-grp]');
