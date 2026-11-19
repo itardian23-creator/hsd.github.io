@@ -436,7 +436,7 @@ const VK=[['FB-01','Food Hazard','Sodexo','c',0,20,'Jumlah kejadian food hazard 
 ['SG-02','Kepatuhan Monitoring Checklist CCTV','CSI','p',1,20,'Checklist CCTV terisi / checklist wajib (pagi & malam)'],
 ['SG-03','Patroli Area Rawat Inap di Luar Jam Kunjungan','CSI','p',1,20,'Patroli terlaksana / rencana patroli'],
 ['SG-04','Respontime Perbantuan Security ≤ 15 Menit','CSI','p',1,30,'Perbantuan direspons ≤ 15 menit / total perbantuan'],
-['SG-05','Kepatuhan Checklist High Risk Area (Monitor CCTV)','CSI','p',1,20,'Checklist area high risk terisi / checklist wajib (12× per 24 jam, tiap 2 jam, via monitor CCTV no. 10)']];
+['SG-05','Patroli Checklist High Risk Area','CSI','p',1,20,'Checklist area high risk terisi / checklist wajib (12× per 24 jam, tiap 2 jam, via monitor CCTV no. 10)']];
 const HW={gc:20,tl:25,kt:30,ins:25},VEN=[['Provices','Housekeeping'],['Sodexo','Food Service'],['CSI','Security & GA']];
 const vr=(c,m)=>((S.vk||{})[m||M]||{})[c]||{},has=x=>x!==undefined&&x!==''&&x!==null&&!isNaN(+x);
 function vv(k,m){const X=auto(k[0],m);if(X)return X;const L=logOf(k[0],m);if(L&&L.length){const a=L.filter(x=>x.ok).length/L.length;return{v:a,s:Math.min(100,a/k[4]*100)}}const r=vr(k[0],m);if(k[3]=='c')return has(r.n)?{v:+r.n,s:Math.max(0,100-50*+r.n)}:null;
