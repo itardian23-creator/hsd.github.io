@@ -345,6 +345,21 @@ body[data-sy=bad] .topnav .logo .mark{background:var(--bad);box-shadow:0 0 12px 
 .logo:not(#sync){background:color-mix(in srgb,var(--panel) 14%,transparent);border:1px solid color-mix(in srgb,#fff 60%,transparent);backdrop-filter:blur(16px) saturate(1.6);-webkit-backdrop-filter:blur(16px) saturate(1.6);box-shadow:inset 0 1px 0 rgba(255,255,255,.7),inset 0 -1px 0 rgba(255,255,255,.15),0 8px 24px -12px rgba(15,23,42,.25)}
 .dash .dgx{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 10px}.dash .dgi{display:flex;flex-direction:column;align-items:center;text-align:center;gap:0;border:0;background:none;font:inherit;color:inherit;cursor:pointer;padding:8px 6px;border-radius:14px}.dash .dgi:hover{background:var(--chip)}.dash .dgi .dc{font-size:11px;font-weight:600;color:var(--mute)}.dash .dgi .hg{max-width:110px;margin:2px auto 0}.dash .dgi .hg path{stroke-width:8}.dash .dgi .hv{font-size:1.25rem;margin-top:-4px}.dash .dgi .dt2{font-size:12px;line-height:1.25;color:var(--mute);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-top:2px}
 .dash .dp{overflow:hidden}.dash .dtot{display:flex;align-items:center;justify-content:center;gap:14px;padding:6px 0 8px;border-bottom:1px solid var(--line);margin-bottom:6px}.dash .dtot .hg{width:96px;max-width:96px;margin:0}.dash .dtot .hg path{stroke-width:8}.dash .dtot .hv{font-size:1.9rem;text-align:left;margin:0;display:block}.dash .dgx{flex:1;min-height:0;grid-template-columns:repeat(3,minmax(0,1fr));grid-auto-rows:minmax(0,1fr);gap:2px 6px}.dash .dgi{min-height:0;padding:3px 2px;justify-content:center;overflow:hidden}.dash .dgi .hg{flex:1 1 0;min-height:0;max-height:54px;max-width:78px;width:100%;margin:1px auto 0}.dash .dgi .hg path{stroke-width:9}.dash .dgi .hv{font-size:1.05rem;margin-top:-2px;line-height:1.1}.dash .dgi .dt2{font-size:10.5px;line-height:1.2;-webkit-line-clamp:2}
+
+/* ===== Pelacakan per jam – Toilet Umum ===== */
+.hm{border-collapse:separate;border-spacing:3px;font-size:12px;width:100%}.hm th,.hm td{border:0;padding:0;text-align:center}
+.hm th{background:none;font-weight:600;color:var(--mute);padding:2px 0}.hm th.nm,.hm td.nm{text-align:left;white-space:nowrap;padding-right:8px;position:sticky;left:0;background:var(--panel);z-index:1;font-size:12px}
+.hm td.hc{min-width:26px;height:26px;border-radius:6px;font-size:11px;font-weight:700;background:var(--chip);color:var(--mute)}
+.hm td.ok{background:var(--ok);color:#fff}.hm td.miss{background:color-mix(in srgb,var(--bad) 18%,transparent);color:var(--bad);box-shadow:inset 0 0 0 1.5px var(--bad)}
+.hm td.now{box-shadow:inset 0 0 0 2px var(--warn);color:var(--warn);background:color-mix(in srgb,var(--warn) 12%,transparent)}.hm td.up{opacity:.55}
+.hm td.sm{white-space:nowrap;padding-left:8px;text-align:left;font-size:12px;color:var(--mute)}
+.hlg{display:flex;flex-wrap:wrap;gap:12px;font-size:12px;color:var(--mute);margin:10px 0 0}.hlg i{display:inline-block;width:12px;height:12px;border-radius:4px;vertical-align:-2px;margin-right:5px;background:var(--chip)}
+.hlg i.ok{background:var(--ok)}.hlg i.miss{background:color-mix(in srgb,var(--bad) 18%,transparent);box-shadow:inset 0 0 0 1.5px var(--bad)}.hlg i.now{box-shadow:inset 0 0 0 2px var(--warn)}
+.hs3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:12px 0}.hs3>div{background:var(--chip);border-radius:14px;padding:10px 12px}.hs3 b{display:block;font-size:1.5rem;font-variant-numeric:tabular-nums;letter-spacing:-.03em}
+.hrow{display:grid;grid-template-columns:52px 1fr auto;gap:10px;align-items:center;font-size:13px;padding:3px 0}.hrow .bar{margin:0;height:8px}.hrow .bar i.bad{background:var(--bad)}.hrow .bar i.ok{background:var(--ok)}.hrow .bar i.warn{background:var(--warn)}
+.mch{display:inline-block;font-size:11px;padding:2px 8px;border-radius:99px;margin:2px 3px 2px 0;background:color-mix(in srgb,var(--bad) 12%,transparent);color:var(--bad);white-space:nowrap}
+.tlnav{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin:2px 0 4px}.tlnav input[type=date]{font:inherit;padding:6px 10px;border-radius:10px;border:1px solid var(--line);background:var(--chip);color:var(--ink)}
+@media(max-width:600px){.hs3 b{font-size:1.2rem}.hm td.hc{min-width:22px;height:24px}}
 </style></head><body>
 <div class="topnav"><div style="display:flex;gap:8px;align-items:center"><div class="logo"><span class="mark"></span><span>HSIMS<span class="by">.ByArdian</span></span></div><button class="logo" id="sync" data-dr="sync" style="font:inherit;font-size:.85rem;cursor:pointer;color:inherit"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.35 10.04A7.49 7.49 0 0 0 12 4C9.11 4 6.6 5.64 5.35 8.04A5.994 5.994 0 0 0 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/></svg><span id="synct" class="hm"></span></button></div><nav class="navlinks" id="nav"></nav><div class="menu-wrap"><button type="button" class="menu-btn" id="menuBtn" aria-label="Buka menu" aria-expanded="false" aria-controls="mmenu"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></button><nav class="mmenu" id="mmenu" aria-label="Menu"></nav></div></div>
 <main class="app" id="app"></main>
@@ -458,6 +473,7 @@ function vpage(k){if(PF&&PF.c==k[0])return ptForm();const x=vv(k),st=vst(k,x),r=
  return`<div class="row"><div><p class="eyebrow">${k[0]} · ${P_[1]}</p><h1>${k[1]}</h1></div>${mbar()}</div>
 <div class="card adm-only"><div class="sub">${k[0]} · Target ${vtg(k)} · Bobot SLA ${k[5]}%</div><div class="big ${st[1]}">${pv(k)(x)}</div><div class="sub">${st[0]} · ${esc(k[6])}</div>
 ${c&&x&&x.v>0?'<p class="bad"><b>⚠ KPI kritis:</b> wajib CAR/NCR dalam 24 jam dan RCA dalam 5 hari kerja.</p>':''}</div>
+${isAdmin()&&['SG-01','SG-03','SG-05'].includes(k[0])?csiTrack(k[0]):''}
 ${['FB-03','SG-03','SG-02','SG-04','SG-01','SG-05'].includes(k[0])?'':`<div class="card"><h2>Input ${MN[+M.slice(5)-1]} ${M.slice(0,4)}</h2><div class="f" style="margin-top:8px">${c?`<label>Jumlah kejadian<input type="number" min="0" step="1" data-vk="${k[0]}|n" value="${esc(r.n??'')}"></label>`:`<label>Numerator<input type="number" min="0" step="any" data-vk="${k[0]}|n" value="${esc(r.n??'')}"></label><label>Denominator<input type="number" min="0" step="any" data-vk="${k[0]}|d" value="${esc(r.d??'')}"></label><label>Capaian manual % (jika tanpa num/den)<input type="number" min="0" max="100" step="any" data-vk="${k[0]}|p" value="${esc(r.p??'')}"></label>`}<label>Catatan<input data-vk="${k[0]}|k" value="${esc(r.k||'')}"></label></div></div>`}
 ${logCard(k)}${xCard(k)}<div class="card adm-only"><h2>Tren ${M.slice(0,4)}</h2><div class="tw" style="margin-top:8px"><table><tr>${MS.map(m=>`<th>${m}</th>`).join('')}</tr><tr>${ymon().map(m=>{const z=vv(k,m),s2=vst(k,z);return`<td class="${s2[1]}">${pv(k)(z).replace(' kej.','')}</td>`}).join('')}</tr></table></div></div>`}
 VK.forEach(k=>{V[vkey(k)]=()=>vpage(k)});
@@ -1333,6 +1349,86 @@ function submitTl(){if(!canSub())return;if(!F.p.trim()){toast('Isi nama petugas 
  S.tc.push({id:Date.now(),o:authed(),date:d,slot:sl,area:a,p:pn,ans:F.ans,k:F.k.trim(),dist:GPS.dist??null,ts:new Date().toISOString()});
  const r=(S.tl[d]=S.tl[d]||{});r[a]=r[a]||Array(14).fill(0);r[a][sl-8]=1;M=d.slice(0,7);save();gpsStop();gpsModalClose();F=null;draw();scrollTo(0,0);toast('Checklist tersimpan')}
 let tlHist='d';
+
+/* ===== Pelacakan per jam – dashboard Toilet Umum (HK-02) ===== */
+let tlDay=null,tlVw='d';
+const TLH=Array.from({length:14},(_,i)=>i+8),hh=h=>pd(h)+'.00';
+function tlSt(d,h){if(d<TODAY)return'miss';if(d>TODAY)return'up';const n=new Date().getHours();return h<n?'miss':h==n?'now':'up'}
+const tlDone=(d,a,h)=>!!(((S.tl[d]||{})[a]||[])[h-8]);
+function tlTrackDay(){const d=tlDay||TODAY,A=SEED.areas,who={};S.tc.filter(x=>x.date==d).forEach(x=>{who[x.area+'|'+x.slot]=x});
+ let done=0,miss=0,up=0;const perH=TLH.map(h=>{const st=tlSt(d,h),ok=A.filter(a=>tlDone(d,a[0],h)),no=A.filter(a=>!tlDone(d,a[0],h));done+=ok.length;if(st=='miss')miss+=no.length;else up+=no.length;return{h,st,ok:ok.length,no:st=='miss'?no:[]}});
+ const due=done+miss,tt=x=>{const t=new Date(x.ts);return x.ts?pd(t.getHours())+'.'+pd(t.getMinutes()):hh(x.slot)};
+ const rows=A.map(([c,n])=>{let k=0,m=0;const tds=TLH.map(h=>{const ok=tlDone(d,c,h),st=ok?'ok':tlSt(d,h),w=who[c+'|'+h];if(ok)k++;else if(st=='miss')m++;
+   const tip=`${n} · ${hh(h)} · `+(ok?('Terisi'+(w?' '+tt(w)+' oleh '+w.p:'')):st=='miss'?'TERLEWAT':st=='now'?'Jam berjalan, belum diisi':'Belum waktunya');
+   return`<td class="hc ${st}" title="${esc(tip)}">${ok?'✓':st=='miss'?'✕':''}</td>`}).join('');
+  return`<tr><td class="nm">${esc(n.replace('Lantai ','L').replace(' - Toilet ',' · '))}</td>${tds}<td class="sm"><b class="${m?'bad':'ok'}">${k}</b>/14${m?` · <span class="bad">${m} terlewat</span>`:''}</td></tr>`}).join('');
+ const miss_rows=perH.filter(x=>x.no.length).map(x=>`<tr><td><b>${hh(x.h)}</b></td><td>${x.ok}/${A.length}</td><td class="bad"><b>${x.no.length}</b></td><td style="white-space:normal;min-width:240px">${x.no.map(a=>`<span class="mch">${esc(a[1].replace('Lantai ','L'))}</span>`).join('')}</td></tr>`).join('');
+ const dl=new Date(d+'T00:00:00').toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+ return`<div class="tlnav"><div class="tgl"><button data-tlv="d" class="on">Per jam · harian</button><button data-tlv="m">Rekap bulan</button></div><label class="sub">Tanggal <input type="date" id="tldate" value="${d}" max="${TODAY}"></label></div>
+<p class="sub" style="margin:6px 0 0">${dl}${d==TODAY?' · jam sekarang '+pd(new Date().getHours())+'.'+pd(new Date().getMinutes()):''}</p>
+<div class="hs3"><div><span class="sub">Terisi</span><b class="ok">${done}</b></div><div><span class="sub">Jam terlewat</span><b class="${miss?'bad':'ok'}">${miss}</b></div><div><span class="sub">Kepatuhan jam yang sudah lewat</span><b class="${due&&done/due>=TGT?'ok':due&&done/due>=.9?'warn':'bad'}">${due?P(done,due):'–'}</b></div></div>
+<div class="tw" style="padding:8px"><table class="hm"><tr><th class="nm"></th>${TLH.map(h=>`<th>${pd(h)}</th>`).join('')}<th></th></tr>${rows}</table></div>
+<div class="hlg"><span><i class="ok"></i>Terisi</span><span><i class="miss"></i>Terlewat</span><span><i class="now"></i>Jam berjalan</span><span><i></i>Belum waktunya</span></div>
+<h3 style="margin:18px 0 8px">Jam yang terlewat</h3><div class="tw"><table><tr><th>Jam</th><th>Terisi</th><th>Terlewat</th><th>Toilet yang belum dicek</th></tr>${miss_rows||'<tr><td colspan="4" class="sub">Tidak ada jam yang terlewat 🎉</td></tr>'}</table></div>`}
+function tlTrackMonth(){const A=SEED.areas,days=[];for(let i=1;i<=dim(M);i++){const d=M+'-'+pd(i);if(d<TODAY)days.push(d)}
+ const byH=TLH.map(h=>({h,ok:0,no:0})),byA=A.map(a=>({a,ok:0,no:0})),byD=days.map(d=>({d,ok:0,no:0}));
+ days.forEach((d,di)=>A.forEach((a,ai)=>TLH.forEach((h,hi)=>{const o=tlDone(d,a[0],h);if(o){byH[hi].ok++;byA[ai].ok++;byD[di].ok++}else{byH[hi].no++;byA[ai].no++;byD[di].no++}})));
+ const tot=byD.reduce((s,x)=>s+x.ok,0),all=days.length*A.length*14,cl=v=>v>=TGT?'ok':v>=.9?'warn':'bad';
+ const hrows=byH.map(x=>{const t=x.ok+x.no,v=t?x.ok/t:0;return`<div class="hrow"><b>${hh(x.h)}</b><div class="bar"><i class="${cl(v)}" style="width:${v*100}%"></i></div><span class="sub"><b>${P(x.ok,t)}</b> · ${x.no} terlewat</span></div>`}).join('');
+ const arows=byA.map(x=>{const t=x.ok+x.no,v=t?x.ok/t:0;return`<tr><td>${esc(x.a[1])}</td><td>${x.ok}/${t}</td><td class="${x.no?'bad':'ok'}">${x.no}</td><td class="${cl(v)}"><b>${P(x.ok,t)}</b></td></tr>`}).join('');
+ const drows=byD.slice().reverse().map(x=>{const t=x.ok+x.no,v=t?x.ok/t:0;return`<tr><td>${x.d.slice(8)}/${x.d.slice(5,7)}</td><td>${x.ok}/${t}</td><td class="${x.no?'bad':'ok'}">${x.no}</td><td class="${cl(v)}"><b>${P(x.ok,t)}</b></td><td><button class="btn sm" data-tld="${x.d}">Lihat per jam</button></td></tr>`}).join('');
+ return`<div class="tlnav"><div class="tgl"><button data-tlv="d">Per jam · harian</button><button data-tlv="m" class="on">Rekap bulan</button></div></div>
+<p class="sub" style="margin:6px 0 0">${MN[+M.slice(5)-1]} ${M.slice(0,4)} · ${days.length} hari lengkap (hari ini dihitung setelah hari berganti, sama seperti angka KPI) · ${tot} terisi, ${all-tot} terlewat</p>
+<h3 style="margin:16px 0 6px">Kepatuhan per jam</h3>${hrows||'<p class="sub">Belum ada hari berjalan.</p>'}
+<h3 style="margin:18px 0 8px">Per toilet</h3><div class="tw"><table><tr><th>Toilet</th><th>Terisi</th><th>Terlewat</th><th>%</th></tr>${arows}</table></div>
+<h3 style="margin:18px 0 8px">Per hari</h3><div class="tw"><table><tr><th>Tgl</th><th>Terisi</th><th>Terlewat</th><th>%</th><th></th></tr>${drows||'<tr><td colspan="5" class="sub">Belum ada hari berjalan.</td></tr>'}</table></div>`}
+function tlTrack(){return`<div class="card" id="tltrack"><div class="row"><h2>Pelacakan per jam</h2><span class="sub">08.00–21.00 · ${SEED.areas.length} toilet</span></div>${tlVw=='m'?tlTrackMonth():tlTrackDay()}</div>`}
+document.addEventListener('click',e=>{const t=e.target.closest('[data-tlv],[data-tld]');if(!t)return;if(t.dataset.tlv){tlVw=t.dataset.tlv;draw();return}if(t.dataset.tld){tlDay=t.dataset.tld;tlVw='d';draw();const x=document.getElementById('tltrack');if(x)x.scrollIntoView({behavior:'smooth',block:'start'})}});
+document.addEventListener('change',e=>{if(e.target.id=='tldate'&&e.target.value){tlDay=e.target.value;tlVw='d';draw()}});
+
+/* ===== Pelacakan per jam – CSI: Patroli Amano (SG-01), Patroli Ranap (SG-03), High Risk CCTV (SG-05) ===== */
+const CT={};const ctS=c=>CT[c]=CT[c]||{day:null,vw:'d'};
+const ctHM=h=>pd(h%24);
+function ctCfg(c){
+ if(c=='SG-03'){const rows=RNA.map((n,i)=>({id:n,name:n.replace('Nurse Station ','NS ')}));
+  const cols=RNW.map((w,i)=>({key:w,lbl:'P'+(i+1),sub:ctHM(RNH[i][0])+'–'+ctHM(RNH[i][1]),a:RNH[i][0],b:RNH[i][1]}));
+  return{title:'Patroli Ranap · 7 putaran',rows,cols,idx(d){const o={},mk=d.slice(0,7);((((S.vl||{})[mk]||{})['SG-03'])||[]).forEach(x=>{if((x.ts||'').slice(0,10)==d)o[x.area+'|'+x.waktu]=x});return o},get:(o,r,k)=>o[r.id+'|'+k.key],who:x=>x.petugas,colName:k=>'Putaran '+k.lbl.slice(1)+' ('+k.sub+')',unit:'area'}}
+ const st=pst(c),rows=ptList(c).map(p=>({id:p.id,name:(p.lt?p.lt+' · ':'')+p.n})),cols=PS(c).map(s=>({key:s,lbl:pd(s),sub:ctHM(s)+'–'+ctHM(s+st),a:s,b:s+st}));
+ return{title:(c=='SG-05'?'High Risk CCTV':'Patroli Amano')+' · tiap '+st+' jam',rows,cols,idx(d){const o={};ptRec(c,d.slice(0,7)).forEach(x=>{if(x.date==d)o[x.pid+'|'+x.slot]=x});return o},get:(o,r,k)=>o[r.id+'|'+k.key],who:x=>x.p,colName:k=>'Slot '+k.sub,unit:'titik'}}
+function ctSt(d,k){if(d<TODAY)return'miss';if(d>TODAY)return'up';const h=new Date().getHours();return h>=k.b?'miss':h>=k.a?'now':'up'}
+function ctDay(c,cf){const s=ctS(c);let d=s.day;if(!d||d.slice(0,7)!=M||d>TODAY)d=M==TODAY.slice(0,7)?TODAY:M+'-'+pd(dim(M));return d}
+function ctTrackDay(c,cf){const d=ctDay(c,cf),idx=cf.idx(d),R=cf.rows,K=cf.cols;let done=0,miss=0;
+ const perK=K.map(k=>{const st=ctSt(d,k),ok=R.filter(r=>cf.get(idx,r,k)),no=R.filter(r=>!cf.get(idx,r,k));done+=ok.length;if(st=='miss')miss+=no.length;return{k,st,ok:ok.length,no:st=='miss'?no:[]}});
+ const due=done+miss,tm=x=>(x.ts||'').slice(11,16);
+ const body=R.map(r=>{let n=0,m=0;const tds=K.map(k=>{const x=cf.get(idx,r,k),st=x?'ok':ctSt(d,k);if(x)n++;else if(st=='miss')m++;
+   const tip=r.name+' · '+cf.colName(k)+' · '+(x?('Terisi'+(tm(x)?' '+tm(x):'')+(cf.who(x)?' oleh '+cf.who(x):'')+(x.st=='tidak'?' · TIDAK AMAN':'')):st=='miss'?'TERLEWAT':st=='now'?'Slot berjalan, belum diisi':'Belum waktunya');
+   return`<td class="hc ${st}" style="min-width:40px" title="${esc(tip)}">${x?(x.st=='tidak'?'⚠':'✓'):st=='miss'?'✕':''}</td>`}).join('');
+  return`<tr><td class="nm" style="max-width:240px;overflow:hidden;text-overflow:ellipsis">${esc(r.name)}</td>${tds}<td class="sm"><b class="${m?'bad':'ok'}">${n}</b>/${K.length}${m?` · <span class="bad">${m} terlewat</span>`:''}</td></tr>`}).join('');
+ const mrows=perK.filter(x=>x.no.length).map(x=>{const L=x.no.map(r=>`<span class="mch">${esc(r.name)}</span>`);return`<tr><td><b>${esc(cf.colName(x.k))}</b></td><td>${x.ok}/${R.length}</td><td class="bad"><b>${x.no.length}</b></td><td style="white-space:normal;min-width:240px">${L.length>8?`<details><summary class="sub">${L.length} ${cf.unit} belum dicek</summary>${L.join('')}</details>`:L.join('')}</td></tr>`}).join('');
+ const dl=new Date(d+'T00:00:00').toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+ return`<div class="tlnav"><div class="tgl"><button data-ctv="${c}|d" class="on">Per jam · harian</button><button data-ctv="${c}|m">Rekap bulan</button></div><label class="sub">Tanggal <input type="date" data-ctdate="${c}" value="${d}" min="${M}-01" max="${M==TODAY.slice(0,7)?TODAY:M+'-'+pd(dim(M))}"></label></div>
+<p class="sub" style="margin:6px 0 0">${dl}${d==TODAY?' · jam sekarang '+pd(new Date().getHours())+'.'+pd(new Date().getMinutes()):''}</p>
+<div class="hs3"><div><span class="sub">Terisi</span><b class="ok">${done}</b></div><div><span class="sub">Slot terlewat</span><b class="${miss?'bad':'ok'}">${miss}</b></div><div><span class="sub">Kepatuhan slot yang sudah lewat</span><b class="${due&&done/due>=TGT?'ok':due&&done/due>=.9?'warn':'bad'}">${due?P(done,due):'–'}</b></div></div>
+${R.length?`<div class="tw" style="padding:8px"><table class="hm"><tr><th class="nm"></th>${K.map(k=>`<th title="${esc(cf.colName(k))}">${k.lbl}<br><span style="font-weight:400;font-size:10px">${k.sub}</span></th>`).join('')}<th></th></tr>${body}</table></div>
+<div class="hlg"><span><i class="ok"></i>Terisi</span><span><i class="miss"></i>Terlewat</span><span><i class="now"></i>Slot berjalan</span><span><i></i>Belum waktunya</span></div>
+<h3 style="margin:18px 0 8px">Slot yang terlewat</h3><div class="tw"><table><tr><th>Slot</th><th>Terisi</th><th>Terlewat</th><th>Belum dicek</th></tr>${mrows||'<tr><td colspan="4" class="sub">Tidak ada slot yang terlewat 🎉</td></tr>'}</table></div>`:`<p class="sub" style="margin-top:12px">Belum ada ${cf.unit} terdaftar.</p>`}`}
+function ctTrackMonth(c,cf){const R=cf.rows,K=cf.cols,days=[];for(let i=1;i<=dim(M);i++){const d=M+'-'+pd(i);if(d<TODAY)days.push(d)}
+ const bK=K.map(k=>({k,ok:0,no:0})),bR=R.map(r=>({r,ok:0,no:0})),bD=days.map(d=>({d,ok:0,no:0})),cl=v=>v>=TGT?'ok':v>=.9?'warn':'bad';
+ days.forEach((d,di)=>{const idx=cf.idx(d);R.forEach((r,ri)=>K.forEach((k,ki)=>{const o=!!cf.get(idx,r,k);if(o){bK[ki].ok++;bR[ri].ok++;bD[di].ok++}else{bK[ki].no++;bR[ri].no++;bD[di].no++}}))});
+ const tot=bD.reduce((s,x)=>s+x.ok,0),all=days.length*R.length*K.length;
+ const krows=bK.map(x=>{const t=x.ok+x.no,v=t?x.ok/t:0;return`<div class="hrow" style="grid-template-columns:96px 1fr auto"><b>${esc(cf.colName(x.k).replace(/^(Slot|Putaran) /,''))}</b><div class="bar"><i class="${cl(v)}" style="width:${v*100}%"></i></div><span class="sub"><b>${P(x.ok,t)}</b> · ${x.no} terlewat</span></div>`}).join('');
+ const rrows=bR.map(x=>{const t=x.ok+x.no,v=t?x.ok/t:0;return`<tr><td>${esc(x.r.name)}</td><td>${x.ok}/${t}</td><td class="${x.no?'bad':'ok'}">${x.no}</td><td class="${cl(v)}"><b>${P(x.ok,t)}</b></td></tr>`}).join('');
+ const drows=bD.slice().reverse().map(x=>{const t=x.ok+x.no,v=t?x.ok/t:0;return`<tr><td>${x.d.slice(8)}/${x.d.slice(5,7)}</td><td>${x.ok}/${t}</td><td class="${x.no?'bad':'ok'}">${x.no}</td><td class="${cl(v)}"><b>${P(x.ok,t)}</b></td><td><button class="btn sm" data-ctd="${c}|${x.d}">Lihat per jam</button></td></tr>`}).join('');
+ return`<div class="tlnav"><div class="tgl"><button data-ctv="${c}|d">Per jam · harian</button><button data-ctv="${c}|m" class="on">Rekap bulan</button></div></div>
+<p class="sub" style="margin:6px 0 0">${MN[+M.slice(5)-1]} ${M.slice(0,4)} · ${days.length} hari lengkap (hari ini dihitung setelah hari berganti, sama seperti angka KPI) · ${tot} terisi, ${all-tot} terlewat</p>
+<h3 style="margin:16px 0 6px">Kepatuhan per ${c=='SG-03'?'putaran':'slot'}</h3>${krows}
+<h3 style="margin:18px 0 8px">Per ${cf.unit}</h3><div class="tw"><table><tr><th>${cf.unit[0].toUpperCase()+cf.unit.slice(1)}</th><th>Terisi</th><th>Terlewat</th><th>%</th></tr>${rrows}</table></div>
+<h3 style="margin:18px 0 8px">Per hari</h3><div class="tw"><table><tr><th>Tgl</th><th>Terisi</th><th>Terlewat</th><th>%</th><th></th></tr>${drows||'<tr><td colspan="5" class="sub">Belum ada hari berjalan.</td></tr>'}</table></div>`}
+function csiTrack(c){const cf=ctCfg(c),s=ctS(c);return`<div class="card" id="cttrack"><div class="row"><h2>Pelacakan per jam</h2><span class="sub">${esc(cf.title)}</span></div>${s.vw=='m'?ctTrackMonth(c,cf):ctTrackDay(c,cf)}</div>`}
+document.addEventListener('click',e=>{const t=e.target.closest('[data-ctv],[data-ctd]');if(!t)return;const q=t.dataset;
+ if(q.ctv){const[c,v]=q.ctv.split('|');ctS(c).vw=v;const y=scrollY;draw();scrollTo(0,y);return}
+ if(q.ctd){const[c,d]=q.ctd.split('|'),s=ctS(c);s.day=d;s.vw='d';draw();const x=document.getElementById('cttrack');if(x)x.scrollIntoView({behavior:'smooth',block:'start'})}});
+document.addEventListener('change',e=>{const c=e.target.dataset&&e.target.dataset.ctdate;if(c&&e.target.value){const s=ctS(c);s.day=e.target.value;s.vw='d';const y=scrollY;draw();scrollTo(0,y)}});
 V.tl=function(){if(F)return tlForm();
  const hr=Math.min(21,Math.max(8,new Date().getHours())),td_=S.tc.filter(x=>x.date==TODAY).sort((a,b)=>b.ts.localeCompare(a.ts));
  const vals=x=>Object.values(x.ans),bad=td_.filter(x=>vals(x).includes('bad')).length,wr=td_.filter(x=>vals(x).includes('warn')&&!vals(x).includes('bad')).length;
@@ -1341,6 +1437,7 @@ V.tl=function(){if(F)return tlForm();
  const hs=tlHist=='m'?S.tc.filter(x=>x.date.startsWith(M)).sort((a,b)=>(b.ts||'').localeCompare(a.ts||'')):td_;
  return`<div class="row">${head('tl')}${isAdmin()?mbar():''}</div>${isAdmin()?`${sumbox('tl')}
 <div class="grid" style="grid-template-columns:repeat(3,1fr)"><div class="card"><div class="sub">Toilet dicek hari ini</div><div class="big ok">${new Set(td_.map(x=>x.area)).size}</div></div><div class="card"><div class="sub">Perlu perhatian</div><div class="big warn">${wr}</div></div><div class="card"><div class="sub">Temuan masalah</div><div class="big bad">${bad}</div></div></div>`:''}
+${isAdmin()?tlTrack():''}
 <h2>Pilih toilet · ${new Date().toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</h2><div class="grid">${cards}</div>
 ${isAdmin()?`<div class="card"><div class="row"><h2>Riwayat ${tlHist=='m'?MN[+M.slice(5)-1]+' '+M.slice(0,4):'hari ini'} (${hs.length})</h2></div><div style="margin-top:10px"><button class="btn sm acc" data-xl="ct">Unduh Excel checklist</button></div><div class="tgl" style="margin-top:10px"><button data-th="d" class="${tlHist!='m'?'on':''}">Hari ini</button><button data-th="m" class="${tlHist=='m'?'on':''}">Per bulan</button></div><div class="tw" style="margin-top:10px"><table><tr>${tlHist=='m'?'<th>Tanggal</th>':''}<th>Jam</th><th>Toilet</th><th>Petugas</th><th>Kondisi</th><th>Jarak</th><th>Keterangan</th></tr>${hs.map(x=>{const v=Object.values(x.ans),tm=x.ts?(t=>pd(t.getHours())+'.'+pd(t.getMinutes()))(new Date(x.ts)):pd(x.slot)+'.00';return`<tr>${tlHist=='m'?'<td>'+x.date.slice(8)+'/'+x.date.slice(5,7)+'</td>':''}<td>${tm}</td><td>${esc(nm(x.area))}</td><td>${esc(x.p)}</td><td><span class="ok">${v.filter(a=>a=='ok').length} OK</span> <span class="warn">${v.filter(a=>a=='warn').length} Perhatian</span> <span class="bad">${v.filter(a=>a=='bad').length} Masalah</span></td><td>${x.dist==null?'–':x.dist+' m'}</td><td>${esc(x.k)}</td></tr>`}).join('')||`<tr><td colspan="${tlHist=='m'?7:6}" class="sub">Belum ada checklist ${tlHist=='m'?'bulan ini':'hari ini'}.</td></tr>`}</table></div></div>`:''}
 ${isAdmin()?`<details ${geoOpen?'open':''}><summary>Koordinat lokasi & toleransi GPS</summary><div style="padding-bottom:14px"><div class="f"><label>Toleransi (meter, 0 = GPS nonaktif)<input type="number" id="tol" min="0" value="${tol()}"></label></div><p class="sub">Koordinat bertanda “belum diatur” masih memakai titik bawaan yang sama; ketuk “GPS saya” saat berdiri di toilet tersebut.</p><div class="tw"><table><tr><th>Area</th><th>Latitude</th><th>Longitude</th><th></th></tr>${SEED.areas.map(([c,n])=>{const g=geo(c);return`<tr><td>${n}</td><td><input style="width:120px" data-geo="${c}|0" value="${g[0]}"></td><td><input style="width:120px" data-geo="${c}|1" value="${g[1]}"></td><td><button class="btn sm" data-gme="${c}">GPS saya</button></td></tr>`}).join('')}</table></div></div></details>`:''}`};
