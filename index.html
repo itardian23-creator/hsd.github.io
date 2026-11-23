@@ -1179,7 +1179,7 @@ document.addEventListener('click',e=>{const t=e.target.closest('button,[data-go]
 if(q.go){F=null;if(PF){ptStop();PF=null}page=q.go;M=TODAY.slice(0,7);D=TODAY;draw();scrollTo(0,0);return}
 if(q.v){view=q.v;draw();return}
 if(q.th){tlHist=q.th;draw();return}
-if(q.tf){F={code:q.tf,j:Math.min(21,Math.max(8,new Date().getHours())),p:'',k:'',ans:{}};GPS={ok:false,msg:'Memverifikasi lokasi…'};draw();scrollTo(0,0);gpsCheck();return}
+if(q.tf){const _h=Math.min(21,Math.max(8,new Date().getHours()));if(((S.tl[TODAY]||{})[q.tf]||[])[_h-8])return toast('Sudah dicek pada jam '+pd(_h)+'.00');F={code:q.tf,j:Math.min(21,Math.max(8,new Date().getHours())),p:'',k:'',ans:{}};GPS={ok:false,msg:'Memverifikasi lokasi…'};draw();scrollTo(0,0);gpsCheck();return}
 if(q.tfx){gpsStop();gpsModalClose();F=null;draw();return}
 if(q.tfg){gpsCheck();return}
 if(q.ans){const[i,v]=q.ans.split('|');F.ans[i]=v;const y=scrollY;draw();scrollTo(0,y);return}
@@ -1344,7 +1344,7 @@ function tlForm(){const a=SEED.areas.find(x=>x[0]==F.code);
 ${ITEMS.map(([id,l],i)=>`<div class="card"><div class="row"><b>${l}</b><span class="pill">${i+1}/5</span></div><div class="opt">${[['ok','Bersih/OK'],['warn','Perhatian'],['bad','Masalah']].map(([v,t])=>`<button data-ans="${id}|${v}" class="${F.ans[id]==v?'s-'+v:''}">${t}</button>`).join('')}</div></div>`).join('')}
 <div class="card"><label class="sub">Keterangan / Temuan</label><textarea id="tfk" rows="3" style="width:100%;margin-top:6px" placeholder="Tulis temuan atau catatan jika ada…">${esc(F.k)}</textarea></div>
 <button class="btn acc" id="tfs" data-tfs="1" ${canSub()?'':'disabled'}>Simpan checklist</button>`}
-function submitTl(){if(!canSub())return;if(!F.p.trim()){toast('Isi nama petugas dulu');const e=$('#tfp');if(e){e.focus();e.scrollIntoView({block:'center'})}return}const a=F.code,d=TODAY,sl=Math.min(21,Math.max(8,new Date().getHours()));F.j=sl;const pn=F.p.trim();S.petugas=pn;
+function submitTl(){if(!canSub())return;if(!F.p.trim()){toast('Isi nama petugas dulu');const e=$('#tfp');if(e){e.focus();e.scrollIntoView({block:'center'})}return}const a=F.code,d=TODAY,sl=Math.min(21,Math.max(8,new Date().getHours()));F.j=sl;if(((S.tl[d]||{})[a]||[])[sl-8]){gpsStop();gpsModalClose();F=null;draw();scrollTo(0,0);return toast('Sudah dicek pada jam '+pd(sl)+'.00')}const pn=F.p.trim();S.petugas=pn;
  S.tc=S.tc.filter(x=>!(x.date==d&&x.slot==sl&&x.area==a));
  S.tc.push({id:Date.now(),o:authed(),date:d,slot:sl,area:a,p:pn,ans:F.ans,k:F.k.trim(),dist:GPS.dist??null,ts:new Date().toISOString()});
  const r=(S.tl[d]=S.tl[d]||{});r[a]=r[a]||Array(14).fill(0);r[a][sl-8]=1;M=d.slice(0,7);save();gpsStop();gpsModalClose();F=null;draw();scrollTo(0,0);toast('Checklist tersimpan')}
@@ -1432,7 +1432,7 @@ document.addEventListener('change',e=>{const c=e.target.dataset&&e.target.datase
 V.tl=function(){if(F)return tlForm();
  const hr=Math.min(21,Math.max(8,new Date().getHours())),td_=S.tc.filter(x=>x.date==TODAY).sort((a,b)=>b.ts.localeCompare(a.ts));
  const vals=x=>Object.values(x.ans),bad=td_.filter(x=>vals(x).includes('bad')).length,wr=td_.filter(x=>vals(x).includes('warn')&&!vals(x).includes('bad')).length;
- const cards=SEED.areas.map(([c,n])=>{const bits=(S.tl[TODAY]||{})[c]||[],k=bits.filter(Boolean).length,cur=bits[hr-8];return`<button class="card stat" data-tf="${c}"><div class="row"><b>${n}</b><span class="pill ${cur?'ok':''}">${cur?'✓ '+pd(hr)+'.00':'Belum '+pd(hr)+'.00'}</span></div><div class="sub">${c} · ${k}/14 jam hari ini${unset(c)&&isAdmin()?' · <span class="warn">koordinat belum diatur</span>':''}</div></button>`}).join('');
+ const cards=SEED.areas.map(([c,n])=>{const bits=(S.tl[TODAY]||{})[c]||[],k=bits.filter(Boolean).length,cur=bits[hr-8];return`<button class="card stat" data-tf="${c}" style="${cur?'opacity:.6':''}"><div class="row"><b>${n}</b><span class="pill ${cur?'ok':''}">${cur?'✓ '+pd(hr)+'.00':'Belum '+pd(hr)+'.00'}</span></div><div class="sub">${c} · ${k}/14 jam hari ini${unset(c)&&isAdmin()?' · <span class="warn">koordinat belum diatur</span>':''}</div></button>`}).join('');
  const nm=c=>(SEED.areas.find(x=>x[0]==c)||[])[1]||c;
  const hs=tlHist=='m'?S.tc.filter(x=>x.date.startsWith(M)).sort((a,b)=>(b.ts||'').localeCompare(a.ts||'')):td_;
  return`<div class="row">${head('tl')}${isAdmin()?mbar():''}</div>${isAdmin()?`${sumbox('tl')}
