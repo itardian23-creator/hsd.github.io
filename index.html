@@ -378,7 +378,7 @@ const pd=n=>String(n).padStart(2,'0');const nowDay=()=>{const d=new Date();retur
 let S;try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
 S=S||{};S.items=S.items||SEED.items;['gc','tl','kt','ins','tc','kj'].forEach(k=>S[k]=S[k]||(k=='ins'||k=='tc'||k=='kj'?[]:{}));S.geo=S.geo||{};S.users=S.users||{};
 let page='dash',M=TODAY.slice(0,7),D=TODAY,gcMode='a',gcArea='';
-const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}if(typeof sched=='function')sched()};
+const save=()=>{try{tlFix();ktSync()}catch(e){}try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}if(typeof sched=='function')sched()};
 const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const toast=(t,ms)=>{const e=document.createElement('div');e.className='toast';e.textContent=t;document.body.append(e);setTimeout(()=>e.remove(),ms||1800)};
 const dim=m=>new Date(+m.slice(0,4),+m.slice(5),0).getDate();
@@ -612,7 +612,7 @@ function logCard0(k){const L=LOG[k[0]];if(!L)return'';const rows=logOf(k[0])||[]
 document.addEventListener('click',async e=>{const a=e.target.closest('[data-vl]'),d=e.target.closest('[data-vld]'),x=e.target.closest('[data-vle]');
  if(a){const c=a.dataset.vl,L=LOG[c],o={};document.querySelectorAll('[data-lf]').forEach(i=>o[i.dataset.lf]=i.value.trim());
   if(L.req.some(n=>!o[n]))return toast('Lengkapi kolom wajib: '+L.req.map(n=>L.f.find(f=>f[0]==n)[1]).join(', '));
-  o.ts=nowS();o.o=authed();if(L.pre)L.pre(o);o.ok=L.ok(o)?1:0;((((S.vl=S.vl||{})[M]=S.vl[M]||{})[c]=S.vl[M][c]||[])).push(o);save();const y=scrollY;draw();scrollTo(0,y);toast('Baris ditambahkan');return}
+  o.ts=nowS();o.o=authed();o.id=rid();if(L.pre)L.pre(o);o.ok=L.ok(o)?1:0;((((S.vl=S.vl||{})[M]=S.vl[M]||{})[c]=S.vl[M][c]||[])).push(o);save();const y=scrollY;draw();scrollTo(0,y);toast('Baris ditambahkan');return}
  if(d){const[c,i]=d.dataset.vld.split('|');if(c=='SG-03')return toast('Patroli yang sudah terkirim tidak bisa dihapus');if(!own((logOf(c)||[])[+i]))return toast('Hanya pemilik data atau admin yang bisa menghapus');if(confirm('Hapus baris ini?')){logOf(c).splice(+i,1);save();const y=scrollY;draw();scrollTo(0,y)}return}
  if(x){if(!window.ExcelJS)return toast('Pustaka Excel belum termuat (perlu internet)');const c=x.dataset.vle,[fn,buf]=await vBuild('le',c);dl(fn,buf);if(GAS())upDrive(fn,buf,true)}});
 
@@ -714,7 +714,7 @@ document.addEventListener('click',async e=>{const b=e.target.closest('[data-xq],
  if(ds.xq){const o=Q(),f=o[ddk()]=o[ddk()]||[],i=f.indexOf(ds.xq);i<0?f.push(ds.xq):f.splice(i,1);save();rd();return}
  if(ds.xqs){const o=Q();o[ddk()]=o[ddk()]||[];save();rd();toast('Hari tersimpan');return}
  if(ds.xqx){if(confirm('Hapus data tanggal ini?')){delete Q()[ddk()];save();rd()}return}
- if(ds.xi){const c=ds.xi,o={};document.querySelectorAll('[data-xf]').forEach(i=>o[i.dataset.xf]=i.value.trim());if(!o.by)return toast('Isi nama petugas dulu');if(!o.desk)return toast('Isi deskripsi insiden');o.o=authed();((((S.vi=S.vi||{})[M]=S.vi[M]||{})[c]=S.vi[M][c]||[])).push(o);save();rd();toast('Insiden tersimpan');return}
+ if(ds.xi){const c=ds.xi,o={};document.querySelectorAll('[data-xf]').forEach(i=>o[i.dataset.xf]=i.value.trim());if(!o.by)return toast('Isi nama petugas dulu');if(!o.desk)return toast('Isi deskripsi insiden');o.o=authed();o.id=rid();((((S.vi=S.vi||{})[M]=S.vi[M]||{})[c]=S.vi[M][c]||[])).push(o);save();rd();toast('Insiden tersimpan');return}
  if(ds.xid){const[c,i]=ds.xid.split('|');if(!own(xs('vi')[c][+i]))return toast('Hanya pemilik data atau admin yang bisa menghapus');if(confirm('Hapus insiden ini?')){xs('vi')[c].splice(+i,1);save();rd()}return}
  if(ds.xe){if(!window.ExcelJS)return toast('Pustaka Excel belum termuat (perlu internet)');const c=ds.xe,[fn,buf]=await vBuild('xe',c);dl(fn,buf);if(GAS())upDrive(fn,buf,true)}});
 
@@ -998,7 +998,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-pb]');if(!
  if(a=='done'){const t0=new Date(j.t0),t1=new Date(),dur=Math.max(1,Math.ceil((t1-t0)/60000)),ok=dur<=PBMAX;let lambat='';
   if(!ok){const q=prompt('Perbantuan melebihi '+PBMAX+' menit ('+dur+' menit). Isi keterangan keterlambatan:');if(q===null)return;lambat=q.trim();if(!lambat)return toast('Keterangan keterlambatan wajib diisi')}
   const dm=t0.getFullYear()+'-'+pd(t0.getMonth()+1)+'-'+pd(t0.getDate()),hm=d=>pd(d.getHours())+':'+pd(d.getMinutes());
-  const row={ts:dm+' '+hm(t0)+':'+pd(t0.getSeconds()),pos:j.pos,req:j.req,unit:j.unit,mulai:hm(t0),selesai:hm(t1),bantu:j.bantu,minta:j.minta,lambat,dur,ok:ok?1:0,o:authed()},mk=dm.slice(0,7);
+  const row={ts:dm+' '+hm(t0)+':'+pd(t0.getSeconds()),pos:j.pos,req:j.req,unit:j.unit,mulai:hm(t0),selesai:hm(t1),bantu:j.bantu,minta:j.minta,lambat,dur,ok:ok?1:0,o:authed(),id:rid()},mk=dm.slice(0,7);
   (((S.vl=S.vl||{})[mk]=S.vl[mk]||{})['SG-04']=S.vl[mk]['SG-04']||[]).push(row);S.pj=S.pj.filter(x=>x.id!=id);save();rd();toast(ok?'Selesai · TEPAT WAKTU ('+dur+' mnt)':'Selesai · TERLAMBAT ('+dur+' mnt)',3000)}});
 setInterval(()=>{const e=$('#pbrun');if(e&&!document.hidden)e.innerHTML=pbRun()},30000);
 
@@ -1094,7 +1094,7 @@ document.addEventListener('click',async e=>{const b=e.target.closest('[data-rnrm
  b.disabled=true;b.textContent='Mengirim…';const ids=[];let sigId='';
  try{{const rs=await gas({action:'putPhoto',mime:'image/jpeg',name:'TTDPerawat_'+TODAY+'_'+Date.now()+'.jpg',data:RN.sig.split(',')[1]});sigId=rs.id;PHC.set(sigId,RN.sig)}for(let j=0;j<RN.nw.length;j++){const r=await gas({action:'putPhoto',mime:'image/jpeg',name:'PatroliRanap_'+TODAY+'_'+RN.area.replace(/\W+/g,'-')+'_'+Date.now()+'_'+j+'.jpg',data:RN.nw[j].split(',')[1]});ids.push(r.id);PHC.set(r.id,RN.nw[j])}}
  catch(er){b.disabled=false;b.textContent='Kirim patroli';return msg('Gagal mengunggah foto: '+friendly(er))}
- const row={ts:nowS(),area:RN.area,waktu:RN.waktu,ket:RN.ket.trim(),petugas:RN.petugas.trim(),perawat:RN.perawat.trim(),temuan:'',tl:RN.tl.trim(),ph:ids,sig:sigId,o:authed()},mk=TODAY.slice(0,7);
+ const row={ts:nowS(),area:RN.area,waktu:RN.waktu,ket:RN.ket.trim(),petugas:RN.petugas.trim(),perawat:RN.perawat.trim(),temuan:'',tl:RN.tl.trim(),ph:ids,sig:sigId,o:authed(),id:rid()},mk=TODAY.slice(0,7);
  row.ok=LOG['SG-03'].ok(row)?1:0;S.petugas=row.petugas;(((S.vl=S.vl||{})[mk]=S.vl[mk]||{})['SG-03']=S.vl[mk]['SG-03']||[]).push(row);
  RN={area:'',waktu:'',ket:'',petugas:'',perawat:'',tl:'',nw:[],sig:''};M=mk;save();rd();toast('Patroli terkirim')});
 /* ===== Penyiapan kamar: Start / Done per kamar check-out ===== */
@@ -1763,7 +1763,16 @@ function m3(b,l,r){
  /* tanda centang 0/1 tanpa data dasar: yang sudah dicentang (1) tidak boleh kalah oleh 0 dari perangkat lain */
  if((l===0||l===1)&&(r===0||r===1)&&(b===undefined||b===null))return l||r
  return l}
-function norm(){S=S||{};S.items=S.items||SEED.items;['gc','tl','kt','ins','tc','kj'].forEach(k=>S[k]=S[k]||(k=='ins'||k=='tc'||k=='kj'?[]:{}));S.geo=S.geo||{};S.users=S.users||{};if(!S.vk)S.vk=JSON.parse(JSON.stringify(SEEDVK))}
+const hid=s=>{let h=5381;for(let i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))|0;return 'h'+(h>>>0).toString(36)+s.length.toString(36)};
+const rid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+/* baris log lama tanpa id diberi id tetap (sama di semua perangkat) agar bisa digabung tanpa saling menimpa */
+function prep(x){if(!x||typeof x!='object')return x;['vl','vi'].forEach(k=>{const o=x[k];if(!o||typeof o!='object')return;Object.values(o).forEach(mo=>{if(!mo||typeof mo!='object')return;Object.keys(mo).forEach(c=>{const a=mo[c];if(!Array.isArray(a))return;const seen={};a.forEach(r=>{if(r&&typeof r=='object'&&r.id===undefined){const h=hid(JSON.stringify(r));seen[h]=(seen[h]||0)+1;r.id=seen[h]>1?h+'_'+seen[h]:h}})})})});return x}
+/* centang toilet = turunan dari catatan checklist (S.tc, aman digabung per id) */
+function tlFix(){(S.tc||[]).forEach(x=>{if(!x||!x.date||!x.area||!(x.slot>=8&&x.slot<=21))return;const r=(S.tl[x.date]=S.tl[x.date]||{});r[x.area]=r[x.area]||Array(14).fill(0);r[x.area][x.slot-8]=1})}
+/* hitungan kamar = turunan dari daftar kamar selesai (S.kj), bukan angka yang di-edit bersamaan */
+function ktSync(){const g={};(S.kj||[]).forEach(j=>{if(!j||!j.t1||!j.date)return;const m=j.date.slice(0,7),d=j.date.slice(8,10),k=m+'|'+d,e=g[k]=g[k]||{m,d,c:0,s:0};e.c++;if(j.ok)e.s++;j.cnt=1});
+ Object.values(g).forEach(e=>{const o=(S.kt[e.m]=S.kt[e.m]||{}),x=(o[e.d]=o[e.d]||{});x.c=e.c;x.s=e.s})}
+function norm(){try{prep(S)}catch(e){}S=S||{};S.items=S.items||SEED.items;['gc','tl','kt','ins','tc','kj'].forEach(k=>S[k]=S[k]||(k=='ins'||k=='tc'||k=='kj'?[]:{}));S.geo=S.geo||{};S.users=S.users||{};if(!S.vk)S.vk=JSON.parse(JSON.stringify(SEEDVK));try{tlFix();ktSync()}catch(e){}}
 function setSt(s,m){ST=s;STM=m||'';notify(s,m);const b=$('#synct');if(!b)return;const T={off:'Drive: atur',idle:'Sambungkan Drive',sync:'Menyinkronkan…',ok:'Tersinkron '+STM,exp:'Sambungkan ulang',err:'Gagal sinkron'};b.textContent=T[s]||'';const w=$('#sync');if(w){w.title=m||'';w.style.color=s=='err'||s=='exp'?'var(--bad)':s=='ok'?'var(--ok)':'';document.body.dataset.sy=s=='err'||s=='exp'?'bad':s=='ok'?'ok':''}}
 const gis=()=>new Promise((ok,no)=>{if(window.google&&google.accounts&&google.accounts.oauth2)return ok();let s=document.querySelector('#gis');if(!s){s=document.createElement('script');s.id='gis';s.src='https://accounts.google.com/gsi/client';document.head.append(s)}s.addEventListener('load',ok);s.addEventListener('error',()=>no(new Error('Gagal memuat Google Identity (cek internet)')))});
 function token(ia){return new Promise((ok,no)=>{
@@ -1793,7 +1802,7 @@ async function sync(ia){
   const txt=await(await gd(`${API}/drive/v3/files/${id}?alt=media`,{},ia)).text();let rem=null;try{rem=JSON.parse(txt).data}catch(e){}
   let base=null;try{base=JSON.parse(localStorage.getItem(BK))}catch(e){}
   const before=JSON.stringify(S);
-  const merged=rem?m3(base||{},S,rem):S;
+  prep(S);prep(rem);prep(base);const merged=rem?m3(base||{},S,rem):S;
   S=merged;norm();const after=JSON.stringify(S);
   try{localStorage.setItem(KEY,after)}catch(e){}
   if(!rem||after!==JSON.stringify(rem))await gd(`${API}/upload/drive/v3/files/${id}?uploadType=media`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:pack()},ia);
@@ -1810,18 +1819,20 @@ async function upDrive(fn,buf,quiet){if(!GAS())return;
 let XLS=null;function xlShow(){const d=$('#xls');if(d)d.innerHTML=XLS?XLS.ok?'<span class="ok">terkirim '+XLS.t+'</span>':'<span class="bad">gagal — '+esc(XLS.m)+'</span>':'belum pernah terkirim'}
 let xt,xlBusy=false;function schedXl(){clearTimeout(xt);xt=setTimeout(()=>{if(!GAS()||!window.ExcelJS)return;if(ST!='ok'||xlBusy){schedXl();return}xlBusy=true;xlSep(false).finally(()=>xlBusy=false)},6000)}
 async function gas(body){
- const r=await fetch(gUrl(),{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({key:gKey(),...body})});
+ const ac=new AbortController(),tm=setTimeout(()=>ac.abort(),60000);let r;
+ try{r=await fetch(gUrl(),{method:'POST',redirect:'follow',signal:ac.signal,headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({key:gKey(),...body})})}
+ catch(e){if(e&&e.name=='AbortError')throw new Error('Server tidak merespons (timeout), mencoba lagi');throw e}finally{clearTimeout(tm)}
  if(!r.ok)throw new Error('Server '+r.status);
  let j;try{j=await r.json()}catch(x){throw new Error('Balasan Apps Script bukan JSON (deploy ulang dengan akses "Anyone")')}
  if(!j.ok&&j.error!=='conflict'){if(j.error==='Aksi tidak dikenal'&&/Photo|File/.test(body.action||''))throw new Error('Script Apps Script belum diperbarui: tempel Code.gs terbaru lalu Deploy > Kelola deployment > Versi baru');throw new Error(j.error||'Gagal')}return j}
 async function syncGAS(ia){
- if(syncing){again=true;return}
- syncing=true;setSt('sync');
+ if(syncing&&Date.now()-(window._sa||0)<90000){again=true;return}
+ syncing=true;window._sa=Date.now();setSt('sync');
  try{const before=JSON.stringify(S);let done=false,pushed=false;
   for(let n=0;n<4&&!done;n++){
    const g=await gas({action:'get'}),rem=g.data;
    let base=null;try{base=JSON.parse(localStorage.getItem(BK))}catch(e){}
-   S=rem?m3(base||{},S,rem):S;norm();const after=JSON.stringify(S);
+   prep(S);prep(rem);prep(base);S=rem?m3(base||{},S,rem):S;norm();const after=JSON.stringify(S);
    if(!rem||after!==JSON.stringify(rem)){const p=await gas({action:'put',version:g.version,data:S});if(p.error==='conflict')continue;pushed=true}
    try{localStorage.setItem(KEY,after);localStorage.setItem(BK,after)}catch(e){}
    done=true;
@@ -2229,5 +2240,6 @@ document.addEventListener('click',e=>{if(MGI<0)return;if(e.target.closest('[data
 document.addEventListener('keydown',e=>{if(e.key=='Escape')mgClose()});
 addEventListener('resize',mgClose);
 
+prep(S);try{tlFix();ktSync()}catch(e){}
 draw();
 </script></body></html>
