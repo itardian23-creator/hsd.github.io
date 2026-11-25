@@ -1189,15 +1189,15 @@ if(q.tfx){gpsStop();gpsModalClose();F=null;draw();return}
 if(q.tfg){gpsCheck();return}
 if(q.ans){const[i,v]=q.ans.split('|');F.ans[i]=v;const y=scrollY;draw();scrollTo(0,y);return}
 if(q.tfs){submitTl();return}
-if(q.tdel){const r=S.tc.find(x=>x.id==q.tdel);if(r&&!own(r))return toast('Hanya pemilik data atau admin yang bisa menghapus');if(r&&confirm('Hapus checklist ini?')){tombAdd('c:'+r.id);tombAdd('l:'+r.date+'|'+r.area+'|'+r.slot);S.tc=S.tc.filter(x=>x.id!=r.id);obDrop(e=>e.id==r.id);try{S.tl[r.date][r.area][r.slot-8]=0}catch(e){}save();draw()}return}
+if(q.tdel){const r=S.tc.find(x=>x.id==q.tdel);if(r)return toast('Checklist yang sudah masuk terkunci dan tidak bisa dihapus.',3500);if(r&&!own(r))return toast('Hanya pemilik data atau admin yang bisa menghapus');if(r&&confirm('Hapus checklist ini?')){tombAdd('c:'+r.id);tombAdd('l:'+r.date+'|'+r.area+'|'+r.slot);S.tc=S.tc.filter(x=>x.id!=r.id);obDrop(e=>e.id==r.id);try{S.tl[r.date][r.area][r.slot-8]=0}catch(e){}save();draw()}return}
 if(q.gme){if(!isAdmin())return toast('Hanya admin yang bisa mengatur koordinat');geoOpen=true;navigator.geolocation?navigator.geolocation.getCurrentPosition(p=>{S.geo[q.gme]=[+p.coords.latitude.toFixed(7),+p.coords.longitude.toFixed(7)];save();const y=scrollY;draw();scrollTo(0,y);toast('Koordinat diperbarui')},()=>toast('Izin GPS ditolak'),{enableHighAccuracy:true,timeout:8000}):toast('GPS tidak tersedia');return}
 if(q.rk){repK=q.rk;draw();return}
 if(q.xl){xl(q.xl);return}
 if(q.m){if(q.m=='p'&&!isAdmin())return toast('Hanya admin yang bisa mengatur rencana');gcMode=q.m;draw();return}
 if(q.gc){const id=q.gc,w=+q.w,it=S.items.find(i=>i.id==id),r=((S.gc[M]=S.gc[M]||{})[id]=S.gc[M][id]||{p:[...it.p],a:[0,0,0,0,0]});r.p=r.p||[...it.p];r.a=r.a||[0,0,0,0,0];
  if(gcMode=='p'&&isAdmin()){r.p[w]=r.p[w]?0:1;if(!r.p[w])r.a[w]=0}else if(r.p[w]){phOpen(id,w);return}else return;save();const y=scrollY;draw();scrollTo(0,y);return}
-if(q.tl){const r=(S.tl[D]=S.tl[D]||{});r[q.tl]=r[q.tl]||Array(14).fill(0);r[q.tl][+q.h]^=1;{const k='l:'+D+'|'+q.tl+'|'+(+q.h+8);if(r[q.tl][+q.h])tombDel(k);else tombAdd(k)}if(!r[q.tl][+q.h])obDrop(e=>e.date==D&&e.area==q.tl&&e.slot==+q.h+8);save();t.className='cell '+(r[q.tl][+q.h]?'d':'');t.textContent=r[q.tl][+q.h]?'✓':'';refresh();return}
-if(q.tlall){const r=(S.tl[D]=S.tl[D]||{});const full=(r[q.tlall]||[]).every(Boolean);r[q.tlall]=Array(14).fill(full?0:1);for(let i=0;i<14;i++){const k='l:'+D+'|'+q.tlall+'|'+(i+8);if(full)tombAdd(k);else tombDel(k)}if(full)obDrop(e=>e.date==D&&e.area==q.tlall);save();const y=scrollY;draw();scrollTo(0,y);return}
+if(q.tl){const r=(S.tl[D]=S.tl[D]||{});r[q.tl]=r[q.tl]||Array(14).fill(0);if(r[q.tl][+q.h])return toast('Sudah dicentang dan terkunci, tidak bisa diubah.',3000);r[q.tl][+q.h]^=1;{const k='l:'+D+'|'+q.tl+'|'+(+q.h+8);if(r[q.tl][+q.h])tombDel(k);else tombAdd(k)}if(!r[q.tl][+q.h])obDrop(e=>e.date==D&&e.area==q.tl&&e.slot==+q.h+8);save();t.className='cell '+(r[q.tl][+q.h]?'d':'');t.textContent=r[q.tl][+q.h]?'✓':'';refresh();return}
+if(q.tlall){const r=(S.tl[D]=S.tl[D]||{});const full=(r[q.tlall]||[]).every(Boolean);if(full)return toast('Semua jam sudah dicentang dan terkunci.',3000);r[q.tlall]=Array(14).fill(full?0:1);for(let i=0;i<14;i++){const k='l:'+D+'|'+q.tlall+'|'+(i+8);if(full)tombAdd(k);else tombDel(k)}if(full)obDrop(e=>e.date==D&&e.area==q.tlall);save();const y=scrollY;draw();scrollTo(0,y);return}
 if(q.x!==undefined){insMenu(t);return}
 if(q.insv!==undefined){insSet(q.insv);return}
 if(q.insc!==undefined){insClose();return}
@@ -1814,9 +1814,9 @@ function guardMerge(L,R,M){try{
  const have=new Set(M.tc.map(x=>x&&x.id));
  [L,R].forEach(s=>((s&&s.tc)||[]).forEach(x=>{if(x&&x.id!==undefined&&!have.has(x.id)&&!T['c:'+x.id]){M.tc.push(JSON.parse(JSON.stringify(x)));have.add(x.id)}}));
  const set=(d,a,i)=>{if(i<0||i>13)return;const r=(M.tl[d]=M.tl[d]||{});if(!Array.isArray(r[a]))r[a]=Array(14).fill(0);r[a][i]=1};
- [L,R].forEach(s=>{const t=(s&&s.tl)||{};for(const d in t)for(const a in t[d])(t[d][a]||[]).forEach((v,i)=>{if(v&&!T['l:'+d+'|'+a+'|'+(i+8)])set(d,a,i)})});
+ [L,R].forEach(s=>{const t=(s&&s.tl)||{};for(const d in t)for(const a in t[d])(t[d][a]||[]).forEach((v,i)=>{if(v)set(d,a,i)})});
  /* perbaikan centang dari entri hanya untuk HARI INI; data tanggal lama tidak diubah diam-diam karena masuk angka KPI */
- M.tc.forEach(x=>{if(x&&x.date&&x.date>=TODAY&&x.area&&x.slot>=8&&!T['l:'+x.date+'|'+x.area+'|'+x.slot])set(x.date,x.area,x.slot-8)});
+ M.tc.forEach(x=>{if(x&&x.date&&x.date>=TODAY&&x.area&&x.slot>=8)set(x.date,x.area,x.slot-8)}); /* entri checklist yang masih ada = bukti terisi; penghapusan sengaja lewat tombol Hapus (membuang entrinya) */
 }catch(e){console.error('guardMerge',e)}}
 
 /* PENGAMAN SEMUA MODUL (bukan hanya toilet):
@@ -2106,7 +2106,11 @@ function rfCheck(){
  if(!last){rfStamp();return}
  if(Date.now()-last<REFRESH_MS)return;
  let busy=false;try{busy=!!(SVBUSY||syncing)}catch(e){}
- if(busy)return;
+ /* jangan refresh saat form checklist/patroli terbuka, sedang mengetik, atau ada dialog GPS/kirim: isian belum tersimpan bisa hilang */
+ try{if((typeof F!=='undefined'&&F)||(typeof PF!=='undefined'&&PF))busy=true}catch(e){}
+ try{const ae=document.activeElement;if(ae&&/INPUT|TEXTAREA|SELECT/.test(ae.tagName))busy=true}catch(e){}
+ try{if(document.getElementById('svov')||document.getElementById('gpsov'))busy=true}catch(e){}
+ if(busy)return; /* dicek lagi 5 detik kemudian, refresh jalan begitu form ditutup */
  rfStamp();location.reload()}
 rfStamp();
 setInterval(rfCheck,5000);
