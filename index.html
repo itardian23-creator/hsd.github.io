@@ -1980,7 +1980,7 @@ document.addEventListener('change',e=>{const t=e.target;
  else if(t.id=='fid'){C.fid=t.value.trim();saveC();try{localStorage.removeItem(BK)}catch(x){}}
  else if(t.id=='full'){C.full=t.value?1:0;C.on=0;TOK=null;saveC();setSt(CID()?'idle':'off')}});
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&C.on)sync(false)});
-setInterval(()=>{if(!document.hidden&&C.on&&ST!='exp')sync(false)},20000);
+setInterval(()=>{if(!document.hidden&&C.on&&ST!='exp'&&!syncing&&!SVBUSY)sync(false)},20000);
 setSt(GAS()?'idle':CID()?(C.on?'exp':'idle'):'off');if(GAS()){C.on=1;sync(false)}else if(gUrl()){sync(false)}else if(CID())gis().catch(()=>{});
 setInterval(()=>{if(!document.hidden&&ST=='err'&&gUrl())sync(false)},20000);
 addEventListener('online',()=>{if(gUrl())sync(false)});
