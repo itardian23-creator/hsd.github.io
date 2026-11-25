@@ -1915,7 +1915,7 @@ async function gas(body){
  if(!j.ok&&j.error!=='conflict'){if(j.error==='Aksi tidak dikenal'&&/Photo|File/.test(body.action||''))throw new Error('Script Apps Script belum diperbarui: tempel Code.gs terbaru lalu Deploy > Kelola deployment > Versi baru');throw new Error(j.error||'Gagal')}return j}
 /* Data dasar penggabungan disimpan per tab. Kalau dibaca dari localStorage (dipakai bersama semua tab),
    tab lama menganggap isian tab lain "sudah dihapus" lalu menghapusnya dari server. */
-let GBASE=null;try{GBASE=JSON.parse(localStorage.getItem(BK))}catch(e){}
+let GBASE=null,GVER=null,LP=null;try{GBASE=JSON.parse(localStorage.getItem(BK))}catch(e){}
 /* Antrean isian checklist toilet: dipasang ulang ke data sampai benar-benar ada di server */
 const OBK='hsims-tl-outbox',OBHOLD=120000;
 let OB=[];
@@ -1936,11 +1936,17 @@ async function syncGAS(ia){
  if(syncing){again=true;return}
  syncing=true;setSt('sync');
  try{const before=JSON.stringify(S);let done=false,pushed=false;
+  LP=null;
   for(let n=0;n<4&&!done;n++){
+   /* jalur cepat: versi server masih sama dengan sinkron terakhir -> langsung kirim, tanpa ambil data dulu */
+   if(n==0&&GVER!=null&&GBASE){norm();const sent=obApply(),after=JSON.stringify(S);
+    if(after!==JSON.stringify(GBASE)){const p=await gas({action:'put',version:GVER,data:S});
+     if(p.ok){GVER=p.version;pushed=true;PREV=_cl(S);GBASE=JSON.parse(after);LP=GBASE;obSent(sent);try{localStorage.setItem(KEY,JSON.stringify(S));localStorage.setItem(BK,after)}catch(e){}done=true;setSt('ok',new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}));break}
+     GVER=null;if(p.error!=='conflict')throw new Error(p.error||'Gagal menyimpan');continue}}
    const g=await gas({action:'get'}),rem=g.data;
    const remTxt=rem?JSON.stringify(rem):'';const L0=_cl(S);S=rem?m3(GBASE||{},S,rem):S;norm();guardMerge(L0,rem,S);guardAll(L0,rem,S);PREV=_cl(S);const sent=obApply();const after=JSON.stringify(S);
-   if(!rem||after!==remTxt){const p=await gas({action:'put',version:g.version,data:S});if(p.error==='conflict')continue;pushed=true}
-   GBASE=JSON.parse(after);obSent(sent);
+   GVER=g.version;if(!rem||after!==remTxt){const p=await gas({action:'put',version:g.version,data:S});if(p.error==='conflict')continue;pushed=true;GVER=p.version}
+   GBASE=JSON.parse(after);if(pushed)LP=GBASE;obSent(sent);
    /* S bisa sudah bertambah isian baru selama menunggu server, jadi simpan S terbaru */
    try{localStorage.setItem(KEY,JSON.stringify(S));localStorage.setItem(BK,after)}catch(e){}
    done=true;
@@ -1973,6 +1979,7 @@ async function sendConfirm(job,step){let last='';
    const t0=Date.now();while(syncing){if(Date.now()-t0>100000)throw new Error('Sinkron sebelumnya belum selesai');await nap(300)}
    await syncGAS();
    if(ST=='err')throw new Error(STM||'Gagal sinkron');
+   if(LP){const d=LP;LP=null;if(job.check(d))return{ok:true}} /* server sudah membalas OK untuk data ini: tidak perlu unduh ulang seluruh data */
    step('Memastikan data sudah masuk…');
    const g=await gas({action:'get'});
    if(job.check(g.data))return{ok:true};
@@ -1990,7 +1997,7 @@ async function saveWait(job,finish){
  SVBUSY=true;if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();
  svLoad();
  const r=await sendConfirm(job,svLoad);
- if(r.ok){svBox('<div class="svic ok">✓</div><h2>Berhasil masuk</h2><p class="sub">Data sudah tersimpan.</p>');await nap(1000);SVBUSY=false;svClose();finish();return}
+ if(r.ok){svBox('<div class="svic ok">✓</div><h2>Berhasil masuk</h2><p class="sub">Data sudah tersimpan.</p>');await nap(300);SVBUSY=false;svClose();finish();return}
  const o=svBox('<div class="svic bad">!</div><h2>Belum terkirim</h2><p class="sub">'+esc(r.m)+'</p><p class="sub">Isian masih tersimpan di HP ini. Cek internet lalu ketuk <b>Coba kirim lagi</b>.</p><button class="btn acc" id="svretry">Coba kirim lagi</button><button class="btn" id="svlater">Tutup, kirim nanti</button>');
  o.querySelector('#svretry').onclick=()=>saveWait(job,finish);
  o.querySelector('#svlater').onclick=()=>{SVBUSY=false;svClose();finish();toast('BELUM terkirim. Biarkan aplikasi terbuka sampai tersinkron',4000)}}
