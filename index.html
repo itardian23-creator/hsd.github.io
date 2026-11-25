@@ -383,7 +383,7 @@ const pd=n=>String(n).padStart(2,'0');const nowDay=()=>{const d=new Date();retur
 let S;try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
 S=S||{};S.items=S.items||SEED.items;['gc','tl','kt','ins','tc','kj'].forEach(k=>S[k]=S[k]||(k=='ins'||k=='tc'||k=='kj'?[]:{}));S.geo=S.geo||{};S.users=S.users||{};
 let page='dash',M=TODAY.slice(0,7),D=TODAY,gcMode='a',gcArea='';
-const save=()=>{if(typeof obPrune=='function')obPrune();try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}if(typeof sched=='function')sched()};
+const save=()=>{if(typeof trackSave=='function')trackSave();if(typeof obPrune=='function')obPrune();try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}if(typeof sched=='function')sched()};
 const $=s=>document.querySelector(s),esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const toast=(t,ms)=>{const e=document.createElement('div');e.className='toast';e.textContent=t;document.body.append(e);setTimeout(()=>e.remove(),ms||1800)};
 const dim=m=>new Date(+m.slice(0,4),+m.slice(5),0).getDate();
@@ -1225,7 +1225,7 @@ else if(t.id=='tol'&&isAdmin()){S.tol=Math.max(0,+t.value||0);save();toast('Tole
 else if(t.dataset.geo&&isAdmin()){const[c,i]=t.dataset.geo.split('|'),g=geo(c).slice();g[+i]=parseFloat(String(t.value).replace(',','.'))||0;S.geo[c]=g;save();toast('Koordinat disimpan')}
 else if(t.id=='dt'&&t.value){D=t.value;M=D.slice(0,7);draw()}
 else if(t.dataset.kt){const o=(S.kt[M]=S.kt[M]||{}),k=t.dataset.kt,x=(o[k]=o[k]||{});x[t.dataset.f]=t.value;save();ktUpd(k);refresh()}
-else if(t.id=='imp'){const f=t.files[0];if(!f)return;f.text().then(s=>{try{const j=JSON.parse(s);if(!j.items||!j.gc)throw 0;S=j;S.tc=S.tc||[];S.geo=S.geo||{};save();draw();toast('Impor berhasil')}catch(x){toast('Berkas tidak valid')}})}});
+else if(t.id=='imp'){const f=t.files[0];if(!f)return;f.text().then(s=>{try{const j=JSON.parse(s);if(!j.items||!j.gc)throw 0;S=j;S.tc=S.tc||[];S.geo=S.geo||{};PREV=_cl(S);save();draw();toast('Impor berhasil')}catch(x){toast('Berkas tidak valid')}})}});
 document.addEventListener('visibilitychange',()=>{if(document.visibilityState!='visible')return;const n=nowDay();if(n==TODAY)return;const wasNow=M==TODAY.slice(0,7);TODAY=n;if(wasNow){M=n.slice(0,7);D=n}try{draw()}catch(e){}});
 setInterval(()=>{const e=document.getElementById('tfclk');if(!e)return;const n=new Date();e.value=pd(n.getHours())+'.'+pd(n.getMinutes())+'.'+pd(n.getSeconds());if(typeof F!=='undefined'&&F)F.j=Math.min(21,Math.max(8,n.getHours()))},1000);
 let INSB=null;
@@ -1349,7 +1349,26 @@ function tlForm(){const a=SEED.areas.find(x=>x[0]==F.code);
 ${ITEMS.map(([id,l],i)=>`<div class="card"><div class="row"><b>${l}</b><span class="pill">${i+1}/5</span></div><div class="opt">${[['ok','Bersih/OK'],['warn','Perhatian'],['bad','Masalah']].map(([v,t])=>`<button data-ans="${id}|${v}" class="${F.ans[id]==v?'s-'+v:''}">${t}</button>`).join('')}</div></div>`).join('')}
 <div class="card"><label class="sub">Keterangan / Temuan</label><textarea id="tfk" rows="3" style="width:100%;margin-top:6px" placeholder="Tulis temuan atau catatan jika ada…">${esc(F.k)}</textarea></div>
 <button class="btn acc" id="tfs" data-tfs="1" ${canSub()?'':'disabled'}>Simpan checklist</button>`}
-function submitTl(){if(SVBUSY||!canSub())return;if(!F.p.trim()){toast('Isi nama petugas dulu');const e=$('#tfp');if(e){e.focus();e.scrollIntoView({block:'center'})}return}const a=F.code,d=TODAY,sl=Math.min(21,Math.max(8,new Date().getHours()));F.j=sl;if(((S.tl[d]||{})[a]||[])[sl-8]){gpsStop();gpsModalClose();F=null;draw();scrollTo(0,0);return toast('Sudah dicek pada jam '+pd(sl)+'.00')}const pn=F.p.trim();S.petugas=pn;
+/* CEGAH DOBEL INPUT: sebelum menyimpan, tanya server dulu apakah toilet & jam ini sudah dicek oleh orang/perangkat lain.
+   Kalau server tidak terjangkau (offline / lambat >6 dtk) tetap boleh simpan seperti biasa agar kerja offline tidak terhambat. */
+let _tlChk=false;
+async function submitTl(){
+ if(_tlChk||SVBUSY||!canSub())return;
+ if(F&&F.p&&F.p.trim()&&GAS()&&navigator.onLine){
+  _tlChk=true;
+  try{
+   const a=F.code,d=TODAY,sl=Math.min(21,Math.max(8,new Date().getHours()));
+   toast('Memeriksa data terbaru…',1500);
+   const g=await Promise.race([gas({action:'get'}),new Promise((_,no)=>setTimeout(()=>no(new Error('lambat')),6000))]);
+   const dd=g&&g.data;
+   if(dd&&((((dd.tl||{})[d]||{})[a]||[])[sl-8]||(dd.tc||[]).some(x=>x.date==d&&x.area==a&&x.slot==sl))){
+    gpsStop();gpsModalClose();F=null;try{await syncGAS()}catch(e){}draw();scrollTo(0,0);
+    return toast('Sudah dicek pada jam '+pd(sl)+'.00 oleh perangkat lain',3500)}
+  }catch(e){/* offline/lambat: lanjut simpan seperti biasa */}
+  finally{_tlChk=false}
+ }
+ return submitTl0()}
+function submitTl0(){if(SVBUSY||!canSub())return;if(!F.p.trim()){toast('Isi nama petugas dulu');const e=$('#tfp');if(e){e.focus();e.scrollIntoView({block:'center'})}return}const a=F.code,d=TODAY,sl=Math.min(21,Math.max(8,new Date().getHours()));F.j=sl;if(((S.tl[d]||{})[a]||[])[sl-8]){gpsStop();gpsModalClose();F=null;draw();scrollTo(0,0);return toast('Sudah dicek pada jam '+pd(sl)+'.00')}const pn=F.p.trim();S.petugas=pn;
  S.tc.filter(x=>x.date==d&&x.slot==sl&&x.area==a).forEach(x=>tombAdd('c:'+x.id));S.tc=S.tc.filter(x=>!(x.date==d&&x.slot==sl&&x.area==a));
  /* id diberi angka acak supaya dua HP yang menyimpan di milidetik yang sama tidak saling menimpa */
  const en={id:Date.now()*1000+Math.floor(Math.random()*1000),o:authed(),date:d,slot:sl,area:a,p:pn,ans:{...F.ans},k:F.k.trim(),dist:GPS.dist??null,ts:new Date().toISOString()};
@@ -1796,8 +1815,44 @@ function guardMerge(L,R,M){try{
  [L,R].forEach(s=>((s&&s.tc)||[]).forEach(x=>{if(x&&x.id!==undefined&&!have.has(x.id)&&!T['c:'+x.id]){M.tc.push(JSON.parse(JSON.stringify(x)));have.add(x.id)}}));
  const set=(d,a,i)=>{if(i<0||i>13)return;const r=(M.tl[d]=M.tl[d]||{});if(!Array.isArray(r[a]))r[a]=Array(14).fill(0);r[a][i]=1};
  [L,R].forEach(s=>{const t=(s&&s.tl)||{};for(const d in t)for(const a in t[d])(t[d][a]||[]).forEach((v,i)=>{if(v&&!T['l:'+d+'|'+a+'|'+(i+8)])set(d,a,i)})});
- M.tc.forEach(x=>{if(x&&x.date&&x.area&&x.slot>=8&&!T['l:'+x.date+'|'+x.area+'|'+x.slot])set(x.date,x.area,x.slot-8)});
+ /* perbaikan centang dari entri hanya untuk HARI INI; data tanggal lama tidak diubah diam-diam karena masuk angka KPI */
+ M.tc.forEach(x=>{if(x&&x.date&&x.date>=TODAY&&x.area&&x.slot>=8&&!T['l:'+x.date+'|'+x.area+'|'+x.slot])set(x.date,x.area,x.slot-8)});
 }catch(e){console.error('guardMerge',e)}}
+
+/* PENGAMAN SEMUA MODUL (bukan hanya toilet):
+   1) Setiap kali pengguna menyimpan (save), perubahan dibandingkan dengan kondisi sebelumnya; apa pun yang HILANG karena aksi
+      pengguna dicatat sebagai "batu nisan" (S.tomb, kunci 'g:...'), dan yang DITAMBAH menghapus batu nisannya.
+   2) Setelah sinkron, apa pun yang ada di perangkat ini atau di server tetapi hilang dari hasil gabungan DIKEMBALIKAN,
+      kecuali ada batu nisannya. Jadi sinkron/perangkat lain tidak bisa menghapus data, hanya aksi hapus yang sengaja. */
+const _GSKIP=new Set(['tomb','bk','tc','tl']),_cl=x=>JSON.parse(JSON.stringify(x));
+const _gO=x=>x&&typeof x=='object'&&!Array.isArray(x),_gId=a=>Array.isArray(a)&&a.length>0&&a.every(x=>_gO(x)&&x.id!==undefined),
+ _gRow=a=>Array.isArray(a)&&a.length>0&&a.every(x=>_gO(x)&&x.id===undefined&&'o' in x),_gFlg=a=>Array.isArray(a)&&a.length>0&&a.every(x=>x===0||x===1);
+const _gH=s=>{let h=5381;for(let i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))|0;return(h>>>0).toString(36)},_gRk=x=>_gH(JSON.stringify(stable(x)));
+let PREV=null;
+function gTrk(p,c,path){
+ if(p===c)return;
+ if(_gO(p)&&_gO(c)){
+  for(const k in p){if(path===''&&_GSKIP.has(k))continue;if(!(k in c))tombAdd('g:'+path+'/'+k);else gTrk(p[k],c[k],path+'/'+k)}
+  for(const k in c){if(path===''&&_GSKIP.has(k))continue;if(!(k in p))tombDel('g:'+path+'/'+k)}return}
+ if(Array.isArray(p)&&Array.isArray(c)){
+  if(_gId(p)||_gId(c)){const pm=new Map(p.filter(_gO).map(x=>[x.id,x])),cm=new Map(c.filter(_gO).map(x=>[x.id,x]));
+   pm.forEach((x,id)=>{if(!cm.has(id))tombAdd('g:'+path+'#'+id);else gTrk(x,cm.get(id),path+'#'+id)});
+   cm.forEach((x,id)=>{if(!pm.has(id))tombDel('g:'+path+'#'+id)});return}
+  if(_gRow(p)||_gRow(c)){const ps=new Set(p.filter(_gO).map(_gRk)),cs=new Set(c.filter(_gO).map(_gRk));
+   ps.forEach(k=>{if(!cs.has(k))tombAdd('g:'+path+'^'+k)});cs.forEach(k=>{if(!ps.has(k))tombDel('g:'+path+'^'+k)});return}
+  if(_gFlg(p)&&_gFlg(c)){const n=Math.min(p.length,c.length);for(let i=0;i<n;i++){
+   if(p[i]===1&&c[i]===0)tombAdd('g:'+path+'['+i+']');else if(p[i]===0&&c[i]===1)tombDel('g:'+path+'['+i+']')}}}}
+function trackSave(){try{if(PREV)gTrk(PREV,S,'');PREV=_cl(S)}catch(e){console.error('trackSave',e)}}
+function gRst(M,X,path,T){
+ if(_gO(M)&&_gO(X)){for(const k in X){if(path===''&&_GSKIP.has(k))continue;const pk=path+'/'+k;
+   if(!(k in M)){if(!T['g:'+pk])M[k]=_cl(X[k])}else gRst(M[k],X[k],pk,T)}return}
+ if(Array.isArray(M)&&Array.isArray(X)){
+  if(_gId(X)&&(_gId(M)||!M.length)){const mm=new Map(M.filter(_gO).map(x=>[x.id,x]));
+   X.forEach(x=>{if(!mm.has(x.id)){if(!T['g:'+path+'#'+x.id]){const y=_cl(x);M.push(y);mm.set(x.id,y)}}else gRst(mm.get(x.id),x,path+'#'+x.id,T)});return}
+  if(_gRow(X)&&(_gRow(M)||!M.length)){const have=new Set(M.filter(_gO).map(_gRk));
+   X.forEach(x=>{const k=_gRk(x);if(!have.has(k)&&!T['g:'+path+'^'+k]){M.push(_cl(x));have.add(k)}});return}
+  if(_gFlg(X)&&_gFlg(M)&&X.length==M.length){X.forEach((v,i)=>{if(v===1&&M[i]===0&&!T['g:'+path+'['+i+']'])M[i]=1})}}}
+function guardAll(L,R,M){try{M.tomb=M.tomb||{};[L,R].forEach(x=>{if(_gO(x))gRst(M,x,'',M.tomb)})}catch(e){console.error('guardAll',e)}}
 function norm(){S=S||{};S.items=S.items||SEED.items;['gc','tl','kt','ins','tc','kj'].forEach(k=>S[k]=S[k]||(k=='ins'||k=='tc'||k=='kj'?[]:{}));S.geo=S.geo||{};S.users=S.users||{};if(!S.vk)S.vk=JSON.parse(JSON.stringify(SEEDVK))}
 function setSt(s,m){ST=s;STM=m||'';notify(s,m);const b=$('#synct');if(!b)return;const T={off:'Drive: atur',idle:'Sambungkan Drive',sync:'Menyinkronkan…',ok:'Tersinkron '+STM,exp:'Sambungkan ulang',err:'Gagal sinkron'};b.textContent=T[s]||'';const w=$('#sync');if(w){w.title=m||'';w.style.color=s=='err'||s=='exp'?'var(--bad)':s=='ok'?'var(--ok)':'';document.body.dataset.sy=s=='err'||s=='exp'?'bad':s=='ok'?'ok':''}}
 const gis=()=>new Promise((ok,no)=>{if(window.google&&google.accounts&&google.accounts.oauth2)return ok();let s=document.querySelector('#gis');if(!s){s=document.createElement('script');s.id='gis';s.src='https://accounts.google.com/gsi/client';document.head.append(s)}s.addEventListener('load',ok);s.addEventListener('error',()=>no(new Error('Gagal memuat Google Identity (cek internet)')))});
@@ -1828,8 +1883,8 @@ async function sync(ia){
   const txt=await(await gd(`${API}/drive/v3/files/${id}?alt=media`,{},ia)).text();let rem=null;try{rem=JSON.parse(txt).data}catch(e){}
   let base=null;try{base=JSON.parse(localStorage.getItem(BK))}catch(e){}
   const before=JSON.stringify(S);
-  const L0={tc:[...(S.tc||[])],tl:S.tl};const merged=rem?m3(base||{},S,rem):S;
-  S=merged;norm();guardMerge(L0,rem,S);const after=JSON.stringify(S);
+  const L0=_cl(S);const merged=rem?m3(base||{},S,rem):S;
+  S=merged;norm();guardMerge(L0,rem,S);guardAll(L0,rem,S);PREV=_cl(S);const after=JSON.stringify(S);
   try{localStorage.setItem(KEY,after)}catch(e){}
   if(!rem||after!==JSON.stringify(rem))await gd(`${API}/upload/drive/v3/files/${id}?uploadType=media`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:pack()},ia);
   try{localStorage.setItem(BK,after)}catch(e){}
@@ -1877,7 +1932,7 @@ async function syncGAS(ia){
  try{const before=JSON.stringify(S);let done=false,pushed=false;
   for(let n=0;n<4&&!done;n++){
    const g=await gas({action:'get'}),rem=g.data;
-   const remTxt=rem?JSON.stringify(rem):'';const L0={tc:[...(S.tc||[])],tl:S.tl};S=rem?m3(GBASE||{},S,rem):S;norm();guardMerge(L0,rem,S);const sent=obApply();const after=JSON.stringify(S);
+   const remTxt=rem?JSON.stringify(rem):'';const L0=_cl(S);S=rem?m3(GBASE||{},S,rem):S;norm();guardMerge(L0,rem,S);guardAll(L0,rem,S);PREV=_cl(S);const sent=obApply();const after=JSON.stringify(S);
    if(!rem||after!==remTxt){const p=await gas({action:'put',version:g.version,data:S});if(p.error==='conflict')continue;pushed=true}
    GBASE=JSON.parse(after);obSent(sent);
    /* S bisa sudah bertambah isian baru selama menunggu server, jadi simpan S terbaru */
@@ -2060,7 +2115,23 @@ setInterval(idleCheck,5000);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)idleCheck()});
 addEventListener('pageshow',idleCheck);addEventListener('focus',idleCheck);
 idleCheck();
-lock(!authed());
+/* CADANGAN OTOMATIS: tiap jam (setelah sinkron sukses) salinan seluruh data dikirim ke Drive dengan nama berbeda per jam
+   (hsims-backup_TANGGAL_JAM.json) sehingga selalu ada titik pemulihan, tidak bergantung pada riwayat versi Drive.
+   Penanda S.bk ikut tersinkron supaya hanya satu perangkat yang mengirim untuk jam yang sama. */
+let _bkFail=0;
+async function autoBackup(){
+ try{
+  if(!GAS()||ST!='ok'||syncing||!navigator.onLine)return;
+  const t=new Date(),key=t.getFullYear()+'-'+pd(t.getMonth()+1)+'-'+pd(t.getDate())+'_'+pd(t.getHours());
+  if((S&&S.bk)===key)return;
+  const u=new TextEncoder().encode(JSON.stringify({v:1,saved:t.toISOString(),data:S}));let bin='';
+  for(let i=0;i<u.length;i+=0x8000)bin+=String.fromCharCode.apply(null,u.subarray(i,i+0x8000));
+  const r=await gas({action:'putFile',name:'hsims-backup_'+key+'.json',mime:'application/json',data:btoa(bin)});
+  if(r&&r.ok===false)throw new Error(r.error||'gagal');
+  S.bk=key;save();_bkFail=0;
+ }catch(e){console.error('autoBackup',e);if(++_bkFail==3&&typeof isAdmin=='function'&&isAdmin())toast('Cadangan otomatis ke Drive gagal: '+String(e.message||e).slice(0,60),4000)}}
+setTimeout(autoBackup,20000);setInterval(autoBackup,60000);
+norm();PREV=_cl(S);lock(!authed());
 
 document.addEventListener('change',e=>{const t=e.target;if(t.id=='ur'){const w=$('#umw');if(w)w.querySelectorAll('.ak').forEach(x=>x.hidden=t.value!='admin')}if(t.id=='iu'){insUnit=t.value;insRoom='';$('#ir').innerHTML=roomOpts(insUnit);$('#irml').hidden=true;insApply()}else if(t.id=='ir'){$('#irml').hidden=t.value!='__x';insRoom=t.value=='__x'?'':t.value;insApply()}else if(t.id=='irm'){insRoom=t.value.trim();insApply()}else if(t.id=='id')insApply()});
 (function(){const btn=$('#menuBtn'),menu=$('#mmenu');if(!btn||!menu)return;
