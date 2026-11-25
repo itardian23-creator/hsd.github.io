@@ -360,6 +360,11 @@ body[data-sy=bad] .topnav .logo .mark{background:var(--bad);box-shadow:0 0 12px 
 .mch{display:inline-block;font-size:11px;padding:2px 8px;border-radius:99px;margin:2px 3px 2px 0;background:color-mix(in srgb,var(--bad) 12%,transparent);color:var(--bad);white-space:nowrap}
 .tlnav{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin:2px 0 4px}.tlnav input[type=date]{font:inherit;padding:6px 10px;border-radius:10px;border:1px solid var(--line);background:var(--chip);color:var(--ink)}
 @media(max-width:600px){.hs3 b{font-size:1.2rem}.hm td.hc{min-width:22px;height:24px}}
+#svov{position:fixed;inset:0;z-index:400;background:rgba(15,23,42,.6);display:flex;align-items:center;justify-content:center;padding:20px}
+#svov .svb{background:var(--panel);color:var(--ink);border-radius:18px;padding:24px 20px;width:100%;max-width:340px;text-align:center;box-shadow:0 20px 50px -12px rgba(0,0,0,.4)}
+#svov h2{margin:12px 0 4px}#svov .btn{display:block;width:100%;margin-top:10px}
+.svsp{width:46px;height:46px;margin:0 auto;border-radius:50%;border:5px solid var(--line);border-top-color:var(--ok);animation:svspin .8s linear infinite}@keyframes svspin{to{transform:rotate(360deg)}}
+.svic{width:50px;height:50px;margin:0 auto;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;color:#fff}.svic.ok{background:var(--ok)}.svic.bad{background:var(--bad)}
 </style></head><body>
 <div class="topnav"><div style="display:flex;gap:8px;align-items:center"><div class="logo"><span class="mark"></span><span>HSIMS<span class="by">.ByArdian</span></span></div><button class="logo" id="sync" data-dr="sync" style="font:inherit;font-size:.85rem;cursor:pointer;color:inherit"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.35 10.04A7.49 7.49 0 0 0 12 4C9.11 4 6.6 5.64 5.35 8.04A5.994 5.994 0 0 0 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/></svg><span id="synct" class="hm"></span></button></div><nav class="navlinks" id="nav"></nav><div class="menu-wrap"><button type="button" class="menu-btn" id="menuBtn" aria-label="Buka menu" aria-expanded="false" aria-controls="mmenu"><svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="12" cy="19" r="2"/></svg></button><nav class="mmenu" id="mmenu" aria-label="Menu"></nav></div></div>
 <main class="app" id="app"></main>
@@ -1184,15 +1189,15 @@ if(q.tfx){gpsStop();gpsModalClose();F=null;draw();return}
 if(q.tfg){gpsCheck();return}
 if(q.ans){const[i,v]=q.ans.split('|');F.ans[i]=v;const y=scrollY;draw();scrollTo(0,y);return}
 if(q.tfs){submitTl();return}
-if(q.tdel){const r=S.tc.find(x=>x.id==q.tdel);if(r&&!own(r))return toast('Hanya pemilik data atau admin yang bisa menghapus');if(r&&confirm('Hapus checklist ini?')){S.tc=S.tc.filter(x=>x.id!=r.id);try{S.tl[r.date][r.area][r.slot-8]=0}catch(e){}save();draw()}return}
+if(q.tdel){const r=S.tc.find(x=>x.id==q.tdel);if(r&&!own(r))return toast('Hanya pemilik data atau admin yang bisa menghapus');if(r&&confirm('Hapus checklist ini?')){S.tc=S.tc.filter(x=>x.id!=r.id);obDrop(e=>e.id==r.id);try{S.tl[r.date][r.area][r.slot-8]=0}catch(e){}save();draw()}return}
 if(q.gme){if(!isAdmin())return toast('Hanya admin yang bisa mengatur koordinat');geoOpen=true;navigator.geolocation?navigator.geolocation.getCurrentPosition(p=>{S.geo[q.gme]=[+p.coords.latitude.toFixed(7),+p.coords.longitude.toFixed(7)];save();const y=scrollY;draw();scrollTo(0,y);toast('Koordinat diperbarui')},()=>toast('Izin GPS ditolak'),{enableHighAccuracy:true,timeout:8000}):toast('GPS tidak tersedia');return}
 if(q.rk){repK=q.rk;draw();return}
 if(q.xl){xl(q.xl);return}
 if(q.m){if(q.m=='p'&&!isAdmin())return toast('Hanya admin yang bisa mengatur rencana');gcMode=q.m;draw();return}
 if(q.gc){const id=q.gc,w=+q.w,it=S.items.find(i=>i.id==id),r=((S.gc[M]=S.gc[M]||{})[id]=S.gc[M][id]||{p:[...it.p],a:[0,0,0,0,0]});r.p=r.p||[...it.p];r.a=r.a||[0,0,0,0,0];
  if(gcMode=='p'&&isAdmin()){r.p[w]=r.p[w]?0:1;if(!r.p[w])r.a[w]=0}else if(r.p[w]){phOpen(id,w);return}else return;save();const y=scrollY;draw();scrollTo(0,y);return}
-if(q.tl){const r=(S.tl[D]=S.tl[D]||{});r[q.tl]=r[q.tl]||Array(14).fill(0);r[q.tl][+q.h]^=1;save();t.className='cell '+(r[q.tl][+q.h]?'d':'');t.textContent=r[q.tl][+q.h]?'✓':'';refresh();return}
-if(q.tlall){const r=(S.tl[D]=S.tl[D]||{});const full=(r[q.tlall]||[]).every(Boolean);r[q.tlall]=Array(14).fill(full?0:1);save();const y=scrollY;draw();scrollTo(0,y);return}
+if(q.tl){const r=(S.tl[D]=S.tl[D]||{});r[q.tl]=r[q.tl]||Array(14).fill(0);r[q.tl][+q.h]^=1;if(!r[q.tl][+q.h])obDrop(e=>e.date==D&&e.area==q.tl&&e.slot==+q.h+8);save();t.className='cell '+(r[q.tl][+q.h]?'d':'');t.textContent=r[q.tl][+q.h]?'✓':'';refresh();return}
+if(q.tlall){const r=(S.tl[D]=S.tl[D]||{});const full=(r[q.tlall]||[]).every(Boolean);r[q.tlall]=Array(14).fill(full?0:1);if(full)obDrop(e=>e.date==D&&e.area==q.tlall);save();const y=scrollY;draw();scrollTo(0,y);return}
 if(q.x!==undefined){insMenu(t);return}
 if(q.insv!==undefined){insSet(q.insv);return}
 if(q.insc!==undefined){insClose();return}
@@ -1344,10 +1349,17 @@ function tlForm(){const a=SEED.areas.find(x=>x[0]==F.code);
 ${ITEMS.map(([id,l],i)=>`<div class="card"><div class="row"><b>${l}</b><span class="pill">${i+1}/5</span></div><div class="opt">${[['ok','Bersih/OK'],['warn','Perhatian'],['bad','Masalah']].map(([v,t])=>`<button data-ans="${id}|${v}" class="${F.ans[id]==v?'s-'+v:''}">${t}</button>`).join('')}</div></div>`).join('')}
 <div class="card"><label class="sub">Keterangan / Temuan</label><textarea id="tfk" rows="3" style="width:100%;margin-top:6px" placeholder="Tulis temuan atau catatan jika ada…">${esc(F.k)}</textarea></div>
 <button class="btn acc" id="tfs" data-tfs="1" ${canSub()?'':'disabled'}>Simpan checklist</button>`}
-function submitTl(){if(!canSub())return;if(!F.p.trim()){toast('Isi nama petugas dulu');const e=$('#tfp');if(e){e.focus();e.scrollIntoView({block:'center'})}return}const a=F.code,d=TODAY,sl=Math.min(21,Math.max(8,new Date().getHours()));F.j=sl;if(((S.tl[d]||{})[a]||[])[sl-8]){gpsStop();gpsModalClose();F=null;draw();scrollTo(0,0);return toast('Sudah dicek pada jam '+pd(sl)+'.00')}const pn=F.p.trim();S.petugas=pn;
+function submitTl(){if(SVBUSY||!canSub())return;if(!F.p.trim()){toast('Isi nama petugas dulu');const e=$('#tfp');if(e){e.focus();e.scrollIntoView({block:'center'})}return}const a=F.code,d=TODAY,sl=Math.min(21,Math.max(8,new Date().getHours()));F.j=sl;if(((S.tl[d]||{})[a]||[])[sl-8]){gpsStop();gpsModalClose();F=null;draw();scrollTo(0,0);return toast('Sudah dicek pada jam '+pd(sl)+'.00')}const pn=F.p.trim();S.petugas=pn;
  S.tc=S.tc.filter(x=>!(x.date==d&&x.slot==sl&&x.area==a));
- S.tc.push({id:Date.now(),o:authed(),date:d,slot:sl,area:a,p:pn,ans:F.ans,k:F.k.trim(),dist:GPS.dist??null,ts:new Date().toISOString()});
- const r=(S.tl[d]=S.tl[d]||{});r[a]=r[a]||Array(14).fill(0);r[a][sl-8]=1;M=d.slice(0,7);save();gpsStop();gpsModalClose();F=null;draw();scrollTo(0,0);toast('Checklist tersimpan')}
+ /* id diberi angka acak supaya dua HP yang menyimpan di milidetik yang sama tidak saling menimpa */
+ const en={id:Date.now()*1000+Math.floor(Math.random()*1000),o:authed(),date:d,slot:sl,area:a,p:pn,ans:{...F.ans},k:F.k.trim(),dist:GPS.dist??null,ts:new Date().toISOString()};
+ S.tc.push(en);
+ const r=(S.tl[d]=S.tl[d]||{});r[a]=r[a]||Array(14).fill(0);r[a][sl-8]=1;M=d.slice(0,7);
+ const finish=()=>{F=null;draw();scrollTo(0,0)};
+ gpsStop();gpsModalClose();
+ if(!GAS()){save();finish();return toast('Tersimpan di perangkat ini saja (server belum diatur)',3500)}
+ obAdd(en);try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}
+ clearTimeout(timer);saveWait(en,finish)}
 let tlHist='d';
 
 /* ===== Pelacakan per jam – dashboard Toilet Umum (HK-02) ===== */
@@ -1810,20 +1822,43 @@ async function upDrive(fn,buf,quiet){if(!GAS())return;
 let XLS=null;function xlShow(){const d=$('#xls');if(d)d.innerHTML=XLS?XLS.ok?'<span class="ok">terkirim '+XLS.t+'</span>':'<span class="bad">gagal — '+esc(XLS.m)+'</span>':'belum pernah terkirim'}
 let xt,xlBusy=false;function schedXl(){clearTimeout(xt);xt=setTimeout(()=>{if(!GAS()||!window.ExcelJS)return;if(ST!='ok'||xlBusy){schedXl();return}xlBusy=true;xlSep(false).finally(()=>xlBusy=false)},6000)}
 async function gas(body){
- const r=await fetch(gUrl(),{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({key:gKey(),...body})});
- if(!r.ok)throw new Error('Server '+r.status);
- let j;try{j=await r.json()}catch(x){throw new Error('Balasan Apps Script bukan JSON (deploy ulang dengan akses "Anyone")')}
+ const ac=new AbortController(),to=setTimeout(()=>ac.abort(),45000);let j;
+ try{const r=await fetch(gUrl(),{method:'POST',redirect:'follow',signal:ac.signal,headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({key:gKey(),...body})});
+  if(!r.ok)throw new Error('Server '+r.status);
+  try{j=await r.json()}catch(x){if(ac.signal.aborted)throw x;throw new Error('Balasan Apps Script bukan JSON (deploy ulang dengan akses "Anyone")')}}
+ catch(x){if(ac.signal.aborted)throw new Error('Server terlalu lama merespons');throw x}
+ finally{clearTimeout(to)}
  if(!j.ok&&j.error!=='conflict'){if(j.error==='Aksi tidak dikenal'&&/Photo|File/.test(body.action||''))throw new Error('Script Apps Script belum diperbarui: tempel Code.gs terbaru lalu Deploy > Kelola deployment > Versi baru');throw new Error(j.error||'Gagal')}return j}
+/* Data dasar penggabungan disimpan per tab. Kalau dibaca dari localStorage (dipakai bersama semua tab),
+   tab lama menganggap isian tab lain "sudah dihapus" lalu menghapusnya dari server. */
+let GBASE=null;try{GBASE=JSON.parse(localStorage.getItem(BK))}catch(e){}
+/* Antrean isian checklist toilet: dipasang ulang ke data sampai benar-benar ada di server */
+const OBK='hsims-tl-outbox',OBHOLD=120000;
+let OB=[];
+function obLoad(){try{OB=JSON.parse(localStorage.getItem(OBK))||[]}catch(e){}return OB}
+function obStore(){try{localStorage.setItem(OBK,JSON.stringify(OB))}catch(e){}}
+const obPending=()=>obLoad().filter(x=>!x.t);
+function obAdd(en){obLoad().push({e:en,t:0});obStore()}
+function obDrop(fn){OB=obLoad().filter(x=>!fn(x.e));obStore()}
+function obApply(){obLoad();const now=Date.now(),n=OB.length;
+ /* setelah terkirim, tetap dijaga 2 menit untuk jaga-jaga tertimpa kiriman perangkat lain */
+ OB=OB.filter(x=>!x.t||now-x.t<OBHOLD);if(OB.length!=n)obStore();
+ OB.forEach(({e})=>{if(!S.tc.some(x=>x.id==e.id))S.tc.push(JSON.parse(JSON.stringify(e)));
+  const r=(S.tl[e.date]=S.tl[e.date]||{});r[e.area]=r[e.area]||Array(14).fill(0);r[e.area][e.slot-8]=1});
+ return OB.map(x=>x.e.id)}
+function obSent(ids){obLoad();OB.forEach(x=>{if(!x.t&&ids.includes(x.e.id))x.t=Date.now()});obStore()}
+const onServer=(data,e)=>!!(data&&(data.tc||[]).some(x=>x.id==e.id)&&(((data.tl||{})[e.date]||{})[e.area]||[])[e.slot-8]);
 async function syncGAS(ia){
  if(syncing){again=true;return}
  syncing=true;setSt('sync');
  try{const before=JSON.stringify(S);let done=false,pushed=false;
   for(let n=0;n<4&&!done;n++){
    const g=await gas({action:'get'}),rem=g.data;
-   let base=null;try{base=JSON.parse(localStorage.getItem(BK))}catch(e){}
-   S=rem?m3(base||{},S,rem):S;norm();const after=JSON.stringify(S);
-   if(!rem||after!==JSON.stringify(rem)){const p=await gas({action:'put',version:g.version,data:S});if(p.error==='conflict')continue;pushed=true}
-   try{localStorage.setItem(KEY,after);localStorage.setItem(BK,after)}catch(e){}
+   const remTxt=rem?JSON.stringify(rem):'';S=rem?m3(GBASE||{},S,rem):S;norm();const sent=obApply();const after=JSON.stringify(S);
+   if(!rem||after!==remTxt){const p=await gas({action:'put',version:g.version,data:S});if(p.error==='conflict')continue;pushed=true}
+   GBASE=JSON.parse(after);obSent(sent);
+   /* S bisa sudah bertambah isian baru selama menunggu server, jadi simpan S terbaru */
+   try{localStorage.setItem(KEY,JSON.stringify(S));localStorage.setItem(BK,after)}catch(e){}
    done=true;
    setSt('ok',new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}));
    if(before!==after&&!F&&!/INPUT|TEXTAREA|SELECT/.test((document.activeElement||{}).tagName||''))draw();
@@ -1832,6 +1867,38 @@ async function syncGAS(ia){
   {let nv=0;try{nv=!localStorage.getItem('hsims-xl-ok')}catch(e){}if(pushed||nv)schedXl()}
  }catch(e){setSt('err',friendly(e))}
  syncing=false;if(again){again=false;sched()}}
+const nap=ms=>new Promise(r=>setTimeout(r,ms));
+/* Kirim lalu BACA ULANG dari server. Berhasil hanya jika isian memang ada di data API. */
+async function sendConfirm(en,step){let last='';
+ for(let n=1;n<=3;n++){
+  try{
+   step('Mengirim ke server…'+(n>1?' (percobaan '+n+' dari 3)':''));
+   const t0=Date.now();while(syncing){if(Date.now()-t0>100000)throw new Error('Sinkron sebelumnya belum selesai');await nap(300)}
+   await syncGAS();
+   if(ST=='err')throw new Error(STM||'Gagal sinkron');
+   step('Memastikan data sudah masuk…');
+   const g=await gas({action:'get'});
+   if(onServer(g.data,en))return{ok:true};
+   last='Data belum terbaca di server';
+   /* kirim ulang */
+   obLoad();OB.forEach(x=>{if(x.e.id==en.id)x.t=0});obStore();
+  }catch(e){last=friendly(e)}
+  if(!navigator.onLine)break;
+  if(n<3)await nap(1500*n)}
+ return{ok:false,m:last}}
+let SVBUSY=false;
+function svBox(html){let o=$('#svov');if(!o){o=document.createElement('div');o.id='svov';o.setAttribute('role','alertdialog');o.setAttribute('aria-modal','true');o.setAttribute('aria-live','assertive');document.body.append(o)}o.innerHTML='<div class="svb">'+html+'</div>';return o}
+function svClose(){const o=$('#svov');if(o)o.remove()}
+async function saveWait(en,finish){
+ SVBUSY=true;if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();
+ const step=t=>svBox('<div class="svsp"></div><h2>Menyimpan…</h2><p class="sub">'+esc(t)+'</p><p class="sub"><b>Jangan tutup atau keluar dari halaman ini.</b></p>');
+ step('Mengirim ke server…');
+ const r=await sendConfirm(en,step);
+ if(r.ok){svBox('<div class="svic ok">✓</div><h2>Berhasil masuk</h2><p class="sub">Data sudah tersimpan di server.</p>');await nap(1000);SVBUSY=false;svClose();finish();return}
+ const o=svBox('<div class="svic bad">!</div><h2>Belum masuk ke server</h2><p class="sub">'+esc(r.m)+'</p><p class="sub">Isian masih tersimpan di HP ini. Cek internet lalu ketuk <b>Coba kirim lagi</b>.</p><button class="btn acc" id="svretry">Coba kirim lagi</button><button class="btn" id="svlater">Tutup, kirim nanti</button>');
+ o.querySelector('#svretry').onclick=()=>saveWait(en,finish);
+ o.querySelector('#svlater').onclick=()=>{SVBUSY=false;svClose();finish();toast('BELUM terkirim. Biarkan aplikasi terbuka sampai tersinkron',4000)}}
+addEventListener('beforeunload',e=>{if(SVBUSY||(GAS()&&obPending().length)){e.preventDefault();e.returnValue=''}});
 let lastSt='';
 function friendly(e){const m=String(e&&e.message||e||'');
  if(!navigator.onLine)return'Tidak ada koneksi internet';
@@ -1868,7 +1935,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-dr]');if(!
  if(a=='sync'){if(!CID()){page='data';F=null;draw();return toast('Isi Client ID dulu')}sync(true)}
  if(a=='off'){try{if(TOK&&window.google)google.accounts.oauth2.revoke(TOK)}catch(x){}TOK=null;C.on=0;saveC();setSt(CID()?'idle':'off');const s=$('#drs');if(s)s.textContent='belum terhubung';toast('Terputus dari Drive')}});
 document.addEventListener('change',e=>{const t=e.target;
- if(t.id=='gurl'||t.id=='gkey'){C[t.id=='gurl'?'url':'key']=t.value.trim();try{localStorage.removeItem(BK)}catch(x){}C.on=GAS()?1:0;saveC();setSt(ON()?'idle':'off');if(GAS())sync(true);return}
+ if(t.id=='gurl'||t.id=='gkey'){GBASE=null;C[t.id=='gurl'?'url':'key']=t.value.trim();try{localStorage.removeItem(BK)}catch(x){}C.on=GAS()?1:0;saveC();setSt(ON()?'idle':'off');if(GAS())sync(true);return}
  if(t.id=='cid'){C.cid=t.value.trim();C.on=0;TOK=null;saveC();setSt(CID()?'idle':'off')}
  else if(t.id=='fid'){C.fid=t.value.trim();saveC();try{localStorage.removeItem(BK)}catch(x){}}
  else if(t.id=='full'){C.full=t.value?1:0;C.on=0;TOK=null;saveC();setSt(CID()?'idle':'off')}});
