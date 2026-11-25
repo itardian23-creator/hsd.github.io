@@ -1189,15 +1189,15 @@ if(q.tfx){gpsStop();gpsModalClose();F=null;draw();return}
 if(q.tfg){gpsCheck();return}
 if(q.ans){const[i,v]=q.ans.split('|');F.ans[i]=v;const y=scrollY;draw();scrollTo(0,y);return}
 if(q.tfs){submitTl();return}
-if(q.tdel){const r=S.tc.find(x=>x.id==q.tdel);if(r&&!own(r))return toast('Hanya pemilik data atau admin yang bisa menghapus');if(r&&confirm('Hapus checklist ini?')){S.tc=S.tc.filter(x=>x.id!=r.id);obDrop(e=>e.id==r.id);try{S.tl[r.date][r.area][r.slot-8]=0}catch(e){}save();draw()}return}
+if(q.tdel){const r=S.tc.find(x=>x.id==q.tdel);if(r&&!own(r))return toast('Hanya pemilik data atau admin yang bisa menghapus');if(r&&confirm('Hapus checklist ini?')){tombAdd('c:'+r.id);tombAdd('l:'+r.date+'|'+r.area+'|'+r.slot);S.tc=S.tc.filter(x=>x.id!=r.id);obDrop(e=>e.id==r.id);try{S.tl[r.date][r.area][r.slot-8]=0}catch(e){}save();draw()}return}
 if(q.gme){if(!isAdmin())return toast('Hanya admin yang bisa mengatur koordinat');geoOpen=true;navigator.geolocation?navigator.geolocation.getCurrentPosition(p=>{S.geo[q.gme]=[+p.coords.latitude.toFixed(7),+p.coords.longitude.toFixed(7)];save();const y=scrollY;draw();scrollTo(0,y);toast('Koordinat diperbarui')},()=>toast('Izin GPS ditolak'),{enableHighAccuracy:true,timeout:8000}):toast('GPS tidak tersedia');return}
 if(q.rk){repK=q.rk;draw();return}
 if(q.xl){xl(q.xl);return}
 if(q.m){if(q.m=='p'&&!isAdmin())return toast('Hanya admin yang bisa mengatur rencana');gcMode=q.m;draw();return}
 if(q.gc){const id=q.gc,w=+q.w,it=S.items.find(i=>i.id==id),r=((S.gc[M]=S.gc[M]||{})[id]=S.gc[M][id]||{p:[...it.p],a:[0,0,0,0,0]});r.p=r.p||[...it.p];r.a=r.a||[0,0,0,0,0];
  if(gcMode=='p'&&isAdmin()){r.p[w]=r.p[w]?0:1;if(!r.p[w])r.a[w]=0}else if(r.p[w]){phOpen(id,w);return}else return;save();const y=scrollY;draw();scrollTo(0,y);return}
-if(q.tl){const r=(S.tl[D]=S.tl[D]||{});r[q.tl]=r[q.tl]||Array(14).fill(0);r[q.tl][+q.h]^=1;if(!r[q.tl][+q.h])obDrop(e=>e.date==D&&e.area==q.tl&&e.slot==+q.h+8);save();t.className='cell '+(r[q.tl][+q.h]?'d':'');t.textContent=r[q.tl][+q.h]?'✓':'';refresh();return}
-if(q.tlall){const r=(S.tl[D]=S.tl[D]||{});const full=(r[q.tlall]||[]).every(Boolean);r[q.tlall]=Array(14).fill(full?0:1);if(full)obDrop(e=>e.date==D&&e.area==q.tlall);save();const y=scrollY;draw();scrollTo(0,y);return}
+if(q.tl){const r=(S.tl[D]=S.tl[D]||{});r[q.tl]=r[q.tl]||Array(14).fill(0);r[q.tl][+q.h]^=1;{const k='l:'+D+'|'+q.tl+'|'+(+q.h+8);if(r[q.tl][+q.h])tombDel(k);else tombAdd(k)}if(!r[q.tl][+q.h])obDrop(e=>e.date==D&&e.area==q.tl&&e.slot==+q.h+8);save();t.className='cell '+(r[q.tl][+q.h]?'d':'');t.textContent=r[q.tl][+q.h]?'✓':'';refresh();return}
+if(q.tlall){const r=(S.tl[D]=S.tl[D]||{});const full=(r[q.tlall]||[]).every(Boolean);r[q.tlall]=Array(14).fill(full?0:1);for(let i=0;i<14;i++){const k='l:'+D+'|'+q.tlall+'|'+(i+8);if(full)tombAdd(k);else tombDel(k)}if(full)obDrop(e=>e.date==D&&e.area==q.tlall);save();const y=scrollY;draw();scrollTo(0,y);return}
 if(q.x!==undefined){insMenu(t);return}
 if(q.insv!==undefined){insSet(q.insv);return}
 if(q.insc!==undefined){insClose();return}
@@ -1215,7 +1215,7 @@ if(a=='addins'){if(!($('#ib').value||'').trim()){$('#ib').focus();$('#ib').scrol
  {const dd=dLoad();delete dd[dt+'|'+room];dSave(dd)}insRoom=room;D=dt;M=D.slice(0,7);draw();saveW(()=>toast(old?'Inspeksi diperbarui':'Inspeksi tersimpan'))}
 if(a=='expj')dl('hsims-kpi-hk-'+TODAY+'.json',JSON.stringify(S),'application/json');
 if(a=='expr'){let c='kpi,nama,bulan,numerator,denominator,pencapaian\n';for(const k in CALC){const x=CALC[k](M);c+=[INFO[k][0],INFO[k][1],M,x.n,x.d,x.d?(x.n/x.d).toFixed(6):''].join(',')+'\n'}dl('rekap-kpi-hk-'+M+'.csv',c,'text/csv')}
-if(a=='reset'&&confirm('Hapus SEMUA data input di peramban ini?')){localStorage.removeItem(KEY);location.reload()}});
+if(a=='reset'&&confirm('Hapus SEMUA data input di peramban ini?')){localStorage.removeItem(KEY);localStorage.removeItem('hsims-kpi-base');location.reload()}});
 document.addEventListener('input',e=>{const t=e.target;if(!F)return;if(t.id=='tfp'){F.p=t.value;gpsShow()}else if(t.id=='tfk'){F.k=t.value}});
 document.addEventListener('change',e=>{const t=e.target;
 if(t.id=='mon'&&t.value){M=t.value;D=M==TODAY.slice(0,7)?TODAY:M+'-01';draw()}
@@ -1350,11 +1350,11 @@ ${ITEMS.map(([id,l],i)=>`<div class="card"><div class="row"><b>${l}</b><span cla
 <div class="card"><label class="sub">Keterangan / Temuan</label><textarea id="tfk" rows="3" style="width:100%;margin-top:6px" placeholder="Tulis temuan atau catatan jika ada…">${esc(F.k)}</textarea></div>
 <button class="btn acc" id="tfs" data-tfs="1" ${canSub()?'':'disabled'}>Simpan checklist</button>`}
 function submitTl(){if(SVBUSY||!canSub())return;if(!F.p.trim()){toast('Isi nama petugas dulu');const e=$('#tfp');if(e){e.focus();e.scrollIntoView({block:'center'})}return}const a=F.code,d=TODAY,sl=Math.min(21,Math.max(8,new Date().getHours()));F.j=sl;if(((S.tl[d]||{})[a]||[])[sl-8]){gpsStop();gpsModalClose();F=null;draw();scrollTo(0,0);return toast('Sudah dicek pada jam '+pd(sl)+'.00')}const pn=F.p.trim();S.petugas=pn;
- S.tc=S.tc.filter(x=>!(x.date==d&&x.slot==sl&&x.area==a));
+ S.tc.filter(x=>x.date==d&&x.slot==sl&&x.area==a).forEach(x=>tombAdd('c:'+x.id));S.tc=S.tc.filter(x=>!(x.date==d&&x.slot==sl&&x.area==a));
  /* id diberi angka acak supaya dua HP yang menyimpan di milidetik yang sama tidak saling menimpa */
  const en={id:Date.now()*1000+Math.floor(Math.random()*1000),o:authed(),date:d,slot:sl,area:a,p:pn,ans:{...F.ans},k:F.k.trim(),dist:GPS.dist??null,ts:new Date().toISOString()};
  S.tc.push(en);
- const r=(S.tl[d]=S.tl[d]||{});r[a]=r[a]||Array(14).fill(0);r[a][sl-8]=1;M=d.slice(0,7);
+ const r=(S.tl[d]=S.tl[d]||{});r[a]=r[a]||Array(14).fill(0);r[a][sl-8]=1;tombDel('l:'+d+'|'+a+'|'+sl);M=d.slice(0,7);
  const finish=()=>{F=null;draw();scrollTo(0,0)};
  gpsStop();gpsModalClose();
  if(!GAS()){save();finish();return toast('Tersimpan di perangkat ini saja (server belum diatur)',3500)}
@@ -1784,6 +1784,20 @@ function m3(b,l,r){
  /* tanda centang 0/1 tanpa data dasar: yang sudah dicentang (1) tidak boleh kalah oleh 0 dari perangkat lain */
  if((l===0||l===1)&&(r===0||r===1)&&(b===undefined||b===null))return l||r
  return l}
+
+/* PENGAMAN DATA TOILET: entri checklist (tc) & centang jam (tl) tidak pernah hilang karena sinkron.
+   Hanya penghapusan yang sengaja (tombol hapus / ketuk sel) yang tercatat sebagai "batu nisan" di S.tomb dan boleh menghapus. */
+function tombAdd(k){S.tomb=S.tomb||{};S.tomb[k]=Date.now()}
+function tombDel(k){if(S.tomb&&k in S.tomb)delete S.tomb[k]}
+function guardMerge(L,R,M){try{
+ M.tomb=M.tomb||{};const T=M.tomb,old=Date.now()-90*864e5;Object.keys(T).forEach(k=>{if(T[k]<old)delete T[k]});
+ M.tc=M.tc||[];M.tl=M.tl||{};
+ const have=new Set(M.tc.map(x=>x&&x.id));
+ [L,R].forEach(s=>((s&&s.tc)||[]).forEach(x=>{if(x&&x.id!==undefined&&!have.has(x.id)&&!T['c:'+x.id]){M.tc.push(JSON.parse(JSON.stringify(x)));have.add(x.id)}}));
+ const set=(d,a,i)=>{if(i<0||i>13)return;const r=(M.tl[d]=M.tl[d]||{});if(!Array.isArray(r[a]))r[a]=Array(14).fill(0);r[a][i]=1};
+ [L,R].forEach(s=>{const t=(s&&s.tl)||{};for(const d in t)for(const a in t[d])(t[d][a]||[]).forEach((v,i)=>{if(v&&!T['l:'+d+'|'+a+'|'+(i+8)])set(d,a,i)})});
+ M.tc.forEach(x=>{if(x&&x.date&&x.area&&x.slot>=8&&!T['l:'+x.date+'|'+x.area+'|'+x.slot])set(x.date,x.area,x.slot-8)});
+}catch(e){console.error('guardMerge',e)}}
 function norm(){S=S||{};S.items=S.items||SEED.items;['gc','tl','kt','ins','tc','kj'].forEach(k=>S[k]=S[k]||(k=='ins'||k=='tc'||k=='kj'?[]:{}));S.geo=S.geo||{};S.users=S.users||{};if(!S.vk)S.vk=JSON.parse(JSON.stringify(SEEDVK))}
 function setSt(s,m){ST=s;STM=m||'';notify(s,m);const b=$('#synct');if(!b)return;const T={off:'Drive: atur',idle:'Sambungkan Drive',sync:'Menyinkronkan…',ok:'Tersinkron '+STM,exp:'Sambungkan ulang',err:'Gagal sinkron'};b.textContent=T[s]||'';const w=$('#sync');if(w){w.title=m||'';w.style.color=s=='err'||s=='exp'?'var(--bad)':s=='ok'?'var(--ok)':'';document.body.dataset.sy=s=='err'||s=='exp'?'bad':s=='ok'?'ok':''}}
 const gis=()=>new Promise((ok,no)=>{if(window.google&&google.accounts&&google.accounts.oauth2)return ok();let s=document.querySelector('#gis');if(!s){s=document.createElement('script');s.id='gis';s.src='https://accounts.google.com/gsi/client';document.head.append(s)}s.addEventListener('load',ok);s.addEventListener('error',()=>no(new Error('Gagal memuat Google Identity (cek internet)')))});
@@ -1814,8 +1828,8 @@ async function sync(ia){
   const txt=await(await gd(`${API}/drive/v3/files/${id}?alt=media`,{},ia)).text();let rem=null;try{rem=JSON.parse(txt).data}catch(e){}
   let base=null;try{base=JSON.parse(localStorage.getItem(BK))}catch(e){}
   const before=JSON.stringify(S);
-  const merged=rem?m3(base||{},S,rem):S;
-  S=merged;norm();const after=JSON.stringify(S);
+  const L0={tc:[...(S.tc||[])],tl:S.tl};const merged=rem?m3(base||{},S,rem):S;
+  S=merged;norm();guardMerge(L0,rem,S);const after=JSON.stringify(S);
   try{localStorage.setItem(KEY,after)}catch(e){}
   if(!rem||after!==JSON.stringify(rem))await gd(`${API}/upload/drive/v3/files/${id}?uploadType=media`,{method:'PATCH',headers:{'Content-Type':'application/json'},body:pack()},ia);
   try{localStorage.setItem(BK,after)}catch(e){}
@@ -1863,7 +1877,7 @@ async function syncGAS(ia){
  try{const before=JSON.stringify(S);let done=false,pushed=false;
   for(let n=0;n<4&&!done;n++){
    const g=await gas({action:'get'}),rem=g.data;
-   const remTxt=rem?JSON.stringify(rem):'';S=rem?m3(GBASE||{},S,rem):S;norm();const sent=obApply();const after=JSON.stringify(S);
+   const remTxt=rem?JSON.stringify(rem):'';const L0={tc:[...(S.tc||[])],tl:S.tl};S=rem?m3(GBASE||{},S,rem):S;norm();guardMerge(L0,rem,S);const sent=obApply();const after=JSON.stringify(S);
    if(!rem||after!==remTxt){const p=await gas({action:'put',version:g.version,data:S});if(p.error==='conflict')continue;pushed=true}
    GBASE=JSON.parse(after);obSent(sent);
    /* S bisa sudah bertambah isian baru selama menunggu server, jadi simpan S terbaru */
@@ -1993,7 +2007,7 @@ const authed=()=>{try{return sessionStorage.getItem('hsims-auth')||localStorage.
 function lock(on){document.body.classList.toggle('locked',on);$('#login').hidden=!on;if(on)setTimeout(()=>{const u=$('#lu');u&&u.focus&&u.focus()},50)}
 async function doLogin(){const u=$('#lu').value.trim().toLowerCase(),p=$('#lp').value;let ok=false;
  try{const us=(S.users||{})[u];ok=us&&us.h?us.h===await uh(u,p):!!AUTH[u]&&AUTH[u]===await sha(p)}catch(e){$('#le').textContent='Peramban tidak mendukung login (butuh HTTPS).';return}
- if(ok){try{($('#lr').checked?localStorage:sessionStorage).setItem('hsims-auth',u)}catch(e){}$('#lp').value='';$('#le').textContent='';lock(false);draw()}
+ if(ok){try{($('#lr').checked?localStorage:sessionStorage).setItem('hsims-auth',u)}catch(e){}$('#lp').value='';$('#le').textContent='';idleTouch();lock(false);draw()}
  else{$('#le').textContent='Username atau password salah';$('#lp').value=''}}
 {const _d2=V.data;V.data=()=>_d2()+`<div class="card row"><span>Masuk sebagai <b>${esc(authed()||'-')}</b></span><button class="btn" data-lo="1">Keluar</button></div>`}
 document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;if(b.id=='lb')doLogin();if(b.dataset.lo){try{sessionStorage.removeItem('hsims-auth');localStorage.removeItem('hsims-auth')}catch(x){}lock(true)}});
@@ -2027,6 +2041,25 @@ document.addEventListener('click',async e=>{const b=e.target.closest('[data-ua]'
  if(a=='role'&&u!='admin'&&u!=authed()&&S.users[u]){const r=S.users[u].r=='admin'?'petugas':'admin';if(!confirm('Ubah peran '+u+' menjadi '+(r=='admin'?'Admin':'Petugas')+'?'))return;S.users[u].r=r;if(r!='admin'&&Array.isArray(S.users[u].m))S.users[u].m=S.users[u].m.filter(x=>x!='akun');save();draw();toast('Peran '+u+' sekarang '+(r=='admin'?'Admin':'Petugas'))}
  if(a=='del'&&u!='admin'&&u!=authed()&&confirm('Hapus akun '+u+'?')){delete S.users[u];save();draw();toast('Akun dihapus')}});
 document.addEventListener('keydown',e=>{if(e.key=='Enter'&&(e.target.id=='lp'||e.target.id=='lu'))doLogin()});
+/* KELUAR OTOMATIS: 5 menit tanpa aktivitas -> keluar dari login lalu halaman dimuat ulang */
+const IDLE_MS=5*60*1000,IDK='hsims-last-active';
+function idleTouch(){try{localStorage.setItem(IDK,String(Date.now()))}catch(e){}}
+let _idT=0;
+function idleMark(){const n=Date.now();if(n-_idT<3000)return;_idT=n;idleTouch()}
+function idleCheck(){
+ if(!authed()||isAdmin())return; /* admin dikecualikan dari keluar otomatis */
+ let last=0;try{last=+localStorage.getItem(IDK)||0}catch(e){}
+ if(!last){idleTouch();return}
+ if(Date.now()-last<IDLE_MS)return;
+ let busy=false;try{busy=!!(SVBUSY||syncing)}catch(e){}
+ if(busy)return; /* jangan memotong pengiriman data yang sedang berjalan; dicek lagi 5 detik kemudian */
+ try{sessionStorage.removeItem('hsims-auth');localStorage.removeItem('hsims-auth')}catch(e){}
+ location.reload()}
+['pointerdown','keydown','touchstart','wheel','scroll','mousemove','input'].forEach(ev=>addEventListener(ev,idleMark,{passive:true,capture:true}));
+setInterval(idleCheck,5000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)idleCheck()});
+addEventListener('pageshow',idleCheck);addEventListener('focus',idleCheck);
+idleCheck();
 lock(!authed());
 
 document.addEventListener('change',e=>{const t=e.target;if(t.id=='ur'){const w=$('#umw');if(w)w.querySelectorAll('.ak').forEach(x=>x.hidden=t.value!='admin')}if(t.id=='iu'){insUnit=t.value;insRoom='';$('#ir').innerHTML=roomOpts(insUnit);$('#irml').hidden=true;insApply()}else if(t.id=='ir'){$('#irml').hidden=t.value!='__x';insRoom=t.value=='__x'?'':t.value;insApply()}else if(t.id=='irm'){insRoom=t.value.trim();insApply()}else if(t.id=='id')insApply()});
