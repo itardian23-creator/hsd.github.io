@@ -2508,7 +2508,20 @@ const _mgV=mgVal;mgVal=function(k){if(TOVK[k]){const d=toD(TOVK[k]),c=d?toCalc(d
  if(k=='msn'){const c=msCalc();return{code:'MS',txt:P(c.n,c.d),cls:c.d?c.n/c.d>=TGT?'ok':'warn':'',d:'Mesin kondisi baik / mesin terperiksa'}}
  if(k=='abs'){const c=abCalc();return{code:'AB',txt:c.n+'/'+c.d+' hari',cls:c.d&&c.n/c.d>=TGT?'ok':'warn',d:'Hari dengan absen (nama, foto, GPS)'}}return _mgV(k)};
 const _dsh=V.dash;V.dash=()=>{const h=_dsh(),ks=['top','tos','toc','msn','abs'].filter(allowed);return h+(ks.length?`<div class="grid">${ks.map(k=>{const x=mgVal(k);return`<button class="card stat" data-go="${k}"><div class="sub">${x.code} · ${esc(pname(k))}</div><div class="big ${x.cls}">${esc(x.txt)}</div><div class="sub">${esc(x.d)}</div></button>`}).join('')}</div>`:'')};
-const _rep3=V.rep;V.rep=()=>{let h=_rep3();if(TRV.includes(repV)){h+=toCard(repV);if(repV=='Provices')h+=V.msn().replace(/<div class="row">.*?<\/div><div class="card adm-only">/s,'<div class="card adm-only">');if(repV=='CSI')h+=V.abs().replace(/<div class="row">.*?<\/div><div class="card"><h2>Absen hari ini.*?<\/div><div class="card">/s,'<div class="card">')}return h};
+let XT='';
+const _rep3=V.rep;V.rep=()=>{const h=_rep3();if(!TRV.includes(repV))return h;const ex=repV=='Provices'?[['to','TO · Turnover'],['ms','MS · Mesin']]:repV=='CSI'?[['to','TO · Turnover'],['ab','AB · Absen karyawan']]:[['to','TO · Turnover']];
+ if(!ex.some(x=>x[0]==XT))XT='';const strip=`<div class="tgl" style="justify-self:start;flex-wrap:wrap"><button data-xt="" class="${XT?'':'on'}">Rekap KPI</button>${ex.map(([k,n])=>`<button data-xt="${k}" class="${XT==k?'on':''}">${n}</button>`).join('')}</div>`;
+ const i=h.indexOf('<div class="card">');if(i<0)return h+strip;const hd=h.slice(0,i);
+ if(!XT)return hd+strip+h.slice(i);
+ const cut=(s,re)=>s.replace(re,'');let body=XT=='to'?toCard(repV):XT=='ms'?cut(V.msn(),/^<div class="row">.*?<\/div><div class="card adm-only">/s).replace(/^/,'<div class="card adm-only">'):cut(V.abs(),/^<div class="row">.*?<\/div><div class="card"><h2>Absen hari ini.*?<\/div><div class="card">/s).replace(/^/,'<div class="card">');
+ return hd+strip+body};
+document.addEventListener('click',e=>{const b=e.target.closest('[data-xt]');if(b){XT=b.dataset.xt;const y=scrollY;draw();scrollTo(0,y);return}if(e.target.closest('[data-rk],[data-rkv],[data-rv]'))XT=''},true);
+const _slaX=V.sla;V.sla=()=>{let h=_slaX();const a=h.indexOf('Rincian '),z=a<0?-1:h.indexOf('</table>',a);if(z<0)return h;
+ const f=(v,n,tg,w,cap,s)=>`<tr><td>${v}</td><td>${n}</td><td>${tg}</td><td>${w}%</td><td>${cap}</td><td>${s==null?'–':f1(s)}</td></tr>`;let r='';
+ VEN.forEach(([v])=>{const d=toD(v),c=d?toCalc(d):null;r+=f(v,'TO Turnover karyawan','≤ '+TOT*100+'%',TOW,c&&c.r!=null?P(c.k,c.mp):'–',c?toScore(c.r):null)});
+ {const c=msCalc();r+=f('Provices','MS Kondisi mesin & peralatan','100%',MSW,P(c.n,c.d),c.d?c.n/c.d*100:null)}
+ {const c=abCalc();r+=f('CSI','AB Absen karyawan harian','100%',ABW,c.d?P(c.n,c.d):'–',c.d?Math.min(100,c.n/c.d*100):null)}
+ return h.slice(0,z)+r+h.slice(z)};
 document.addEventListener('change',async e=>{const t=e.target,d=t.dataset||{};
  if(t.id=='abf'){ABF=t.files[0]||null;const s=$('#abfn');if(s)s.textContent=ABF?ABF.name:'belum ada foto';return}
  if(d.tofile){const f=t.files[0],v=d.tofile;t.value='';if(!f)return;if(!window.ExcelJS)return toast('Pustaka Excel belum termuat (perlu internet)');
