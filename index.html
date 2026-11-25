@@ -1290,7 +1290,7 @@ let F=null,GPS={ok:false,msg:''},geoOpen=false,GTRY=false;
 const ITEMS=[['lantai','Lantai & Dinding'],['sabun','Sabun, Tisu & Hand Sanitizer'],['flush','Flush, Kran & Wastafel'],['bau','Bau & Pewangi'],['kloset','Kloset, Urinal & Dudukan']];
 const geo=c=>{const a=SEED.areas.find(x=>x[0]==c);return S.geo[c]||[a[2],a[3]]};
 const unset=c=>{const g=geo(c);return g[0]==-6.229728&&g[1]==106.664123};
-const tol=()=>S.tol===undefined?6:+S.tol;
+const tol=()=>S.tol===undefined?1:+S.tol;
 const hav=(a,b,c,d)=>{const r=Math.PI/180,x=Math.sin((c-a)*r/2)**2+Math.cos(a*r)*Math.cos(c*r)*Math.sin((d-b)*r/2)**2;return 12742000*Math.atan2(Math.sqrt(x),Math.sqrt(1-x))};
 const canSub=()=>!!(F&&(isAdmin()||GPS.ok)&&ITEMS.every(i=>F.ans[i[0]])&&!!(F.p||'').trim());
 function gpsShow(){const e=$('#gps');if(e){e.textContent=GPS.msg;e.className='pill '+(GPS.ok?'ok':'bad')}const h=$('#gpsh');if(h){h.textContent=GPS.hint||'';h.hidden=!GPS.hint}const b=$('#tfs');if(b)b.disabled=!canSub()}
@@ -1310,11 +1310,11 @@ function gpsRun(){gpsStop();if(!F)return;const t=tol(),tok=++GTOK;
  const g=geo(F.code);let best=null,finished=false,timer=null;
  GPS={ok:false,msg:'Mengambil lokasi…',hint:'Pastikan GPS/lokasi aktif. Bisa sampai 25 detik.'};gpsShow();
  const stop=()=>{finished=true;clearTimeout(timer);gpsStop()},alive=()=>!finished&&tok==GTOK&&!!F;
- const final=()=>{if(!alive())return stop();stop();if(best){GPS={ok:false,dist:Math.round(best.d),msg:`Anda ${Math.round(best.d)} m dari lokasi (akurasi ±${best.acc} m). Maks ${t} m.`,hint:'Dekati titik toilet, usahakan dekat jendela/area terbuka, lalu ketuk Cek ulang GPS.'};gpsShow()}else fail({code:3})};
- const onPos=p=>{if(!alive())return;const d=hav(p.coords.latitude,p.coords.longitude,g[0],g[1]),acc=Math.round(p.coords.accuracy||0),eff=Math.max(0,d-Math.min(acc,50));
+ const final=()=>{if(!alive())return stop();stop();if(best){GPS={ok:false,dist:Math.round(best.d),msg:`Anda ${best.d.toFixed(1)} m dari lokasi (akurasi ±${best.acc} m). Maks ${t} m.`,hint:'Dekati titik toilet, usahakan dekat jendela/area terbuka, lalu ketuk Cek ulang GPS.'};gpsShow()}else fail({code:3})};
+ const onPos=p=>{if(!alive())return;const d=hav(p.coords.latitude,p.coords.longitude,g[0],g[1]),acc=Math.round(p.coords.accuracy||0),eff=d;/* ketat: tanpa kelonggaran akurasi */
   if(!best||eff<best.eff)best={d,acc,eff};
-  if(eff<=t){stop();GPS={ok:true,dist:Math.round(d),msg:`Lokasi sesuai · ${Math.round(d)} m dari titik (±${acc} m)`,hint:''};return gpsShow()}
-  GPS={ok:false,msg:`Mengukur lokasi… ${Math.round(d)} m dari titik (±${acc} m)`,hint:''};gpsShow()};
+  if(eff<=t){stop();GPS={ok:true,dist:Math.round(d),msg:`Lokasi sesuai · ${d.toFixed(1)} m dari titik (±${acc} m)`,hint:''};return gpsShow()}
+  GPS={ok:false,msg:`Mengukur lokasi… ${d.toFixed(1)} m dari titik (±${acc} m)`,hint:''};gpsShow()};
  const start=high=>{if(!alive())return;try{GWID=navigator.geolocation.watchPosition(onPos,e=>{if(!alive())return;
    if(e.code==1){stop();return fail(e)}
    if(high){gpsStop();return start(false)}
