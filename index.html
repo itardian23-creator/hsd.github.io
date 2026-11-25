@@ -618,7 +618,7 @@ document.addEventListener('click',async e=>{const a=e.target.closest('[data-vl]'
  if(a){const c=a.dataset.vl,L=LOG[c],o={};document.querySelectorAll('[data-lf]').forEach(i=>o[i.dataset.lf]=i.value.trim());
   if(L.req.some(n=>!o[n]))return toast('Lengkapi kolom wajib: '+L.req.map(n=>L.f.find(f=>f[0]==n)[1]).join(', '));
   o.ts=nowS();o.o=authed();if(L.pre)L.pre(o);o.ok=L.ok(o)?1:0;((((S.vl=S.vl||{})[M]=S.vl[M]||{})[c]=S.vl[M][c]||[])).push(o);const y=scrollY;draw();scrollTo(0,y);saveW(()=>toast('Baris ditambahkan'));return}
- if(d){const[c,i]=d.dataset.vld.split('|');if(c=='SG-03')return toast('Patroli yang sudah terkirim tidak bisa dihapus');if(!own((logOf(c)||[])[+i]))return toast('Hanya pemilik data atau admin yang bisa menghapus');if(confirm('Hapus baris ini?')){logOf(c).splice(+i,1);save();const y=scrollY;draw();scrollTo(0,y)}return}
+ if(d){const[c,i]=d.dataset.vld.split('|');return toast('Data yang sudah terkirim terkunci dan tidak bisa diubah atau dihapus.');if(!own((logOf(c)||[])[+i]))return toast('Hanya pemilik data atau admin yang bisa menghapus');if(confirm('Hapus baris ini?')){logOf(c).splice(+i,1);save();const y=scrollY;draw();scrollTo(0,y)}return}
  if(x){if(!window.ExcelJS)return toast('Pustaka Excel belum termuat (perlu internet)');const c=x.dataset.vle,[fn,buf]=await vBuild('le',c);dl(fn,buf);if(GAS())upDrive(fn,buf,true)}});
 
 /* ===== Laporan per vendor ===== */
@@ -720,7 +720,7 @@ document.addEventListener('click',async e=>{const b=e.target.closest('[data-xq],
  if(ds.xqs){const o=Q();o[ddk()]=o[ddk()]||[];rd();saveW(()=>toast('Hari tersimpan'));return}
  if(ds.xqx){if(confirm('Hapus data tanggal ini?')){delete Q()[ddk()];save();rd()}return}
  if(ds.xi){const c=ds.xi,o={};document.querySelectorAll('[data-xf]').forEach(i=>o[i.dataset.xf]=i.value.trim());if(!o.by)return toast('Isi nama petugas dulu');if(!o.desk)return toast('Isi deskripsi insiden');o.o=authed();((((S.vi=S.vi||{})[M]=S.vi[M]||{})[c]=S.vi[M][c]||[])).push(o);rd();saveW(()=>toast('Insiden tersimpan'));return}
- if(ds.xid){const[c,i]=ds.xid.split('|');if(!own(xs('vi')[c][+i]))return toast('Hanya pemilik data atau admin yang bisa menghapus');if(confirm('Hapus insiden ini?')){xs('vi')[c].splice(+i,1);save();rd()}return}
+ if(ds.xid){return toast('Data yang sudah terkirim terkunci dan tidak bisa diubah atau dihapus.');const[c,i]=ds.xid.split('|');if(!own(xs('vi')[c][+i]))return toast('Hanya pemilik data atau admin yang bisa menghapus');if(confirm('Hapus insiden ini?')){xs('vi')[c].splice(+i,1);save();rd()}return}
  if(ds.xe){if(!window.ExcelJS)return toast('Pustaka Excel belum termuat (perlu internet)');const c=ds.xe,[fn,buf]=await vBuild('xe',c);dl(fn,buf);if(GAS())upDrive(fn,buf,true)}});
 
 /* ===== Ekspor KPI Food Service (Sodexo) — format 6 file Excel asli: Profil Indikator + Grafik & PDSA + sheet bulanan ===== */
@@ -913,7 +913,7 @@ document.addEventListener('click',async e=>{const b=e.target.closest('[data-pt],
   if(ptRec(c,mk).some(r=>r.date==TODAY&&r.slot==sl&&r.pid==pid))return toast('Sudah dicek pada slot '+slotLbl(sl,c));
   if(ptTol(c)&&!ptSet(p))return toast('Koordinat lokasi ini belum diatur admin',4000);
   PF={c,pid:p.id,sl,p:S.petugas||'',k:'',img:'',st:'',gps:{ok:false,msg:'Memverifikasi lokasi…',hint:''}};draw();scrollTo(0,0);ptGpsRun();return}
- if(d.ptd){const[c,id]=d.ptd.split('|');const mk=TODAY.slice(0,7),rr=ptRec(c,mk).find(r=>r.id==id);if(rr&&!own(rr))return toast('Hanya pemilik data atau admin yang bisa menghapus');if(confirm('Hapus checklist ini?')){S.pl[mk][c]=S.pl[mk][c].filter(r=>r.id!=id);save();rd()}return}
+ if(d.ptd){return toast('Data yang sudah terkirim terkunci dan tidak bisa diubah atau dihapus.');const[c,id]=d.ptd.split('|');const mk=TODAY.slice(0,7),rr=ptRec(c,mk).find(r=>r.id==id);if(rr&&!own(rr))return toast('Hanya pemilik data atau admin yang bisa menghapus');if(confirm('Hapus checklist ini?')){S.pl[mk][c]=S.pl[mk][c].filter(r=>r.id!=id);save();rd()}return}
  if(!isAdmin())return;
  if(d.pta){const c=d.pta,t=$('#ptb_'+c),L=ptList(c);const nm=(t?t.value:'').split('\n').map(s=>s.trim()).filter(Boolean);if(!nm.length)return toast('Isi nama lokasi dulu');let id=Math.max(0,...L.map(x=>+x.id||0));nm.forEach(n=>L.push({id:++id,n,lat:null,lng:null}));PTOPEN=true;save();rd();toast(nm.length+' lokasi ditambahkan');return}
  if(d.ptx){const[c,id]=d.ptx.split('|');if(confirm('Hapus lokasi ini? (riwayat checklist lama tetap tersimpan)')){S.pt[c]=S.pt[c].filter(x=>x.id!=id);PTOPEN=true;save();rd()}return}
@@ -1039,7 +1039,7 @@ document.addEventListener('click',async e=>{const b=e.target.closest('[data-ccv]
  if(d.ccv){const[i,k,v]=d.ccv.split('|');CC.n[+i][k]=v;rd();return}
  if(d.ccs){CC.sh=d.ccs;rd();return}
  if(d.ccrm){const[i,ty,j]=d.ccrm.split('|');(ty=='o'?CC.n[+i].ph:CC.nw[+i]).splice(+j,1);rd();return}
- if(d.ccdel){const rr=(((S.vc||{})[M]||{})[ddk()]||{})[d.ccdel];if(rr&&!own(rr))return toast('Hanya pemilik data atau admin yang bisa menghapus');if(confirm('Hapus checklist shift ini?')){const o=((S.vc||{})[M]||{})[ddk()];if(o){delete o[d.ccdel];if(!Object.keys(o).length)delete S.vc[M][ddk()]}save();CCK='';rd()}return}
+ if(d.ccdel){return toast('Data yang sudah terkirim terkunci dan tidak bisa diubah atau dihapus.');const rr=(((S.vc||{})[M]||{})[ddk()]||{})[d.ccdel];if(rr&&!own(rr))return toast('Hanya pemilik data atau admin yang bisa menghapus');if(confirm('Hapus checklist shift ini?')){const o=((S.vc||{})[M]||{})[ddk()];if(o){delete o[d.ccdel];if(!Object.keys(o).length)delete S.vc[M][ddk()]}save();CCK='';rd()}return}
  if(d.ccsave){const msg=t=>{const m=$('#ccmsg');if(m){m.className='sub bad';m.textContent=t}toast(t.slice(0,80),3500)};
   if(!CC.pos.trim())return msg('Isi nama petugas security');
   for(let i=0;i<3;i++){const x=CC.n[i],nm=NVRN[i];
@@ -1204,7 +1204,7 @@ if(q.insv!==undefined){insSet(q.insv);return}
 if(q.insc!==undefined){insClose();return}
 if(q.arok!==undefined){areaSave();return}
 if(q.arc!==undefined){areaClose();return}
-if(q.del){const ri=S.ins.find(x=>x.id==q.del);if(ri&&!own(ri))return toast('Hanya pemilik data atau admin yang bisa menghapus');if(confirm('Hapus inspeksi ini?')){S.ins=S.ins.filter(x=>x.id!=q.del);save();draw()}return}
+if(q.del){return toast('Data yang sudah terkirim terkunci dan tidak bisa diubah atau dihapus.');const ri=S.ins.find(x=>x.id==q.del);if(ri&&!own(ri))return toast('Hanya pemilik data atau admin yang bisa menghapus');if(confirm('Hapus inspeksi ini?')){S.ins=S.ins.filter(x=>x.id!=q.del);save();draw()}return}
 const a=q.act;if(!a)return;
 if(a=='nowm'){M=TODAY.slice(0,7);D=TODAY;draw();return}
 if((a=='addgc'||a=='stopgc'||a=='addarea')&&!isAdmin())return toast('Hanya admin');
@@ -1212,7 +1212,7 @@ if(a=='addarea'){areaOpen();return}
 if(a=='stopgc'){const it=S.items.find(i=>i.id==t.dataset.id);if(it&&confirm('Hentikan "'+it.n+'" mulai bulan '+M+'? (bulan sebelumnya tidak berubah)')){it.e=M;save();draw();toast('Pekerjaan dihentikan mulai bulan ini')}return}
 if(a=='addgc'){const n=$('#nn').value.trim(),ar=$('#na').value.trim();if(!n||!ar)return toast('Isi area dan pekerjaan');S.items.push({id:Math.max(0,...S.items.map(i=>i.id))+1,a:ar,n,j:$('#nj').value,f:$('#nf').value,s:M,p:$('#nf').value=='monthly'?[1,0,0,0,0]:$('#nf').value=='2weekly'?[1,0,1,0,0]:[1,1,1,1,0]});gcArea=ar;save();draw();toast('Pekerjaan ditambahkan')}
 if(a=='addins'){if(!($('#ib').value||'').trim()){$('#ib').focus();$('#ib').scrollIntoView({block:'center'});return toast('Isi nama petugas dulu (Diperiksa oleh)')}const room=($('#ir').value=='__x'?$('#irm').value:$('#ir').value).trim();if(!room)return toast('Pilih / isi nomor kamar');const un=[...document.querySelectorAll('[data-x]:not(.g):not(.x)')];if(un.length){un.forEach(b=>{b.style.outline='2px solid var(--warn)'});setTimeout(()=>un.forEach(b=>b.style.outline=''),2500);un[0].scrollIntoView({block:'center',behavior:'smooth'});return toast(un.length+' item belum dinilai. Semua wajib diisi.')}const dt=$('#id').value,bs=[...document.querySelectorAll('[data-x].x')],rc={date:dt,room,o:authed(),by:$('#ib').value,ph:INSPH.map(x=>x.id),bad:bs.map(b=>+b.dataset.x),why:Object.fromEntries(bs.filter(b=>b.dataset.s!='u').map(b=>[b.dataset.x,b.dataset.s]))},old=S.ins.find(x=>x.date==dt&&x.room==room);
- if(old)Object.assign(old,rc);else S.ins.push({id:Date.now(),...rc});
+ if(old)return toast('Inspeksi kamar '+room+' tanggal '+dt+' sudah terkirim dan terkunci, tidak bisa ditimpa.',4000);S.ins.push({id:Date.now(),...rc});
  {const dd=dLoad();delete dd[dt+'|'+room];dSave(dd)}insRoom=room;D=dt;M=D.slice(0,7);draw();saveW(()=>toast(old?'Inspeksi diperbarui':'Inspeksi tersimpan'))}
 if(a=='expj')dl('hsims-kpi-hk-'+TODAY+'.json',JSON.stringify(S),'application/json');
 if(a=='expr'){let c='kpi,nama,bulan,numerator,denominator,pencapaian\n';for(const k in CALC){const x=CALC[k](M);c+=[INFO[k][0],INFO[k][1],M,x.n,x.d,x.d?(x.n/x.d).toFixed(6):''].join(',')+'\n'}dl('rekap-kpi-hk-'+M+'.csv',c,'text/csv')}
