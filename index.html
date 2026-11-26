@@ -1012,7 +1012,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-pb]');if(!
   const dm=t0.getFullYear()+'-'+pd(t0.getMonth()+1)+'-'+pd(t0.getDate()),hm=d=>pd(d.getHours())+':'+pd(d.getMinutes());
   const row={ts:dm+' '+hm(t0)+':'+pd(t0.getSeconds()),pos:j.pos,req:j.req,unit:j.unit,mulai:hm(t0),selesai:hm(t1),bantu:j.bantu,minta:j.minta,lambat,dur,ok:ok?1:0,o:authed()},mk=dm.slice(0,7);
   (((S.vl=S.vl||{})[mk]=S.vl[mk]||{})['SG-04']=S.vl[mk]['SG-04']||[]).push(row);S.pj=S.pj.filter(x=>x.id!=id);rd();saveW(()=>toast(ok?'Selesai · TEPAT WAKTU ('+dur+' mnt)':'Selesai · TERLAMBAT ('+dur+' mnt)',3000))};
-  if(ok)finish('');else pbAsk('Perbantuan melebihi '+PBMAX+' menit ('+dur+' menit). Isi keterangan keterlambatan:',finish)}});
+  finish('')}});
 setInterval(()=>{const e=$('#pbrun');if(e&&!document.hidden)e.innerHTML=pbRun()},30000);
 
 /* ===== Checklist CCTV: mengikuti Google Form (per shift, per NVR) ===== */
