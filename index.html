@@ -607,7 +607,15 @@ const LOG={'FB-04':FBL(["No", "Tanggal", "Nomor Kamar", "Nama Pasien", "Menu", "
  row:(x,i)=>[i+1,x.ts,x.area,x.waktu,x.ket,x.petugas,x.perawat,x.temuan,x.tl]},
 'SG-04':{h:["NO", "TIMESTAMP", "NAMA PETUGAS POSKO", "NAMA YANG REQUEST", "UNIT", "JAM MULAI", "JAM SELESAI", "PETUGAS YANG MEMBANTU", "PERBANTUAN YANG DIMINTA", "DURASI (Menit)", "PENCAPAIAN", "KETERANGAN KETERLAMBATAN"],sn:()=>MN[+M.slice(5)-1],f:[['pos','Nama petugas posko','t'],['req','Nama yang request','t'],['unit','Unit','t'],['mulai','Jam mulai','tm'],['selesai','Jam selesai','tm'],['bantu','Petugas yang membantu','t'],['minta','Perbantuan yang diminta','t'],['lambat','Keterangan keterlambatan','t']],req:['pos','mulai','selesai'],pre:x=>{x.dur=mins(x.mulai,x.selesai)},ok:x=>+x.dur<=15,
  row:(x,i)=>[i+1,x.ts,x.pos,x.req,x.unit,x.mulai,x.selesai,x.bantu,x.minta,+x.dur,x.ok?'TEPAT WAKTU':'TERLAMBAT',x.lambat]}};
-function logOf(c,m){return((S.vl||{})[m||M]||{})[c]}
+/* Anti-dobel untuk baris tanpa id: isi yang sama (di luar ts/ok/o/dur) dianggap kiriman ganda.
+   win>0: hanya bila baris yang sama dicatat dalam 'win' menit terakhir (berdasarkan ts); win=0: isi sama persis di daftar itu. */
+function rowSig(o){const c={...o};['ts','ok','o','dur'].forEach(k=>delete c[k]);return JSON.stringify(stable(c))}
+function dupRow(list,o,win){const s=rowSig(o),now=Date.now();return(list||[]).some(x=>{if(!x||typeof x!='object'||rowSig(x)!==s)return false;if(!win)return true;
+ const t=Date.parse(String(x.ts||'').replace(' ','T'));return isNaN(t)||Math.abs(now-t)<=win*60000})}
+/* SG-04: baris kembar (pekerjaan yang sama tercatat berulang) tidak ikut tampil / dihitung. Kunci = waktu mulai + isi permintaan; dipertahankan yang durasinya paling kecil (Done pertama). Data asli tidak dihapus. */
+function pbDedupe(L){const idx=new Map(),out=[];L.forEach(x=>{if(!x||typeof x!='object'){out.push(x);return}const k=[x.ts,x.minta,x.unit,x.pos,x.req].join('|'),i=idx.get(k);
+ if(i===undefined){idx.set(k,out.length);out.push(x)}else if((+x.dur||0)<(+out[i].dur||0))out[i]=x});return out}
+function logOf(c,m){const L=((S.vl||{})[m||M]||{})[c];return c=='SG-04'&&Array.isArray(L)?pbDedupe(L):L}
 function logCard(k){if(k[0]=='SG-03')return rnForm();if(k[0]=='SG-04')return pbCard();return logCard0(k)}
 function logCard0(k){const L=LOG[k[0]];if(!L)return'';const rows=logOf(k[0])||[];
  return`<div class="card"><h2>Log ${esc(k[0])} · ${MN[+M.slice(5)-1]} ${M.slice(0,4)} (${rows.length} baris)</h2><p class="sub">Capaian dihitung otomatis dari log ini dan menggantikan input numerator/denominator bulan ini. Kolom ekspor sama dengan sheet bulanan file Excel asli.</p>
@@ -617,7 +625,7 @@ function logCard0(k){const L=LOG[k[0]];if(!L)return'';const rows=logOf(k[0])||[]
 document.addEventListener('click',async e=>{const a=e.target.closest('[data-vl]'),d=e.target.closest('[data-vld]'),x=e.target.closest('[data-vle]');
  if(a){const c=a.dataset.vl,L=LOG[c],o={};document.querySelectorAll('[data-lf]').forEach(i=>o[i.dataset.lf]=i.value.trim());
   if(L.req.some(n=>!o[n]))return toast('Lengkapi kolom wajib: '+L.req.map(n=>L.f.find(f=>f[0]==n)[1]).join(', '));
-  o.ts=nowS();o.o=authed();if(L.pre)L.pre(o);o.ok=L.ok(o)?1:0;((((S.vl=S.vl||{})[M]=S.vl[M]||{})[c]=S.vl[M][c]||[])).push(o);const y=scrollY;draw();scrollTo(0,y);saveW(()=>toast('Baris ditambahkan'));return}
+  o.ts=nowS();o.o=authed();if(L.pre)L.pre(o);o.ok=L.ok(o)?1:0;const LL=(((S.vl=S.vl||{})[M]=S.vl[M]||{})[c]=S.vl[M][c]||[]);if(dupRow(LL,o,10))return toast('Baris yang sama baru saja ditambahkan');LL.push(o);const y=scrollY;draw();scrollTo(0,y);saveW(()=>toast('Baris ditambahkan'));return}
  if(d){const[c,i]=d.dataset.vld.split('|');return toast('Data yang sudah terkirim terkunci dan tidak bisa diubah atau dihapus.');if(!own((logOf(c)||[])[+i]))return toast('Hanya pemilik data atau admin yang bisa menghapus');if(confirm('Hapus baris ini?')){logOf(c).splice(+i,1);save();const y=scrollY;draw();scrollTo(0,y)}return}
  if(x){if(!window.ExcelJS)return toast('Pustaka Excel belum termuat (perlu internet)');const c=x.dataset.vle,[fn,buf]=await vBuild('le',c);dl(fn,buf);if(GAS())upDrive(fn,buf,true)}});
 
@@ -719,7 +727,7 @@ document.addEventListener('click',async e=>{const b=e.target.closest('[data-xq],
  if(ds.xq){const o=Q(),f=o[ddk()]=o[ddk()]||[],i=f.indexOf(ds.xq);i<0?f.push(ds.xq):f.splice(i,1);save();rd();return}
  if(ds.xqs){const o=Q();o[ddk()]=o[ddk()]||[];rd();saveW(()=>toast('Hari tersimpan'));return}
  if(ds.xqx){if(confirm('Hapus data tanggal ini?')){delete Q()[ddk()];save();rd()}return}
- if(ds.xi){const c=ds.xi,o={};document.querySelectorAll('[data-xf]').forEach(i=>o[i.dataset.xf]=i.value.trim());if(!o.by)return toast('Isi nama petugas dulu');if(!o.desk)return toast('Isi deskripsi insiden');o.o=authed();((((S.vi=S.vi||{})[M]=S.vi[M]||{})[c]=S.vi[M][c]||[])).push(o);rd();saveW(()=>toast('Insiden tersimpan'));return}
+ if(ds.xi){const c=ds.xi,o={};document.querySelectorAll('[data-xf]').forEach(i=>o[i.dataset.xf]=i.value.trim());if(!o.by)return toast('Isi nama petugas dulu');if(!o.desk)return toast('Isi deskripsi insiden');o.o=authed();const VL=(((S.vi=S.vi||{})[M]=S.vi[M]||{})[c]=S.vi[M][c]||[]);if(dupRow(VL,o,0))return toast('Insiden yang sama sudah tersimpan');VL.push(o);rd();saveW(()=>toast('Insiden tersimpan'));return}
  if(ds.xid){return toast('Data yang sudah terkirim terkunci dan tidak bisa diubah atau dihapus.');const[c,i]=ds.xid.split('|');if(!own(xs('vi')[c][+i]))return toast('Hanya pemilik data atau admin yang bisa menghapus');if(confirm('Hapus insiden ini?')){xs('vi')[c].splice(+i,1);save();rd()}return}
  if(ds.xe){if(!window.ExcelJS)return toast('Pustaka Excel belum termuat (perlu internet)');const c=ds.xe,[fn,buf]=await vBuild('xe',c);dl(fn,buf);if(GAS())upDrive(fn,buf,true)}});
 
@@ -906,6 +914,7 @@ function ptModal(c,p,sl){const old=document.getElementById('ptmod');if(old)old.r
   b.textContent='Mengunggah foto…';svLoad();let id;
   try{const r=await gas({action:'putPhoto',mime:'image/jpeg',name:(PCFG[c]?PCFG[c].pre:'Patroli')+'_'+TODAY+'_'+pd(sl)+'_'+p.n.replace(/\W+/g,'-')+'_'+Date.now()+'.jpg',data:img.split(',')[1]});id=r.id;PHC.set(id,img)}
   catch(er){svClose();b.disabled=false;b.textContent='Simpan';return msg('Gagal mengunggah foto: '+friendly(er))}
+  if(ptRec(c,mk).some(r=>r.date==TODAY&&r.slot==sl&&r.pid==p.id)){svClose();clearInterval(iv);o.remove();draw();return toast('Sudah dicek pada slot '+slotLbl(sl,c))}
   S.petugas=pn;(((S.pl=S.pl||{})[mk]=S.pl[mk]||{})[c]=S.pl[mk][c]||[]).push({id:Date.now(),date:TODAY,slot:sl,pid:p.id,n:p.n,p:pn,dist:g.dist,ts:nowS(),ket,ph:[id],o:authed()});M=mk;clearInterval(iv);o.remove();const y=scrollY;draw();scrollTo(0,y);saveW(()=>toast('Tersimpan · '+p.n))}}
 document.addEventListener('click',async e=>{const b=e.target.closest('[data-pt],[data-ptd],[data-pta],[data-ptg],[data-ptx],[data-pe]');if(!b)return;const d=b.dataset,rd=()=>{const y=scrollY;draw();scrollTo(0,y)};
  if(d.pe){if(!window.ExcelJS)return toast('Pustaka Excel belum termuat (perlu internet)');const[fn,buf]=await vBuild('pe',d.pe);dl(fn,buf);if(GAS())upDrive(fn,buf,true);return}
@@ -965,6 +974,7 @@ async function ptfSubmit(){if(!PF||!canPt())return;const c=PF.c,p=ptList(c).find
  const img=PF.img;btn.dataset.busy=1;btn.disabled=true;btn.textContent='Mengunggah foto…';svLoad();let id;
  try{const r=await gas({action:'putPhoto',mime:'image/jpeg',name:(PCFG[c]?PCFG[c].pre:'Patroli')+'_'+TODAY+'_'+pd(sl)+'_'+p.n.replace(/\W+/g,'-')+'_'+Date.now()+'.jpg',data:img.split(',')[1]});id=r.id;PHC.set(id,img)}
  catch(er){svClose();delete btn.dataset.busy;btn.disabled=false;btn.textContent='Simpan checklist';return toast('Gagal mengunggah foto: '+friendly(er),3500)}
+ if(ptRec(c,mk).some(r=>r.date==TODAY&&r.slot==sl&&r.pid==p.id)){svClose();ptStop();PF=null;draw();return toast('Sudah dicek pada slot '+slotLbl(sl,c))}
  const pn=PF.p.trim(),ket=PF.k.trim()||'Area aman & kondusif';S.petugas=pn;
  (((S.pl=S.pl||{})[mk]=S.pl[mk]||{})[c]=S.pl[mk][c]||[]).push({id:Date.now(),date:TODAY,slot:sl,pid:p.id,n:p.n,p:pn,st:PF.st,dist:PF.gps.dist??null,ts:nowS(),ket,ph:[id],o:authed()});
  M=mk;ptStop();PF=null;draw();scrollTo(0,0);saveW(()=>toast('Tersimpan · '+p.n))}
@@ -1004,14 +1014,16 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-pb]');if(!
  if(a=='start'){const g=i=>($(i)?$(i).value.trim():''),pos=g('#pbp'),minta=g('#pbm'),tv=g('#pbt');
   if(!pos)return toast('Isi nama petugas posko');if(!minta)return toast('Isi perbantuan yang diminta');
   let t0=new Date();if(tv){const[h,mi]=tv.split(':').map(Number);t0.setHours(h,mi,0,0);if(t0>new Date())t0.setDate(t0.getDate()-1)}
+  if(S.pj.some(x=>x.minta==minta&&x.pos==pos&&(x.unit||'')==g('#pbu')&&Date.now()-x.id<60000))return toast('Perbantuan ini baru saja dimulai');
   S.petugas=pos;S.pj.push({id:Date.now(),o:authed(),pos,req:g('#pbr'),unit:g('#pbu'),bantu:g('#pbb'),minta,t0:t0.toISOString()});rd();saveW(()=>toast('Mulai: '+minta));return}
  const j=S.pj.find(x=>x.id==id);if(!j)return;if(!pbMine(j))return toast('Perbantuan ini dimulai oleh akun lain');
- if(a=='del'){if(confirm('Batalkan perbantuan ini?')){S.pj=S.pj.filter(x=>x.id!=id);save();rd()}return}
+ if(a=='del'){if(confirm('Batalkan perbantuan ini?')){S.pj=S.pj.filter(x=>x.id!=id);try{tombAdd('g:/pj#'+id)}catch(e){}save();rd()}return}
  if(a=='done'){const t0=new Date(j.t0),t1=new Date(),dur=Math.max(1,Math.ceil((t1-t0)/60000)),ok=dur<=PBMAX;
   const finish=lambat=>{const j=(S.pj||[]).find(x=>x.id==id);if(!j)return toast('Perbantuan ini sudah ditutup');
   const dm=t0.getFullYear()+'-'+pd(t0.getMonth()+1)+'-'+pd(t0.getDate()),hm=d=>pd(d.getHours())+':'+pd(d.getMinutes());
   const row={ts:dm+' '+hm(t0)+':'+pd(t0.getSeconds()),pos:j.pos,req:j.req,unit:j.unit,mulai:hm(t0),selesai:hm(t1),bantu:j.bantu,minta:j.minta,lambat,dur,ok:ok?1:0,o:authed()},mk=dm.slice(0,7);
-  (((S.vl=S.vl||{})[mk]=S.vl[mk]||{})['SG-04']=S.vl[mk]['SG-04']||[]).push(row);S.pj=S.pj.filter(x=>x.id!=id);rd();saveBg(()=>toast(ok?'Selesai · TEPAT WAKTU ('+dur+' mnt)':'Selesai · TERLAMBAT ('+dur+' mnt)',3000))};
+  const L4=((S.vl=S.vl||{})[mk]=S.vl[mk]||{})['SG-04']=S.vl[mk]['SG-04']||[],dup=L4.some(x=>x&&x.ts==row.ts&&x.minta==row.minta&&(x.unit||'')==(row.unit||'')&&(x.pos||'')==(row.pos||'')&&(x.req||'')==(row.req||''));
+  if(!dup)L4.push(row);S.pj=S.pj.filter(x=>x.id!=id);try{tombAdd('g:/pj#'+id)}catch(e){}rd();saveBg(()=>dup?toast('Sudah tercatat sebelumnya, ditutup'):toast(ok?'Selesai · TEPAT WAKTU ('+dur+' mnt)':'Selesai · TERLAMBAT ('+dur+' mnt)',3000))};
   finish('')}});
 setInterval(()=>{const e=$('#pbrun');if(e&&!document.hidden)e.innerHTML=pbRun()},30000);
 
@@ -1108,7 +1120,8 @@ document.addEventListener('click',async e=>{const b=e.target.closest('[data-rnrm
  try{{const rs=await gas({action:'putPhoto',mime:'image/jpeg',name:'TTDPerawat_'+TODAY+'_'+Date.now()+'.jpg',data:RN.sig.split(',')[1]});sigId=rs.id;PHC.set(sigId,RN.sig)}for(let j=0;j<RN.nw.length;j++){const r=await gas({action:'putPhoto',mime:'image/jpeg',name:'PatroliRanap_'+TODAY+'_'+RN.area.replace(/\W+/g,'-')+'_'+Date.now()+'_'+j+'.jpg',data:RN.nw[j].split(',')[1]});ids.push(r.id);PHC.set(r.id,RN.nw[j])}}
  catch(er){svClose();b.disabled=false;b.textContent='Kirim patroli';return msg('Gagal mengunggah foto: '+friendly(er))}
  const row={ts:nowS(),area:RN.area,waktu:RN.waktu,ket:RN.ket.trim(),petugas:RN.petugas.trim(),perawat:RN.perawat.trim(),temuan:'',tl:RN.tl.trim(),ph:ids,sig:sigId,o:authed()},mk=TODAY.slice(0,7);
- row.ok=LOG['SG-03'].ok(row)?1:0;S.petugas=row.petugas;(((S.vl=S.vl||{})[mk]=S.vl[mk]||{})['SG-03']=S.vl[mk]['SG-03']||[]).push(row);
+ row.ok=LOG['SG-03'].ok(row)?1:0;S.petugas=row.petugas;{const L3=(((S.vl=S.vl||{})[mk]=S.vl[mk]||{})['SG-03']=S.vl[mk]['SG-03']||[]),sg=x=>[x.area,x.waktu,x.ket,x.petugas,x.perawat,x.tl].join('|');
+ if(L3.some(x=>x&&sg(x)==sg(row)&&Math.abs(Date.now()-Date.parse(String(x.ts||'').replace(' ','T')))<=600000)){svClose();RN={area:'',waktu:'',ket:'',petugas:'',perawat:'',tl:'',nw:[],sig:''};M=mk;rd();return toast('Patroli yang sama baru saja terkirim')}L3.push(row)}
  RN={area:'',waktu:'',ket:'',petugas:'',perawat:'',tl:'',nw:[],sig:''};M=mk;rd();saveW(()=>toast('Patroli terkirim'))});
 /* ===== Penyiapan kamar: Start / Done per kamar check-out ===== */
 let ktUnit='Ward 9',ktRoom='',ktCls='k2',ktDate='';
@@ -1150,8 +1163,8 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-kj]');if(!
   if(S.kj.some(j=>!j.t1&&j.unit==un&&j.room==room))return toast('Kamar ini sedang dikerjakan');
   S.petugas=p;S.kj.push({id:Date.now(),o:authed(),date:dt,unit:un,room,cls:ktCls,std:kStd(ktCls),p,t0:new Date().toISOString()});ktRoom='';rd();saveW(()=>toast('Mulai: '+room));return}
  const j=S.kj.find(x=>x.id==id);if(!j)return;if(j.t1?!own(j):!pbMine(j))return toast('Data ini milik akun lain');
- if(a=='done'){j.t1=new Date().toISOString();j.dur=Math.max(1,Math.round((new Date(j.t1)-new Date(j.t0))/60000));j.std=jStd(j);j.ok=j.dur<=j.std?1:0;cnt(j,1);j.cnt=1;rd();saveW(()=>toast('Selesai · terhitung 1 kamar'));return}
- if(a=='del'){if(!confirm(j.t1?'Hapus data kamar ini? Hitungan di rekap ikut berkurang.':'Batalkan pengerjaan kamar ini?'))return;if(j.cnt)cnt(j,-1);S.kj=S.kj.filter(x=>x.id!=id);save();rd()}});
+ if(a=='done'){if(j.t1){rd();return toast('Kamar ini sudah selesai dikerjakan')}j.t1=new Date().toISOString();j.dur=Math.max(1,Math.round((new Date(j.t1)-new Date(j.t0))/60000));j.std=jStd(j);j.ok=j.dur<=j.std?1:0;cnt(j,1);j.cnt=1;rd();saveW(()=>toast('Selesai · terhitung 1 kamar'));return}
+ if(a=='del'){if(!confirm(j.t1?'Hapus data kamar ini? Hitungan di rekap ikut berkurang.':'Batalkan pengerjaan kamar ini?'))return;if(j.cnt)cnt(j,-1);S.kj=S.kj.filter(x=>x.id!=id);try{tombAdd('g:/kj#'+id)}catch(e){}save();rd()}});
 setInterval(()=>{const e=$('#kjrun');if(e&&!document.hidden)e.innerHTML=ktRun()},30000);
 
 /* ===== Validasi QHSE: penilaian per item seperti Inspeksi Vacant Clean ===== */
@@ -1851,7 +1864,7 @@ const _GSKIP=new Set(['tomb','bk','tc','tl']),_cl=x=>JSON.parse(JSON.stringify(x
 const _gO=x=>x&&typeof x=='object'&&!Array.isArray(x),_gId=a=>Array.isArray(a)&&a.length>0&&a.every(x=>_gO(x)&&x.id!==undefined),
  _gRow=a=>Array.isArray(a)&&a.length>0&&a.every(x=>_gO(x)&&x.id===undefined&&'o' in x),_gFlg=a=>Array.isArray(a)&&a.length>0&&a.every(x=>x===0||x===1);
 const _gH=s=>{let h=5381;for(let i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))|0;return(h>>>0).toString(36)},_gRk=x=>_gH(JSON.stringify(stable(x)));
-let PREV=null;
+let PREV=null;try{if(S&&typeof S=='object')PREV=_cl(S)}catch(e){}
 function gTrk(p,c,path){
  if(p===c)return;
  if(_gO(p)&&_gO(c)){
@@ -1876,7 +1889,7 @@ function gRst(M,X,path,T){
    X.forEach(x=>{const k=_gRk(x);if(!have.has(k)&&!T['g:'+path+'^'+k]){M.push(_cl(x));have.add(k)}});return}
   if(_gFlg(X)&&_gFlg(M)&&X.length==M.length){X.forEach((v,i)=>{if(v===1&&M[i]===0&&!T['g:'+path+'['+i+']'])M[i]=1})}}}
 function guardAll(L,R,M){try{M.tomb=M.tomb||{};[L,R].forEach(x=>{if(_gO(x))gRst(M,x,'',M.tomb)})}catch(e){console.error('guardAll',e)}}
-function norm(){S=S||{};S.items=S.items||SEED.items;['gc','tl','kt','ins','tc','kj'].forEach(k=>S[k]=S[k]||(k=='ins'||k=='tc'||k=='kj'?[]:{}));S.geo=S.geo||{};S.users=S.users||{};if(!S.vk)S.vk=JSON.parse(JSON.stringify(SEEDVK))}
+function norm(){S=S||{};if(S.tomb){if(Array.isArray(S.pj))S.pj=S.pj.filter(j=>!(j&&S.tomb['g:/pj#'+j.id]));if(Array.isArray(S.kj))S.kj=S.kj.filter(j=>!(j&&S.tomb['g:/kj#'+j.id]))}S.items=S.items||SEED.items;['gc','tl','kt','ins','tc','kj'].forEach(k=>S[k]=S[k]||(k=='ins'||k=='tc'||k=='kj'?[]:{}));S.geo=S.geo||{};S.users=S.users||{};if(!S.vk)S.vk=JSON.parse(JSON.stringify(SEEDVK))}
 function setSt(s,m){ST=s;STM=m||'';notify(s,m);const b=$('#synct');if(!b)return;const T={off:'Drive: atur',idle:'Sambungkan Drive',sync:'Menyinkronkan…',ok:'Tersinkron '+STM,exp:'Sambungkan ulang',err:'Gagal sinkron'};b.textContent=T[s]||'';const w=$('#sync');if(w){w.title=m||'';w.style.color=s=='err'||s=='exp'?'var(--bad)':s=='ok'?'var(--ok)':'';document.body.dataset.sy=s=='err'||s=='exp'?'bad':s=='ok'?'ok':''}}
 const gis=()=>new Promise((ok,no)=>{if(window.google&&google.accounts&&google.accounts.oauth2)return ok();let s=document.querySelector('#gis');if(!s){s=document.createElement('script');s.id='gis';s.src='https://accounts.google.com/gsi/client';document.head.append(s)}s.addEventListener('load',ok);s.addEventListener('error',()=>no(new Error('Gagal memuat Google Identity (cek internet)')))});
 function token(ia){return new Promise((ok,no)=>{
@@ -2015,6 +2028,7 @@ function svBox(html){let o=$('#svov');if(!o){o=document.createElement('div');o.i
 function svClose(){const o=$('#svov');if(o)o.remove()}
 const svLoad=()=>svBox('<div class="svsp"></div><h2>Mengirim.....</h2><p class="sub"><b>Jangan tutup atau keluar dari halaman ini.</b></p>');
 async function saveWait(job,finish){
+ try{if(typeof trackSave=='function')trackSave()}catch(e){}
  SVBUSY=true;if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();
  svLoad();
  /* server lambat: setelah 8 detik muncul tombol untuk lanjut bekerja. Isian sudah di antrean (outbox) dan terus dikirim/dicoba ulang di latar belakang */
@@ -2031,6 +2045,7 @@ async function saveWait(job,finish){
  o.querySelector('#svlater').onclick=()=>{SVBUSY=false;svClose();finish();toast('BELUM terkirim. Biarkan aplikasi terbuka sampai tersinkron',4000)}}
 /* dipakai semua form selain checklist toilet; done() dijalankan setelah proses selesai */
 function saveW(done){
+ try{if(typeof trackSave=='function')trackSave()}catch(e){}
  if(!GAS()){save();svClose();return done()}
  const ops=JSON.parse(JSON.stringify(diffOps(GBASE||{},JSON.parse(JSON.stringify(S)),[],[])));
  const id='g'+Date.now()+Math.random();
