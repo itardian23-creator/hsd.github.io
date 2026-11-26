@@ -1932,7 +1932,7 @@ async function gas(body){
  if(!j.ok&&j.error!=='conflict'){if(j.error==='Aksi tidak dikenal'&&/Photo|File/.test(body.action||''))throw new Error('Script Apps Script belum diperbarui: tempel Code.gs terbaru lalu Deploy > Kelola deployment > Versi baru');throw new Error(j.error||'Gagal')}return j}
 /* Data dasar penggabungan disimpan per tab. Kalau dibaca dari localStorage (dipakai bersama semua tab),
    tab lama menganggap isian tab lain "sudah dihapus" lalu menghapusnya dari server. */
-let GBASE=null,GVER=null,LP=null;try{GBASE=JSON.parse(localStorage.getItem(BK))}catch(e){}
+let GBASE=null,GVER=null,LP=null,NOVER=false;try{GBASE=JSON.parse(localStorage.getItem(BK))}catch(e){}
 /* Antrean isian checklist toilet: dipasang ulang ke data sampai benar-benar ada di server */
 const OBK='hsims-tl-outbox',OBHOLD=120000;
 let OB=[];
@@ -1951,12 +1951,16 @@ function obSent(ids){obLoad();OB.forEach(x=>{if(!x.t&&ids.includes(x.e.id))x.t=D
 const onServer=(data,e)=>!!(data&&(data.tc||[]).some(x=>x.id==e.id)&&(((data.tl||{})[e.date]||{})[e.area]||[])[e.slot-8]);
 async function syncGAS(ia){
  if(syncing){again=true;return}
- syncing=true;setSt('sync');
+ syncing=true;
+ /* label "Menyinkronkan…" hanya tampil bila sinkron manual, belum tersambung, atau ada perubahan lokal; sinkron latar belakang diam-diam */
+ {let dirty=true;try{dirty=!GBASE||JSON.stringify(S)!==JSON.stringify(GBASE)}catch(e){}if(ia||ST!='ok'||dirty)setSt('sync')}
  try{const before=JSON.stringify(S);let done=false,pushed=false;
   LP=null;
   for(let n=0;n<4&&!done;n++){
    /* jalur cepat: versi server masih sama dengan sinkron terakhir -> langsung kirim, tanpa ambil data dulu */
    if(n==0&&GVER!=null&&GBASE){norm();const sent=obApply(),after=JSON.stringify(S);
+    /* tanpa perubahan lokal: tanya versi saja (ringan). Kalau sama dengan sinkron terakhir, selesai tanpa mengunduh seluruh data */
+    if(after===JSON.stringify(GBASE)&&!NOVER){try{const v=await gas({action:'ver'});if(v.version===GVER){obSent(sent);done=true;setSt('ok',new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}));break}}catch(e){if(/tidak dikenal/i.test(String(e&&e.message)))NOVER=true;else throw e}}
     if(after!==JSON.stringify(GBASE)){const p=await gas({action:'put',version:GVER,data:S});
      if(p.ok){GVER=p.version;pushed=true;PREV=_cl(S);GBASE=JSON.parse(after);LP=GBASE;obSent(sent);try{localStorage.setItem(KEY,JSON.stringify(S));localStorage.setItem(BK,after)}catch(e){}done=true;setSt('ok',new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}));break}
      GVER=null;if(p.error!=='conflict')throw new Error(p.error||'Gagal menyimpan');continue}}
@@ -2079,7 +2083,7 @@ document.addEventListener('change',e=>{const t=e.target;
  else if(t.id=='fid'){C.fid=t.value.trim();saveC();try{localStorage.removeItem(BK)}catch(x){}}
  else if(t.id=='full'){C.full=t.value?1:0;C.on=0;TOK=null;saveC();setSt(CID()?'idle':'off')}});
 document.addEventListener('visibilitychange',()=>{if(!document.hidden&&C.on)sync(false)});
-setInterval(()=>{if(!document.hidden&&C.on&&ST!='exp'&&!syncing&&!SVBUSY)sync(false)},20000);
+setInterval(()=>{if(!document.hidden&&C.on&&ST!='exp'&&!syncing&&!SVBUSY)sync(false)},60000);
 setSt(GAS()?'idle':CID()?(C.on?'exp':'idle'):'off');if(GAS()){C.on=1;sync(false)}else if(gUrl()){sync(false)}else if(CID())gis().catch(()=>{});
 setInterval(()=>{if(!document.hidden&&ST=='err'&&gUrl())sync(false)},20000);
 addEventListener('online',()=>{if(gUrl())sync(false)});
