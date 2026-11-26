@@ -1937,7 +1937,7 @@ let XLS=null;function xlShow(){const d=$('#xls');if(d)d.innerHTML=XLS?XLS.ok?'<s
 let xt,xlBusy=false;function schedXl(){clearTimeout(xt);xt=setTimeout(()=>{if(!GAS()||!window.ExcelJS)return;if(ST!='ok'||xlBusy){schedXl();return}xlBusy=true;xlSep(false).finally(()=>xlBusy=false)},6000)}
 async function gas(body){
  const ac=new AbortController(),to=setTimeout(()=>ac.abort(),45000);let j;
- try{const r=await fetch(gUrl(),{method:'POST',redirect:'follow',signal:ac.signal,headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({key:gKey(),...body})});
+ try{const bd=JSON.stringify({key:gKey(),...body});const r=await fetch(gUrl(),{method:'POST',redirect:'follow',keepalive:bd.length<60000,signal:ac.signal,headers:{'Content-Type':'text/plain;charset=utf-8'},body:bd});
   if(!r.ok)throw new Error('Server '+r.status);
   try{j=await r.json()}catch(x){if(ac.signal.aborted)throw x;throw new Error('Balasan Apps Script bukan JSON (deploy ulang dengan akses "Anyone")')}}
  catch(x){if(ac.signal.aborted)throw new Error('Server terlalu lama merespons');throw x}
@@ -2073,6 +2073,14 @@ function opPut(root,o){let v=root;const p=o.p,isArr=k=>isO(k)||typeof k=='number
 /* isian yang diubah/dihapus sendiri oleh pengguna dikeluarkan dari antrean */
 function obPrune(){try{const L=obLoad();if(!L.some(x=>x.g))return;L.forEach(x=>{if(x.g)x.g=x.g.filter(o=>opsOnServer(S,[o]))});OB=L.filter(x=>!x.g||x.g.length);obStore()}catch(e){}}
 addEventListener('beforeunload',e=>{if(SVBUSY||(GAS()&&obPending().length)){e.preventDefault();e.returnValue=''}});
+/* keepalive: saat aplikasi ditutup/disembunyikan, kirim sisa perubahan lokal ke server (permintaan tetap jalan walau halaman sudah tertutup; batas ukuran browser ~64KB) */
+function kaFlush(){try{if(!GAS()||GVER==null||!GBASE||syncing)return;norm();obApply();const after=JSON.stringify(S);
+ try{localStorage.setItem(KEY,after)}catch(e){}
+ if(after===JSON.stringify(GBASE))return;
+ const bd=JSON.stringify({key:gKey(),action:'put',version:GVER,data:S});if(bd.length>=60000)return;
+ fetch(gUrl(),{method:'POST',redirect:'follow',keepalive:true,headers:{'Content-Type':'text/plain;charset=utf-8'},body:bd}).catch(()=>{})}catch(e){}}
+addEventListener('pagehide',kaFlush);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='hidden')kaFlush()});
 let lastSt='';
 function friendly(e){const m=String(e&&e.message||e||'');
  if(!navigator.onLine)return'Tidak ada koneksi internet';
