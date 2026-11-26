@@ -1792,10 +1792,10 @@ async function vBuild(kind,c){if(kind=='xe'&&c=='SG-05')kind='pe';if((kind=='le'
  const _ex=({'SG-01':()=>exAmano(wb),'FB-03':()=>exQHSE(wb),'SG-02':()=>exCCTV(wb),'FB-01':()=>exIns(wb,c),'FB-02':()=>exIns(wb,c)})[c];if(!_ex)throw new Error('Laporan '+c+' belum tersedia');_ex();
  return['KPI-'+c+'-'+M+'.xlsx',await wb.xlsx.writeBuffer()]}
 const VXL=()=>[['rk','Sodexo'],['rk','CSI'],['pe','SG-01'],['xe','SG-01'],['pe','SG-05'],['xe','SG-02'],['xe','FB-01'],['xe','FB-02'],['xe','FB-03'],...Object.keys(LOG).map(c=>['le',c])];
-async function vxAll(){const L=VXL();let ok=0;for(const [k,c] of L){try{const [fn,buf]=await vBuild(k,c);if(await upDrive(fn,buf,true)===true)ok++}catch(e){console.error(e)}}return[ok,L.length]}
+async function vxAll(){const L=VXL();let ok=0;for(const [k,c] of L){try{const [fn,buf]=await vBuild(k,c);if(await upDrive(fn,buf,true)===true)ok++}catch(e){console.error(e)}await new Promise(r=>setTimeout(r,200))}return[ok,L.length]}
 // kirim ke Drive sebagai file TERPISAH: rekap + 1 file per KPI
 async function xlSep(loud){let ok=0;const ks=['rk','gc','tl','ct','kt','ins'];
- for(const x of ks){if(await xl(x,true)===true)ok++}
+ for(const x of ks){if(await xl(x,true)===true)ok++;await new Promise(r=>setTimeout(r,200))}
  let vo=0,vt=0;try{[vo,vt]=await vxAll()}catch(e){console.error(e)}
  ok+=vo;const tot=ks.length+vt;
  if(ok==tot){XLS={ok:true,t:new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'})};try{localStorage.setItem('hsims-xl-ok','1')}catch(e){}xlShow()}else if(!XLS||XLS.ok){XLS={ok:false,m:ok+' dari '+tot+' file terkirim'};xlShow()}
@@ -1939,7 +1939,8 @@ async function upDrive(fn,buf,quiet){if(!GAS())return;
   return true}
  catch(e){XLS={ok:false,m:friendly(e)};xlShow();if(!quiet)toast('Excel gagal dikirim ke Drive: '+friendly(e).slice(0,60));return false}}
 let XLS=null;function xlShow(){const d=$('#xls');if(d)d.innerHTML=XLS?XLS.ok?'<span class="ok">terkirim '+XLS.t+'</span>':'<span class="bad">gagal — '+esc(XLS.m)+'</span>':'belum pernah terkirim'}
-let xt,xlBusy=false;function schedXl(){clearTimeout(xt);xt=setTimeout(()=>{if(!GAS()||!window.ExcelJS)return;if(ST!='ok'||xlBusy){schedXl();return}xlBusy=true;xlSep(false).finally(()=>xlBusy=false)},6000)}
+/* salinan Excel otomatis ke Drive: dulu 6 dtk setelah SETIAP simpan (±25 file, bikin halaman berat & server kebanjiran). Sekarang: tunggu 90 dtk tenang, paling sering sekali per 10 menit, dan tidak jalan saat form/unduhan sedang berjalan */
+let xt,xlBusy=false,xlLast=0;function schedXl(){clearTimeout(xt);const wait=Math.max(90000,xlLast+600000-Date.now());xt=setTimeout(()=>{if(!GAS()||!window.ExcelJS)return;if(ST!='ok'||xlBusy||XLB||SVBUSY||document.hidden){schedXl();return}xlBusy=true;xlLast=Date.now();xlSep(false).finally(()=>xlBusy=false)},wait)}
 async function gas(body){
  const ac=new AbortController(),to=setTimeout(()=>ac.abort(),45000);let j;
  try{const bd=JSON.stringify({key:gKey(),...body});const r=await fetch(gUrl(),{method:'POST',redirect:'follow',signal:ac.signal,headers:{'Content-Type':'text/plain;charset=utf-8'},body:bd});
