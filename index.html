@@ -1011,7 +1011,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-pb]');if(!
   const finish=lambat=>{const j=(S.pj||[]).find(x=>x.id==id);if(!j)return toast('Perbantuan ini sudah ditutup');
   const dm=t0.getFullYear()+'-'+pd(t0.getMonth()+1)+'-'+pd(t0.getDate()),hm=d=>pd(d.getHours())+':'+pd(d.getMinutes());
   const row={ts:dm+' '+hm(t0)+':'+pd(t0.getSeconds()),pos:j.pos,req:j.req,unit:j.unit,mulai:hm(t0),selesai:hm(t1),bantu:j.bantu,minta:j.minta,lambat,dur,ok:ok?1:0,o:authed()},mk=dm.slice(0,7);
-  (((S.vl=S.vl||{})[mk]=S.vl[mk]||{})['SG-04']=S.vl[mk]['SG-04']||[]).push(row);S.pj=S.pj.filter(x=>x.id!=id);rd();saveW(()=>toast(ok?'Selesai · TEPAT WAKTU ('+dur+' mnt)':'Selesai · TERLAMBAT ('+dur+' mnt)',3000))};
+  (((S.vl=S.vl||{})[mk]=S.vl[mk]||{})['SG-04']=S.vl[mk]['SG-04']||[]).push(row);S.pj=S.pj.filter(x=>x.id!=id);rd();saveBg(()=>toast(ok?'Selesai · TEPAT WAKTU ('+dur+' mnt)':'Selesai · TERLAMBAT ('+dur+' mnt)',3000))};
   finish('')}});
 setInterval(()=>{const e=$('#pbrun');if(e&&!document.hidden)e.innerHTML=pbRun()},30000);
 
@@ -2038,6 +2038,15 @@ function saveW(done){
  try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}
  clearTimeout(timer);
  saveWait({check:d=>opsOnServer(d,ops),reset:()=>{obLoad();OB.forEach(x=>{if(x.e.id==id)x.t=0});obStore()}},done)}
+/* Simpan TANPA layar loading: langsung selesai di layar, data masuk antrean (outbox) lalu dikirim di latar belakang.
+   trackSave() mencatat penghapusan (mis. pekerjaan yang di-Done) sebagai "batu nisan", supaya tidak hidup kembali dari server. */
+function saveBg(done){
+ try{if(typeof trackSave=='function')trackSave()}catch(e){}
+ if(!GAS()){save();return done()}
+ const ops=JSON.parse(JSON.stringify(diffOps(GBASE||{},JSON.parse(JSON.stringify(S)),[],[])));
+ obLoad().push({e:{id:'g'+Date.now()+Math.random()},g:ops,t:0});obStore();
+ try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}
+ done();clearTimeout(timer);sync(false)}
 /* pasang kembali isian dari antrean kalau belum ada di data */
 function opPut(root,o){let v=root;const p=o.p,isArr=k=>isO(k)||typeof k=='number';
  for(let i=0;i<p.length;i++){const k=p[i],last=i==p.length-1,mk=()=>last?('has' in o?[]:undefined):isArr(p[i+1])?[]:{};
