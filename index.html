@@ -994,6 +994,12 @@ function pbCard(){const all=logOf('SG-04')||[],n0=HV.pb=='m'?0:Math.max(0,all.le
 <div style="margin-top:10px"><button class="btn acc" data-pb="start">▶ Start</button></div>
 <h2 style="margin-top:16px">Sedang berjalan</h2><div id="pbrun">${pbRun()}</div>
 <div class="adm-only"><h2 style="margin-top:16px">${HV.pb=='m'?'Selesai '+MN[+M.slice(5)-1]+' '+M.slice(0,4)+' ('+all.length+')':'Selesai terakhir'}</h2>${hvTog('pb',['t','Terakhir'],['m','Per bulan'])}<div style="margin-top:10px"><button class="btn sm acc" data-vle="SG-04">Unduh Excel</button></div><div class="tw" style="margin-top:10px"><table><tr><th>Tanggal</th><th>Unit</th><th>Diminta</th><th>Mulai</th><th>Selesai</th><th>Durasi</th><th>Status</th></tr>${rows.map(([x,ix])=>`<tr><td>${esc((x.ts||'').slice(8,10))}/${esc((x.ts||'').slice(5,7))}</td><td>${esc(x.unit)}</td><td style="white-space:normal">${esc(x.minta)}</td><td>${esc(x.mulai)}</td><td>${esc(x.selesai)}</td><td>${+x.dur} mnt</td><td class="${x.ok?'ok':'bad'}">${x.ok?'Tepat waktu':'Terlambat'}</td></tr>`).join('')||'<tr><td colspan="7" class="sub">Belum ada data bulan ini.</td></tr>'}</table></div></div></div>`}
+function pbAsk(msg,ok){if($('#pbask'))return;const o=document.createElement('div');o.id='pbask';o.setAttribute('role','dialog');o.setAttribute('aria-modal','true');
+ o.style.cssText='position:fixed;inset:0;z-index:240;background:rgba(0,0,0,.5);display:flex;align-items:flex-end;justify-content:center';
+ o.innerHTML='<div id="pbsheet" class="card" style="width:100%;max-width:560px;margin:0;border-radius:20px 20px 0 0;max-height:90vh;overflow:auto;box-sizing:border-box;padding:12px 18px calc(18px + env(safe-area-inset-bottom,0px))"><div style="width:44px;height:5px;border-radius:3px;background:#cbd5e1;margin:0 auto 14px"></div><p><b>'+esc(msg)+'</b></p><textarea id="pbwhy" rows="3" style="width:100%;box-sizing:border-box;margin-top:8px" placeholder="Keterangan keterlambatan"></textarea><div class="row" style="justify-content:flex-end;gap:8px;margin-top:10px"><button type="button" class="btn" id="pbno">Kembali</button><button type="button" class="btn acc" id="pbyes">Simpan &amp; Done</button></div></div>';
+ document.body.append(o);if(o.firstChild.animate)o.firstChild.animate([{transform:'translateY(100%)'},{transform:'translateY(0)'}],{duration:250,easing:'ease-out'});const t=o.querySelector('#pbwhy');t.focus();
+ o.querySelector('#pbno').onclick=()=>o.remove();
+ o.querySelector('#pbyes').onclick=()=>{const v=t.value.trim();if(!v)return toast('Keterangan keterlambatan wajib diisi');o.remove();ok(v)}}
 document.addEventListener('click',e=>{const b=e.target.closest('[data-pb]');if(!b)return;const[a,id]=b.dataset.pb.split('|'),y=scrollY,rd=()=>{draw();scrollTo(0,y)};S.pj=S.pj||[];
  if(a=='start'){const g=i=>($(i)?$(i).value.trim():''),pos=g('#pbp'),minta=g('#pbm'),tv=g('#pbt');
   if(!pos)return toast('Isi nama petugas posko');if(!minta)return toast('Isi perbantuan yang diminta');
@@ -1001,11 +1007,12 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-pb]');if(!
   S.petugas=pos;S.pj.push({id:Date.now(),o:authed(),pos,req:g('#pbr'),unit:g('#pbu'),bantu:g('#pbb'),minta,t0:t0.toISOString()});rd();saveW(()=>toast('Mulai: '+minta));return}
  const j=S.pj.find(x=>x.id==id);if(!j)return;if(!pbMine(j))return toast('Perbantuan ini dimulai oleh akun lain');
  if(a=='del'){if(confirm('Batalkan perbantuan ini?')){S.pj=S.pj.filter(x=>x.id!=id);save();rd()}return}
- if(a=='done'){const t0=new Date(j.t0),t1=new Date(),dur=Math.max(1,Math.ceil((t1-t0)/60000)),ok=dur<=PBMAX;let lambat='';
-  if(!ok){const q=prompt('Perbantuan melebihi '+PBMAX+' menit ('+dur+' menit). Isi keterangan keterlambatan:');if(q===null)return;lambat=q.trim();if(!lambat)return toast('Keterangan keterlambatan wajib diisi')}
+ if(a=='done'){const t0=new Date(j.t0),t1=new Date(),dur=Math.max(1,Math.ceil((t1-t0)/60000)),ok=dur<=PBMAX;
+  const finish=lambat=>{const j=(S.pj||[]).find(x=>x.id==id);if(!j)return toast('Perbantuan ini sudah ditutup');
   const dm=t0.getFullYear()+'-'+pd(t0.getMonth()+1)+'-'+pd(t0.getDate()),hm=d=>pd(d.getHours())+':'+pd(d.getMinutes());
   const row={ts:dm+' '+hm(t0)+':'+pd(t0.getSeconds()),pos:j.pos,req:j.req,unit:j.unit,mulai:hm(t0),selesai:hm(t1),bantu:j.bantu,minta:j.minta,lambat,dur,ok:ok?1:0,o:authed()},mk=dm.slice(0,7);
-  (((S.vl=S.vl||{})[mk]=S.vl[mk]||{})['SG-04']=S.vl[mk]['SG-04']||[]).push(row);S.pj=S.pj.filter(x=>x.id!=id);rd();saveW(()=>toast(ok?'Selesai · TEPAT WAKTU ('+dur+' mnt)':'Selesai · TERLAMBAT ('+dur+' mnt)',3000))}});
+  (((S.vl=S.vl||{})[mk]=S.vl[mk]||{})['SG-04']=S.vl[mk]['SG-04']||[]).push(row);S.pj=S.pj.filter(x=>x.id!=id);rd();saveW(()=>toast(ok?'Selesai · TEPAT WAKTU ('+dur+' mnt)':'Selesai · TERLAMBAT ('+dur+' mnt)',3000))};
+  if(ok)finish('');else pbAsk('Perbantuan melebihi '+PBMAX+' menit ('+dur+' menit). Isi keterangan keterlambatan:',finish)}});
 setInterval(()=>{const e=$('#pbrun');if(e&&!document.hidden)e.innerHTML=pbRun()},30000);
 
 /* ===== Checklist CCTV: mengikuti Google Form (per shift, per NVR) ===== */
