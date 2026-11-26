@@ -1202,7 +1202,7 @@ function mmFill(){const M_=$('#mmenu');if(!M_)return;const seen={};let h=`<div c
  M_.innerHTML=h+`<hr><button type="button" data-lo="1" style="color:var(--bad)">⎋ Keluar</button>`}
 function draw(){try{document.body.classList.toggle('pt',!isAdmin())}catch(e){}try{sessionStorage.setItem('hsims-view',JSON.stringify({page,M,D,tlDay,tlVw}))}catch(e){}if(!allowed(page)){const f=PAGES.find(([k])=>allowed(k));page=f?f[0]:'dash'}$('#nav').innerHTML=navH()+`<button data-lo="1" title="Keluar (${esc(authed()||'')})" style="color:var(--bad);font-weight:600">⎋ Keluar</button>`;view='in';mmFill();$('#app').innerHTML=V[page]();if(page=='ins')insApply();if(page=='sg2')ccImgs();if($('#qst'))qApply();if(page=='tl'&&!F)locNeed()}
 function refresh(){if(page=='kt'||page=='gc'||page=='tl'||page=='ins'){const k=page,b=$('#big');if(b){const c=CALC[k](M),v=c.d?c.n/c.d:null;b.textContent=P(c.n,c.d);b.className='big '+(v==null?'':v>=TGT?'ok':v>=.9?'warn':'bad');b.nextElementSibling.firstElementChild.style.width=Math.min(100,v*100||0)+'%';$('#nd').textContent=`${c.n} dari ${c.d} · ${INFO[k][2]}`}}}
-const dl=async(n,t)=>{if(!DLC){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t]));a.download=n;document.body.append(a);a.click();a.remove();return}try{await DLC.save({filename:n,data:t});toast('Tersimpan')}catch(e){if(!e||e.code!='declined')toast('Gagal menyimpan')}};
+const dl=async(n,t)=>{if(!DLC){try{const a=document.createElement('a'),u=URL.createObjectURL(new Blob([t],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));a.href=u;a.download=n;a.style.display='none';document.body.append(a);a.click();/* jangan dihapus langsung: sebagian browser/WebView belum selesai mengambil file */setTimeout(()=>{a.remove();URL.revokeObjectURL(u)},60000);toast('Mengunduh '+n,2500)}catch(er){console.error(er);toast('Gagal mengunduh file: '+String(er&&er.message||er).slice(0,70),5000)}return}try{await DLC.save({filename:n,data:t});toast('Tersimpan')}catch(e){if(!e||e.code!='declined')toast('Gagal menyimpan')}};
 document.addEventListener('click',e=>{const t=e.target.closest('button,[data-go]');if(!t)return;const q=t.dataset;
 if(q.go){F=null;if(PF){ptStop();PF=null}page=q.go;M=TODAY.slice(0,7);D=TODAY;draw();scrollTo(0,0);return}
 if(q.v){view=q.v;draw();return}
@@ -1939,7 +1939,7 @@ let XLS=null;function xlShow(){const d=$('#xls');if(d)d.innerHTML=XLS?XLS.ok?'<s
 let xt,xlBusy=false;function schedXl(){clearTimeout(xt);xt=setTimeout(()=>{if(!GAS()||!window.ExcelJS)return;if(ST!='ok'||xlBusy){schedXl();return}xlBusy=true;xlSep(false).finally(()=>xlBusy=false)},6000)}
 async function gas(body){
  const ac=new AbortController(),to=setTimeout(()=>ac.abort(),45000);let j;
- try{const bd=JSON.stringify({key:gKey(),...body});const r=await fetch(gUrl(),{method:'POST',redirect:'follow',keepalive:bd.length<60000,signal:ac.signal,headers:{'Content-Type':'text/plain;charset=utf-8'},body:bd});
+ try{const bd=JSON.stringify({key:gKey(),...body});const r=await fetch(gUrl(),{method:'POST',redirect:'follow',signal:ac.signal,headers:{'Content-Type':'text/plain;charset=utf-8'},body:bd});
   try{const sd=Date.parse(r.headers.get('Date')||'');if(sd)CLKSKEW=Date.now()-sd}catch(e){}
   if(!r.ok)throw new Error('Server '+r.status);
   try{j=await r.json()}catch(x){if(ac.signal.aborted)throw x;throw new Error('Balasan Apps Script bukan JSON (deploy ulang dengan akses "Anyone")')}}
