@@ -2017,7 +2017,14 @@ const svLoad=()=>svBox('<div class="svsp"></div><h2>Mengirim.....</h2><p class="
 async function saveWait(job,finish){
  SVBUSY=true;if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();
  svLoad();
- const r=await sendConfirm(job,svLoad);
+ /* server lambat: setelah 8 detik muncul tombol untuk lanjut bekerja. Isian sudah di antrean (outbox) dan terus dikirim/dicoba ulang di latar belakang */
+ let esc=false,shown=false;
+ const bgBtn=()=>{const o=$('#svov');if(!o||esc||o.querySelector('#svretry')||o.querySelector('#svbg'))return;const b=document.createElement('button');b.className='btn';b.id='svbg';b.style.marginTop='12px';b.textContent='Lanjut, kirim di latar belakang';
+  b.onclick=()=>{esc=true;SVBUSY=false;svClose();finish();toast('Masih dikirim di latar belakang. Biarkan aplikasi tetap terbuka',4500)};o.querySelector('.svb').append(b)};
+ const tm=setTimeout(()=>{shown=true;bgBtn()},8000);
+ const r=await sendConfirm(job,()=>{if(esc)return;svLoad();if(shown)bgBtn()});
+ clearTimeout(tm);
+ if(esc)return;
  if(r.ok){svBox('<div class="svic ok">✓</div><h2>Berhasil masuk</h2><p class="sub">Data sudah tersimpan.</p>');await nap(300);SVBUSY=false;svClose();finish();return}
  const o=svBox('<div class="svic bad">!</div><h2>Belum terkirim</h2><p class="sub">'+esc(r.m)+'</p><p class="sub">Isian masih tersimpan di HP ini. Cek internet lalu ketuk <b>Coba kirim lagi</b>.</p><button class="btn acc" id="svretry">Coba kirim lagi</button><button class="btn" id="svlater">Tutup, kirim nanti</button>');
  o.querySelector('#svretry').onclick=()=>saveWait(job,finish);
