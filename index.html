@@ -1650,10 +1650,18 @@ async function phFetch(id){await phSlot();try{let err;for(let n=0;n<PHTRY;n++){i
 function phSrc(id){if(PHC.has(id))return Promise.resolve(PHC.get(id));if(!PHWAIT.has(id))PHWAIT.set(id,phFetch(id).finally(()=>PHWAIT.delete(id)));return PHWAIT.get(id)}
 const phLink=id=>({text:'Buka foto',hyperlink:'https://drive.google.com/file/d/'+id+'/view'});
 function phPut(cell,id){cell.value=phLink(id);cell.font={color:{argb:'FF0563C1'},underline:true};cell.alignment={horizontal:'center',vertical:'middle'}}
+/* kotak info selama foto dimuat (tidak tampil untuk salinan otomatis di latar belakang) */
+function phInfo(done,total,ulang,t0){if(typeof xlBusy!=='undefined'&&xlBusy)return;let o=document.getElementById('phinfo');
+ if(!o){o=document.createElement('div');o.id='phinfo';o.setAttribute('role','status');o.style.cssText='position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:500;width:min(420px,calc(100% - 32px));box-sizing:border-box;background:#1f2937;color:#fff;border-radius:14px;padding:14px 16px;font-size:13px;line-height:1.5;box-shadow:0 8px 24px rgba(0,0,0,.35)';document.body.append(o)}
+ const s=Math.floor((Date.now()-t0)/1000),w=(s>=60?Math.floor(s/60)+' menit ':'')+s%60+' detik';
+ o.innerHTML='<b>'+(ulang?'Mencoba ulang foto yang gagal…':'Menyiapkan Excel, sedang memuat foto…')+'</b><br>'+done+' / '+total+' foto · sudah '+w+'<progress value="'+done+'" max="'+total+'" style="display:block;width:100%;margin:8px 0"></progress>'+(s>=15?'Unduhan lama karena fotonya banyak atau internet lambat. ':'')+'Jangan tutup halaman dan jangan tekan unduh lagi.'}
+function phInfoClose(){const o=document.getElementById('phinfo');if(o)o.remove()}
 /* ambil semua foto; yang masih gagal diulang satu putaran lagi */
-async function phAll(ids,get){let sisa=ids;for(let put=0;put<2&&sisa.length;put++){if(put){await phSleep(Math.max(3000,PHDEAD-Date.now()))}
-  const gagal=[];for(let i=0;i<sisa.length;i+=4){await Promise.all(sisa.slice(i,i+4).map(id=>get(id).catch(()=>gagal.push(id))));if(ids.length>20&&i%40==0)toast('Memuat foto '+Math.min(i+4,sisa.length)+' / '+sisa.length+(put?' (coba ulang)':'')+'… jangan tutup halaman',4000)}
-  sisa=gagal}
+async function phAll(ids,get){let sisa=ids,done=0,total=ids.length,ulang=0;const t0=Date.now(),show=()=>phInfo(done,total,ulang,t0);
+ if(!total)return new Set();show();const iv=setInterval(show,1000);
+ try{for(let put=0;put<2&&sisa.length;put++){if(put){ulang=1;done=0;total=sisa.length;show();await phSleep(Math.max(3000,PHDEAD-Date.now()))}
+  const gagal=[];for(let i=0;i<sisa.length;i+=4)await Promise.all(sisa.slice(i,i+4).map(id=>get(id).catch(()=>gagal.push(id)).then(()=>{done++;show()})));
+  sisa=gagal}}finally{clearInterval(iv);phInfoClose()}
  if(sisa.length)toast(sisa.length+' foto gagal dimuat, diganti link "Buka foto"',6000);return new Set(sisa)}
 const SLOT=[['b','BEFORE'],['g','PROGRES'],['a','AFTER']];
 let PH=null;
